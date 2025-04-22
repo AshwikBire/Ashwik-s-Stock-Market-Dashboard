@@ -5,3 +5,5 @@ prophet
 newsapi-python
 pyqrcode
 pandas
+pypng
+
