@@ -3,6 +3,5 @@ yfinance
 plotly
 prophet
 newsapi-python
-sqlite3
 pyqrcode
 pandas
