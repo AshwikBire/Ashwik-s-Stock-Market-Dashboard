@@ -1,11 +1,15 @@
-import streamlit as st
 import yfinance as yf
-import pandas as pd
 import plotly.graph_objs as go
 from prophet import Prophet
 from newsapi import NewsApiClient
 import sqlite3
 import hashlib
+import streamlit as st
+from yahoo_fin import stock_info as si
+import pandas as pd
+from datetime import datetime, timedelta
+
+
 
 
 # ------------------------------- CONFIG ----------------------------------
@@ -87,7 +91,7 @@ def check_user(username, password):
 
 # ---------------------------- SIDEBAR NAVIGATION -------------------------
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Login", "Sign Up", "📊 Overview", "🔮 Prediction & Forecasting", "📢 News & Events", "💥 Volume Spike Detector", "📚 Learning Material & Purpose"])
+page = st.sidebar.radio("Go to", ["Login", "Sign Up", "📊 Overview", "🔮 Prediction & Forecasting", "📢 News & Events", "💥 Volume Spike Detector", "📈 Moneycontrol - Market Insights", "📚 Learning Materials"])
 
 # ---------------------------- LOGIN PAGE -----------------------------
 if page == "Login":
@@ -116,6 +120,7 @@ elif page == "Sign Up":
         else:
             st.error("Passwords do not match.")
 
+#----------------------------------------------------------------------------------------------------------#
 
 # ---------------------------- OVERVIEW PAGE -------------------------
 
@@ -395,102 +400,82 @@ elif page == "💥 Volume Spike Detector":
         if hist['Spike'].any():
             st.warning("⚡ Volume Spikes Detected! Possible Big Moves Incoming!")
 
-
-
-
-
-import pyqrcode
-import tempfile
+#-------------More Features with moneycontrol-----#
 import streamlit as st
+import pandas as pd
+import yfinance as yf
+from datetime import datetime, timedelta
 
-# Generate QR codes for the URLs
-qr_investopedia = pyqrcode.create("https://www.investopedia.com/terms/s/stockmarket.asp")
-qr_coursera = pyqrcode.create("https://www.coursera.org/learn/stock-market")
-qr_udemy = pyqrcode.create("https://www.udemy.com/course/stock-market-investing/")
-qr_youtube = pyqrcode.create("https://www.youtube.com/c/InvestingAcademy")
 
-# Save QR codes as PNG files in a temporary location
-with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp_investopedia:
-    qr_investopedia.png(tmp_investopedia.name, scale=6)
-    investopedia_path = tmp_investopedia.name
 
-with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp_coursera:
-    qr_coursera.png(tmp_coursera.name, scale=6)
-    coursera_path = tmp_coursera.name
+# ----- Main Area -----
+if page == "📈 Moneycontrol - Market Insights":
+    st.title("📈 Moneycontrol - Market Insights")
+    st.markdown("Get live insights from the stock market inspired by Moneycontrol style!")
 
-with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp_udemy:
-    qr_udemy.png(tmp_udemy.name, scale=6)
-    udemy_path = tmp_udemy.name
+    # --- Section 1: Top Gainers ---
+    st.subheader("🔼 Top Gainers Today")
+    nifty = yf.Ticker("^NSEI")
+    nifty_hist = nifty.history(period="1d", interval="5m")
 
-with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp_youtube:
-    qr_youtube.png(tmp_youtube.name, scale=6)
-    youtube_path = tmp_youtube.name
+    # Just dummy example for now
+    st.write("🔵 Loading Top Gainers... (Coming Real Data Soon)")
 
-# Display the learning material introduction and QR codes using Streamlit
-st.title("📚 Stock Market Learning Materials by Ashwik Bire")
-st.subheader("Enhance your knowledge of the stock market with these curated resources. Scan the QR codes to access valuable material and start your learning journey.")
+    # --- Section 2: Top Losers ---
+    st.subheader("🔽 Top Losers Today")
+    st.write("🔵 Loading Top Losers...")
 
-st.markdown("""
-Here are some excellent resources that will guide you through the intricacies of stock market investing:
+    # --- Section 3: Most Active Stocks ---
+    st.subheader("🔥 Most Active Stocks")
+    st.write("🔵 Loading Most Active Stocks...")
 
-1. **[Investopedia Stock Market Basics](https://www.investopedia.com/terms/s/stockmarket.asp)**: An in-depth guide on the stock market.
-2. **[Coursera Stock Market Course](https://www.coursera.org/learn/stock-market)**: A comprehensive stock market course from top institutions.
-3. **[Udemy Stock Market Investing](https://www.udemy.com/course/stock-market-investing/)**: A practical course focused on stock market investing techniques.
-4. **[Investing Academy YouTube Channel](https://www.youtube.com/c/InvestingAcademy)**: A wealth of videos that can help you understand stock market strategies and tips.
+    # --- Section 4: Sector Performance ---
+    st.subheader("🏢 Sector Performance Overview")
+    st.write("🔵 Loading Sector Wise Performance...")
 
-You can scan the following QR codes to access these resources quickly:
+    # --- Section 5: Indices Overview ---
+    st.subheader("📊 Indices Overview")
+    st.write("🔵 Loading Nifty, Sensex, BankNifty Overview...")
 
-""")
+    st.success("✅ New features under development. Stay tuned!")
 
-st.subheader("📱 Scan the QR Codes for Quick Access")
-st.image(investopedia_path, caption="Investopedia")
-st.image(coursera_path, caption="Coursera")
-st.image(udemy_path, caption="Udemy")
-st.image(youtube_path, caption="YouTube Channel")
 
-# LinkedIn Profile Section
-st.markdown("""
----
 
-Connect with **Ashwik Bire** on LinkedIn for more updates and personal insights into the world of stock market investing:
 
-[LinkedIn Profile](https://www.linkedin.com/in/ashwik-bire-b2a000186)
-""")
+# --- PAGE: Learning Materials ---
+elif page == "📚 Learning Materials":
+    st.title("📚 Learning Materials & Purpose")
 
-import streamlit as st
+    st.subheader("🚀 Purpose of this Dashboard")
+    st.write("""
+    This dashboard was built to provide **advanced stock market insights** powered by live data, 
+    predictive models, and financial analysis for investors, learners, and professionals. 
+    It combines real-time data, machine learning forecasting, and financial education in one place.
 
-# --- Purpose and Learning Material Section ---
+    It is designed for:
+    - Stock Market Learners 📖
+    - Professional Traders 📈
+    - Finance Enthusiasts 💹
+    - Data Science & AI Researchers 🤖
+    """)
 
-# Title and Purpose of the App
-st.title("📈 Stock Market Insights App")
-st.header("🎯 Purpose of Our App")
+    st.divider()
 
-st.write("""
-    The **Stock Market Insights App** is designed to provide **real-time stock market analysis**,
-    **predict future trends**, and serve as a comprehensive **learning platform** for investors and traders at all levels.
-    This app combines **advanced stock prediction models**, **technical analysis tools**, and **educational resources** to help you make smarter, more informed investment decisions.
-    Whether you're a **beginner** learning about the stock market or an **advanced trader** using machine learning for stock predictions, this app is for you!
-""")
+    st.subheader("📖 Learning Materials (Recommended Resources)")
 
-# --- Key Features Section ---
-st.header("🔧 Key Features of the App")
+    st.markdown("""
+    - [Investopedia: Stock Market Basics](https://www.investopedia.com/terms/s/stockmarket.asp)
+    - [NSE India Official Site](https://www.nseindia.com/)
+    - [Moneycontrol Learning Center](https://www.moneycontrol.com/news/business/personal-finance/)
+    - [Coursera - Investment Management Specialization](https://www.coursera.org/specializations/investment-management)
+    - [Udemy - Stock Market for Beginners](https://www.udemy.com/course/stock-market-investing-for-beginners/)
+    """)
 
-features = [
-    "📈 **Real-Time Stock Analysis**: Get up-to-date market data and live stock prices.",
-    "📊 **Advanced Technical Indicators**: Use tools like RSI, Moving Averages, and Bollinger Bands.",
-    "🤖 **Stock Prediction Models**: Predict future stock price movements using machine learning (LSTM, XGBoost).",
-    "💬 **Sentiment Analysis**: Understand the sentiment from news and social media to make informed decisions.",
-    "📉 **Volume & Trend Analysis**: Detect significant volume spikes and trends.",
-    "💼 **Portfolio Management**: Track and manage your investment portfolio.",
-    "📚 **Stock Learning Resources**: Access tutorials, courses, and articles to enhance your knowledge.",
-    "📊 **Sector Growth Analysis**: Explore high-growth sectors for better investment decisions.",
-    "📱 **QR Code Learning Access**: Quick access to top stock market learning platforms like Investopedia and Coursera.",
-    "⚙️ **User Customization**: Personalize your watchlist and dashboard for easier tracking."
-]
+    st.divider()
 
-# Displaying the features
-for feature in features:
-    st.write(feature)
+    st.subheader("🔗 Connect with me:")
+    st.markdown(
+        "[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue)](https://www.linkedin.com/in/ashwik-bire-b2a000186)")
 
 # ----------------------------- FOOTER -------------------------------------
 st.markdown("---")
