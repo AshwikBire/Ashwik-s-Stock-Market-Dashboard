@@ -6,4 +6,6 @@ newsapi-python
 pyqrcode
 pandas
 pypng
+yahoo_fin
+
 
