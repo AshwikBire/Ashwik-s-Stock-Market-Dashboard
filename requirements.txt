@@ -7,5 +7,4 @@ pyqrcode
 pandas
 pypng
 yahoo_fin
-
-
+scikit-learn
