@@ -18,3 +18,4 @@ python-dotenv
 tqdm
 openpyxl
 fpdf
+seaborn
