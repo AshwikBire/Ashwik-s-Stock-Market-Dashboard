@@ -34,7 +34,7 @@ st.set_page_config(page_title="Smart Stock Market Dashboard", layout="wide")
 with st.sidebar:
     selected = option_menu(
         "Smart Market Dashboard",
-        ["Home", "Market Movers", "Global Markets", "Mutual Funds", "Sectors", "News", "Company Info", "Learning", "Volume Spike", "Screener", "Predictions", "Buy/Sell Predictor", "News Sentiment"],
+        ["Home", "Company Info", "Market Movers", "Global Markets", "Mutual Funds", "Sectors", "News", "Learning", "Volume Spike", "Stock Screener", "Predictions", "Buy/Sell Predictor", "News Sentiment"],
         icons=['house', 'graph-up', 'globe', 'bank', 'boxes', 'newspaper', 'building', 'book', 'activity', 'search'],
         menu_icon="cast",
         default_index=0
@@ -59,19 +59,37 @@ if selected == "Home":
         percent_change = round((change / data['Open'].iloc[-1]) * 100, 2)
         cols[idx].metric(label=name, value=f"{last_close}", delta=f"{percent_change}%")
 
+
 # Market Movers - Top Gainers & Losers
+# Market Movers - Active Stocks, Top Gainers & Losers
 elif selected == "Market Movers":
-    st.title("\U0001F4C8 Market Movers - Top Gainers & Losers")
+    st.title("📈 Market Movers - Active Stocks, Top Gainers & Losers")
+
+    # Active Stocks (Example: Nifty 50 stocks)
     tickers_list = 'RELIANCE.NS TCS.NS INFY.NS HDFCBANK.NS ICICIBANK.NS'
     nifty = yf.Tickers(tickers_list)
+
+    # Fetching recent closing prices
     data = {ticker: nifty.tickers[ticker].history(period="1d")['Close'].iloc[-1] for ticker in nifty.tickers}
+
+    # Sorting stocks for gainers and losers
     gainers = sorted(data.items(), key=lambda x: x[1], reverse=True)
     losers = sorted(data.items(), key=lambda x: x[1])
 
-    st.subheader("Top Gainers")
-    st.dataframe(pd.DataFrame(gainers, columns=['Stock', 'Price']))
-    st.subheader("Top Losers")
-    st.dataframe(pd.DataFrame(losers, columns=['Stock', 'Price']))
+    # Displaying Active Stocks
+    st.subheader("📊 Active Stocks (Recent Close Prices)")
+    active_stocks = pd.DataFrame(data.items(), columns=["Stock", "Price"])
+    st.dataframe(active_stocks)
+
+    # Top Gainers
+    st.subheader("🚀 Top Gainers")
+    top_gainers = pd.DataFrame(gainers, columns=['Stock', 'Price'])
+    st.dataframe(top_gainers)
+
+    # Top Losers
+    st.subheader("📉 Top Losers")
+    top_losers = pd.DataFrame(losers, columns=['Stock', 'Price'])
+    st.dataframe(top_losers)
 
 # Global Markets - Major Indices
 elif selected == "Global Markets":
@@ -141,46 +159,6 @@ elif selected == "News":
         else:
             st.error("Unable to fetch news articles. Please check API or query.")
 
-# Company Info - Stock Details
-elif selected == "Company Info":
-    st.title("\U0001F3E2 Company Info & Insights")
-    ticker = st.text_input("Enter Stock Ticker (e.g., AAPL, TCS.NS)", "AAPL")
-    if ticker:
-        try:
-            stock = yf.Ticker(ticker)
-            hist = stock.history(period="2y")
-
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Current Price", f"${stock.info.get('regularMarketPrice', 'N/A')}")
-            col2.metric("Day High", f"${stock.info.get('dayHigh', 'N/A')}")
-            col3.metric("Day Low", f"${stock.info.get('dayLow', 'N/A')}")
-
-            st.subheader("\U0001F4C8 Price Trend (2 Years)")
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name="Close Price"))
-            fig.update_layout(title=f"{ticker.upper()} Price Chart", xaxis_title="Date", yaxis_title="Price")
-            st.plotly_chart(fig, use_container_width=True)
-
-            st.subheader("\U0001F4C4 Company Profile")
-            profile_data = {
-                "Name": stock.info.get('longName', 'N/A'),
-                "Sector": stock.info.get('sector', 'N/A'),
-                "Industry": stock.info.get('industry', 'N/A'),
-                "Market Cap": stock.info.get('marketCap', 'N/A'),
-                "PE Ratio": stock.info.get('trailingPE', 'N/A'),
-                "EPS": stock.info.get('trailingEps', 'N/A'),
-                "Revenue": stock.info.get('totalRevenue', 'N/A'),
-                "Profit Margins": stock.info.get('profitMargins', 'N/A'),
-                "Dividend Yield": stock.info.get('dividendYield', 'N/A'),
-                "Earnings Growth": stock.info.get('earningsGrowth', 'N/A'),
-                "Revenue Growth": stock.info.get('revenueGrowth', 'N/A'),
-                "52 Week High": stock.info.get('fiftyTwoWeekHigh', 'N/A'),
-                "52 Week Low": stock.info.get('fiftyTwoWeekLow', 'N/A'),
-                "Employees": stock.info.get('fullTimeEmployees', 'N/A')
-            }
-            st.dataframe(pd.DataFrame(list(profile_data.items()), columns=['Attribute', 'Value']))
-        except Exception as e:
-            st.error(f"Failed to fetch company data. Error: {e}")
 
 # Learning - Stock Market Resources
 elif selected == "Learning":
@@ -255,269 +233,7 @@ elif selected == "Volume Spike":
         except Exception as e:
             st.error(f"Error occurred: {e}")
 
-# Stock Screener - Filter Stocks Based on Criteria
-elif selected == "Screener":
-    st.title("🧠 Smart Stock Screener")
 
-    # Screener criteria inputs
-    st.sidebar.header("📌 Filter Criteria")
-    market_cap = st.sidebar.selectbox("Market Cap", ["All", "Large Cap", "Mid Cap", "Small Cap"])
-    pe_min = st.sidebar.number_input("Min PE Ratio", value=0.0)
-    pe_max = st.sidebar.number_input("Max PE Ratio", value=50.0)
-    price_range = st.sidebar.slider("Price Range (₹)", 10, 5000, (50, 1000))
-    volume_min = st.sidebar.number_input("Minimum Daily Volume", value=100000)
-
-    # Example NSE tickers list (replace with a full list or CSV)
-    tickers = {
-        "RELIANCE.NS": "Reliance",
-        "TCS.NS": "TCS",
-        "INFY.NS": "Infosys",
-        "HDFCBANK.NS": "HDFC Bank",
-        "ICICIBANK.NS": "ICICI Bank",
-        "LT.NS": "L&T",
-        "SBIN.NS": "SBI",
-    }
-
-    results = []
-
-    st.info("🔍 Scanning Stocks... Please wait.")
-    for ticker, name in tickers.items():
-        try:
-            stock = yf.Ticker(ticker)
-            info = stock.info
-
-            pe = info.get("trailingPE", None)
-            mc = info.get("marketCap", 0)
-            price = info.get("regularMarketPrice", 0)
-            volume = info.get("volume", 0)
-
-            if not pe or pe < pe_min or pe > pe_max:
-                continue
-            if price < price_range[0] or price > price_range[1]:
-                continue
-            if volume < volume_min:
-                continue
-            if market_cap == "Large Cap" and mc < 200000000000:
-                continue
-            if market_cap == "Mid Cap" and (mc < 50000000000 or mc > 200000000000):
-                continue
-            if market_cap == "Small Cap" and mc > 50000000000:
-                continue
-
-            results.append({
-                "Ticker": ticker,
-                "Name": name,
-                "Price": price,
-                "PE Ratio": pe,
-                "Volume": volume,
-                "Market Cap": mc
-            })
-
-        except:
-            continue
-
-    if results:
-        df = pd.DataFrame(results)
-
-# Predictions - AI-Powered Stock Predictions
-import numpy as np
-import pandas as pd
-import yfinance as yf
-from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, LSTM
-from sklearn.model_selection import train_test_split
-import plotly.graph_objects as go
-import streamlit as st
-
-
-# Function to create the LSTM model
-def create_lstm_model(input_shape):
-    model = Sequential()
-    model.add(LSTM(units=50, return_sequences=True, input_shape=input_shape))
-    model.add(LSTM(units=50, return_sequences=False))
-    model.add(Dense(units=1))  # Output layer (1 unit for predicting closing price)
-    model.compile(optimizer='adam', loss='mean_squared_error')
-    return model
-
-
-# Function for LSTM prediction
-def predict_with_lstm(data):
-    # Step 1: Preprocess data
-    data = data[['Close']]  # We only need the closing prices for prediction
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    scaled_data = scaler.fit_transform(data)
-
-    # Step 2: Prepare the data for LSTM input
-    X = []
-    y = []
-    look_back = 60  # Look-back window of 60 days
-
-    for i in range(look_back, len(scaled_data)):
-        X.append(scaled_data[i - look_back:i, 0])
-        y.append(scaled_data[i, 0])
-
-    X = np.array(X)
-    y = np.array(y)
-
-    # Reshape X to be in the shape [samples, time steps, features] for LSTM input
-    X = np.reshape(X, (X.shape[0], X.shape[1], 1))
-
-    # Step 3: Split the data into training and test sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
-
-    # Step 4: Create and train the LSTM model
-    model = create_lstm_model((X_train.shape[1], 1))
-    model.fit(X_train, y_train, epochs=10, batch_size=32)
-
-    # Step 5: Predict the next 30 days closing prices
-    predictions = model.predict(X_test)
-    predictions = scaler.inverse_transform(predictions)  # Rescale to original values
-
-    # Prepare the predicted data as a DataFrame
-    prediction_dates = data.index[-len(predictions):]
-    prediction_df = pd.DataFrame(predictions, columns=['Predicted'], index=prediction_dates)
-
-    return prediction_df
-
-
-# Streamlit app UI
-st.title("📈 AI-Powered Stock Predictions")
-
-# Prediction Model Selection
-model_type = st.selectbox("Choose Prediction Model", ["LSTM (Long Short Term Memory)", "XGBoost"])
-
-# Stock Ticker input
-ticker_input = st.text_input("Enter Stock Ticker (e.g., AAPL, TSLA)", "AAPL")
-st.sidebar.info("The models predict next 30 days closing price for the given stock.")
-
-if ticker_input:
-    st.info(f"🔍 Fetching data for {ticker_input}...")
-
-    # Fetch Stock Data
-    data = yf.download(ticker_input, period="1y", interval="1d")
-
-    # Preprocess Data for Predictions
-    data['Date'] = pd.to_datetime(data.index)
-    data.set_index('Date', inplace=True)
-
-    # AI Model Predictions
-    if model_type == "LSTM (Long Short Term Memory)":
-        st.write("Using LSTM model for prediction...")
-        prediction = predict_with_lstm(data)  # This will predict using the LSTM model
-        st.write("Predicted Closing Prices for the Next 30 Days:")
-        st.dataframe(prediction)
-
-        # Visualize LSTM prediction
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=prediction.index, y=prediction['Predicted'], name='Predicted', mode='lines'))
-        fig.add_trace(go.Scatter(x=data.index, y=data['Close'], name='Actual', mode='lines', line=dict(color='red')))
-        fig.update_layout(title=f"LSTM Prediction vs Actual for {ticker_input}", xaxis_title="Date",
-                          yaxis_title="Price", template="plotly_dark")
-        st.plotly_chart(fig, use_container_width=True)
-
-# This is the Streamlit app structure, which integrates LSTM-based AI predictions
-
-# Buy/Sell Predictor - AI-Based Buy/Sell Predictor
-import numpy as np
-import pandas as pd
-import yfinance as yf
-from sklearn.preprocessing import MinMaxScaler
-import xgboost as xgb
-from sklearn.model_selection import train_test_split
-import plotly.graph_objects as go
-import streamlit as st
-
-
-# Function to fetch and prepare data
-def prepare_data(ticker):
-    data = yf.download(ticker, period="1y", interval="1d")
-    data['Date'] = pd.to_datetime(data.index)
-    data.set_index('Date', inplace=True)
-
-    # Feature engineering: Adding technical indicators (e.g., moving averages, RSI)
-    data['SMA_50'] = data['Close'].rolling(window=50).mean()
-    data['SMA_200'] = data['Close'].rolling(window=200).mean()
-    data['RSI'] = 100 - (100 / (1 + (data['Close'].diff(1).gt(0).rolling(window=14).mean() /
-                                     data['Close'].diff(1).lt(0).rolling(window=14).mean())))
-
-    # Drop missing values
-    data.dropna(inplace=True)
-
-    # Defining the target: 1 if price increases, 0 if price decreases
-    data['Target'] = (data['Close'].shift(-1) > data['Close']).astype(int)
-
-    # Features and target
-    X = data[['Close', 'SMA_50', 'SMA_200', 'RSI']]
-    y = data['Target']
-
-    # Scale the features
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    X_scaled = scaler.fit_transform(X)
-
-    return X_scaled, y, data
-
-
-# XGBoost model for Buy/Sell Prediction
-def train_buy_sell_model(X_train, y_train):
-    model = xgb.XGBClassifier(use_label_encoder=False, eval_metric='logloss')
-    model.fit(X_train, y_train)
-    return model
-
-
-# Prediction using XGBoost
-def predict_buy_sell(model, X_test):
-    return model.predict(X_test)
-
-
-# Streamlit UI for Buy/Sell Prediction
-st.title("📈 AI-Based Buy/Sell Stock Predictor")
-
-# Stock Ticker input
-ticker_input = st.text_input("Enter Stock Ticker (e.g., AAPL, TSLA)", "AAPL", key="stock_ticker_input")
-st.sidebar.info("The model predicts Buy/Sell signal based on stock price trends.")
-
-if ticker_input:
-    st.info(f"🔍 Fetching data for {ticker_input}...")
-
-    # Prepare Data
-    X, y, data = prepare_data(ticker_input)
-
-    # Split data into train and test sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
-
-    # Train the model
-    model = train_buy_sell_model(X_train, y_train)
-
-    # Make predictions
-    predictions = predict_buy_sell(model, X_test)
-
-    # Convert predictions to Buy/Sell signals
-    prediction_df = pd.DataFrame({'Date': data.index[-len(predictions):], 'Prediction': predictions})
-    prediction_df['Prediction'] = prediction_df['Prediction'].map({1: 'Buy', 0: 'Sell'})
-
-    st.write("Buy/Sell Predictions for the Stock:")
-    st.dataframe(prediction_df)
-
-    # Visualize the Buy/Sell predictions on stock price chart
-    fig = go.Figure()
-
-    fig.add_trace(go.Scatter(x=data.index, y=data['Close'], mode='lines', name='Stock Price', line=dict(color='blue')))
-
-    buy_signals = prediction_df[prediction_df['Prediction'] == 'Buy']
-    sell_signals = prediction_df[prediction_df['Prediction'] == 'Sell']
-
-    fig.add_trace(go.Scatter(x=buy_signals['Date'], y=data.loc[buy_signals['Date']]['Close'],
-                             mode='markers', name='Buy Signal',
-                             marker=dict(symbol='triangle-up', color='green', size=10)))
-
-    fig.add_trace(go.Scatter(x=sell_signals['Date'], y=data.loc[sell_signals['Date']]['Close'],
-                             mode='markers', name='Sell Signal',
-                             marker=dict(symbol='triangle-down', color='red', size=10)))
-
-    fig.update_layout(title=f"Buy/Sell Predictions for {ticker_input}",
-                      xaxis_title="Date", yaxis_title="Price", template="plotly_dark")
-    st.plotly_chart(fig, use_container_width=True)
 
 # News Sentiment - Sentiment Analysis of News
 elif selected == "News Sentiment":
@@ -553,3 +269,272 @@ elif selected == "News Sentiment":
                     st.markdown("**➖ Overall Sentiment: Neutral**")
         else:
             st.error("Failed to fetch news articles.")
+#company info----------------------------#
+import streamlit as st
+import yfinance as yf
+import pandas as pd
+
+# ✅ Define the function first
+def company_info_page():
+    st.title("📊 Company Info")
+
+    ticker = st.text_input("Enter Company Ticker (e.g., RELIANCE.NS)", "RELIANCE.NS")
+
+    if ticker:
+        try:
+            stock = yf.Ticker(ticker)
+            info = stock.info
+
+            # Company Overview
+            st.header(f"🏢 {info.get('longName', 'N/A')} ({info.get('symbol', ticker)})")
+
+            # Basic Info
+            col1, col2 = st.columns(2)
+            with col1:
+                st.subheader("📌 Basic Info")
+                st.write(pd.DataFrame({
+                    "Detail": [
+                        "Exchange", "Sector", "Industry", "Country", "Market Cap", "Volume",
+                        "52W High", "52W Low", "Dividend Yield", "Book Value", "Face Value"
+                    ],
+                    "Value": [
+                        info.get("exchange", "N/A"), info.get("sector", "N/A"), info.get("industry", "N/A"),
+                        info.get("country", "N/A"), info.get("marketCap", "N/A"), info.get("volume", "N/A"),
+                        info.get("fiftyTwoWeekHigh", "N/A"), info.get("fiftyTwoWeekLow", "N/A"),
+                        info.get("dividendYield", "N/A"), info.get("bookValue", "N/A"), info.get("faceValue", "N/A")
+                    ]
+                }))
+
+            with col2:
+                st.subheader("👔 Executive Info")
+                st.markdown(f"**CEO**: {info.get('CEO', 'N/A')}")
+                st.markdown(f"**Employees**: {info.get('fullTimeEmployees', 'N/A')}")
+                website = info.get('website', '')
+                if website:
+                    st.markdown(f"**Website**: [{website}]({website})")
+
+                st.subheader("📉 Financial Ratios (Simulated)")
+                st.write(pd.DataFrame({
+                    "Metric": ["PE Ratio", "PB Ratio", "EPS", "ROE", "ROCE", "Debt to Equity"],
+                    "Value": [22.5, 4.2, 85.3, "18.5%", "22.1%", "0.35"]
+                }))
+
+            # Shareholding Pattern (Simulated)
+            st.subheader("📊 Shareholding Pattern")
+            share_pattern = {
+                "Promoters": 49.5,
+                "FIIs": 24.2,
+                "DIIs": 13.4,
+                "Retail": 12.9
+            }
+            st.bar_chart(pd.Series(share_pattern))
+
+            # Company Summary
+            st.subheader("📘 About the Company")
+            st.write(info.get("longBusinessSummary", "No description available."))
+
+            # Competitor Comparison (Simulated)
+            st.subheader("🏁 Compare with Competitors")
+            competitors = [ticker, "TCS.NS", "INFY.NS"]
+            comp_data = {
+                "Company": competitors,
+                "PE Ratio": [22.5, 25.3, 30.1],
+                "PB Ratio": [4.2, 5.0, 6.2],
+                "ROE (%)": [18.5, 17.2, 19.5],
+                "ROCE (%)": [22.1, 21.3, 22.0],
+                "Debt/Equity": [0.35, 0.4, 0.3]
+            }
+            st.dataframe(pd.DataFrame(comp_data))
+
+            # Coming Soon
+            st.subheader("🗞️ News & Sentiment")
+            st.info("Live news & sentiment analysis coming in next version 🚀")
+
+        except Exception as e:
+            st.error(f"❌ Could not retrieve data for ticker: {e}")
+
+# ✅ THEN call the function in navigation
+if selected == "Company Info":
+    company_info_page()
+
+
+
+#------------------predictions page---------------------------------#
+# Predictions - Stock Price Prediction
+elif selected == "Predictions":
+    st.title("📈 Stock Price Predictions")
+
+    ticker = st.text_input("Enter Company Ticker (e.g., RELIANCE.NS)", "RELIANCE.NS")
+
+    if ticker:
+        try:
+            # Fetch stock data from Yahoo Finance
+            stock = yf.Ticker(ticker)
+            hist = stock.history(period="1y")  # 1 year of data
+
+            if hist.empty:
+                st.warning("No data available for this ticker.")
+            else:
+                # Show the most recent data
+                st.subheader(f"Recent Stock Data for {ticker}")
+                st.write(hist.tail())
+
+                # Plot the stock's historical closing price
+                st.subheader("📊 Stock Price History")
+                st.line_chart(hist["Close"])
+
+                # Calculate a simple moving average (SMA) for predictions
+                sma50 = hist["Close"].rolling(window=50).mean()
+                sma200 = hist["Close"].rolling(window=200).mean()
+
+                st.subheader("📉 Moving Averages")
+                st.line_chart(pd.DataFrame({
+                    "50-Day SMA": sma50,
+                    "200-Day SMA": sma200
+                }))
+
+                # Determine Buy/Sell signal based on SMA
+                st.subheader("🔍 Buy/Sell Signal")
+                current_price = hist["Close"].iloc[-1]
+                if sma50.iloc[-1] > sma200.iloc[-1]:
+                    st.success(
+                        f"📈 Signal: **BUY** - 50-day SMA is above 200-day SMA (Current Price: ₹{current_price:.2f})")
+                elif sma50.iloc[-1] < sma200.iloc[-1]:
+                    st.error(
+                        f"📉 Signal: **SELL** - 50-day SMA is below 200-day SMA (Current Price: ₹{current_price:.2f})")
+                else:
+                    st.warning(f"⏸️ Signal: **HOLD** - No clear trend (Current Price: ₹{current_price:.2f})")
+
+                # Show price data vs moving averages
+                st.subheader("📈 Price vs. Moving Averages")
+                st.line_chart(hist[["Close"]].join(pd.DataFrame({
+                    "50-Day SMA": sma50,
+                    "200-Day SMA": sma200
+                })))
+
+                # Optional: Machine learning-based predictions can be added here.
+                # For example, using a regression model or an LSTM for stock price prediction.
+
+        except Exception as e:
+            st.error(f"Error retrieving data: {e}")
+
+#----------------------Buy/Sell Predictor-------------#
+
+# Buy/Sell Predictor - Predict Buy or Sell Signal
+elif selected == "Buy/Sell Predictor":
+    st.title("💹 Buy/Sell Predictor")
+
+    # Input: Ticker symbol
+    ticker = st.text_input("Enter Company Ticker (e.g., RELIANCE.NS)", "RELIANCE.NS")
+
+    if ticker:
+        try:
+            # Fetch stock data from Yahoo Finance
+            stock = yf.Ticker(ticker)
+            hist = stock.history(period="1y")  # Fetch 1 year of data
+
+            if hist.empty:
+                st.warning("No data available for this ticker.")
+            else:
+                # Show the most recent data
+                st.subheader(f"Recent Stock Data for {ticker}")
+                st.write(hist.tail())
+
+                # Plot the stock's historical closing price
+                st.subheader("📊 Stock Price History")
+                st.line_chart(hist["Close"])
+
+                # Calculate Simple Moving Averages (SMA)
+                sma50 = hist["Close"].rolling(window=50).mean()
+                sma200 = hist["Close"].rolling(window=200).mean()
+
+                st.subheader("📉 Moving Averages")
+                st.line_chart(pd.DataFrame({
+                    "50-Day SMA": sma50,
+                    "200-Day SMA": sma200
+                }))
+
+                # Calculate Relative Strength Index (RSI) for additional signal
+                delta = hist["Close"].diff()
+                gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+                loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+                rs = gain / loss
+                rsi = 100 - (100 / (1 + rs))
+
+                st.subheader("📈 RSI (Relative Strength Index)")
+                st.line_chart(rsi)
+
+                # Calculate Buy/Sell signal
+                current_price = hist["Close"].iloc[-1]
+                signal = ""
+
+                # Simple Buy/Sell logic based on Moving Averages and RSI
+                if sma50.iloc[-1] > sma200.iloc[-1] and rsi.iloc[-1] < 30:
+                    signal = "Buy"
+                    st.success(f"📈 Signal: **BUY** (Current Price: ₹{current_price:.2f}) - 50-day SMA is above 200-day SMA and RSI is below 30.")
+                elif sma50.iloc[-1] < sma200.iloc[-1] and rsi.iloc[-1] > 70:
+                    signal = "Sell"
+                    st.error(f"📉 Signal: **SELL** (Current Price: ₹{current_price:.2f}) - 50-day SMA is below 200-day SMA and RSI is above 70.")
+                else:
+                    signal = "Hold"
+                    st.warning(f"⏸️ Signal: **HOLD** (Current Price: ₹{current_price:.2f}) - No clear trend.")
+
+                # Show price data vs moving averages and RSI
+                st.subheader("📊 Price vs. Indicators")
+                st.line_chart(hist[["Close"]].join(pd.DataFrame({
+                    "50-Day SMA": sma50,
+                    "200-Day SMA": sma200,
+                    "RSI": rsi
+                })))
+
+        except Exception as e:
+            st.error(f"Error retrieving data: {e}")
+
+# Stock Screener - Default 15 companies, or user input for custom tickers
+elif selected == "Stock Screener":
+    st.title("📊 Stock Screener")
+
+    # Predefined list of 15 companies (Nifty 50 or a custom list of top companies)
+    default_companies = [
+        'RELIANCE.NS', 'TCS.NS', 'INFY.NS', 'HDFCBANK.NS', 'ICICIBANK.NS', 'SBIN.NS', 'HINDUNILVR.NS',
+        'BAJAJFINSV.NS', 'HDFC.NS', 'KOTAKBANK.NS', 'BHARTIARTL.NS', 'ITC.NS', 'AXISBANK.NS', 'MARUTI.NS', 'LT.NS'
+    ]
+
+    # Ask user whether they want to use the default list or input custom tickers
+    choice = st.radio("Choose an option:", ("Use Default List", "Input Custom Tickers"))
+
+    if choice == "Use Default List":
+        # Display the stock data for the default 15 companies
+        st.subheader("Showing 15 Default Companies")
+        data = {}
+
+        for ticker in default_companies:
+            stock_data = yf.Ticker(ticker).history(period="1d")['Close']
+            if not stock_data.empty:
+                data[ticker] = stock_data.iloc[-1]
+            else:
+                data[ticker] = "No Data"
+
+        # Display the data as a dataframe
+        st.dataframe(pd.DataFrame(data.items(), columns=["Stock", "Price"]))
+
+    elif choice == "Input Custom Tickers":
+        # Input box for user to enter their own tickers
+        tickers_input = st.text_area("Enter stock tickers (separated by space or comma):", "")
+        if tickers_input:
+            tickers_list = [ticker.strip() for ticker in tickers_input.split() if ticker.strip()]
+            if len(tickers_list) > 0:
+                st.subheader("Showing Custom Tickers")
+                data = {}
+
+                for ticker in tickers_list:
+                    stock_data = yf.Ticker(ticker).history(period="1d")['Close']
+                    if not stock_data.empty:
+                        data[ticker] = stock_data.iloc[-1]
+                    else:
+                        data[ticker] = "No Data"
+
+                # Display the custom tickers data
+                st.dataframe(pd.DataFrame(data.items(), columns=["Stock", "Price"]))
+            else:
+                st.warning("Please enter valid stock tickers.")
