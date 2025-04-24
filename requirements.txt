@@ -17,5 +17,6 @@ datetime
 python-dotenv
 tqdm
 openpyxl
+streamlit-option-menu
 fpdf
 seaborn
