@@ -8,12 +8,21 @@ import requests
 from plotly import graph_objects as go
 from streamlit_option_menu import option_menu  # Import the option_menu
 from textblob import TextBlob
-import streamlit as st
+from xgboost import XGBRegressor
+from datetime import timedelta
 import yfinance as yf
 import pandas as pd
 import plotly.graph_objects as go
-from xgboost import XGBRegressor
-from datetime import timedelta
+import streamlit as st
+import numpy as np
+import pandas as pd
+import yfinance as yf
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, LSTM
+from sklearn.model_selection import train_test_split
+import plotly.graph_objects as go
+import streamlit as st
 
 # News API Key
 NEWS_API_KEY = "0b08be107dca45d3be30ca7e06544408"
@@ -111,17 +120,26 @@ elif selected == "Sectors":
 
 # News - Latest Financial News
 elif selected == "News":
-    st.title("\U0001F4F0 Latest Financial News")
-    url = f"https://newsapi.org/v2/top-headlines?country=in&category=business&apiKey={NEWS_API_KEY}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        for article in response.json().get("articles", [])[:10]:
-            st.subheader(article['title'])
-            st.write(article['description'])
-            st.markdown(f"[Read more]({article['url']})")
-            st.markdown("---")
-    else:
-        st.error("Failed to fetch news, try again later.")
+    st.title("📰 Latest Financial News")
+    news_query = st.text_input("Search Financial News:", "stock market")
+
+    if news_query:
+        url = f"https://newsapi.org/v2/everything?q={news_query}&apiKey={NEWS_API_KEY}&language=en&sortBy=publishedAt&pageSize=10"
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            articles = response.json().get("articles", [])
+            if articles:
+                for article in articles:
+                    st.markdown("----")
+                    st.subheader(article["title"])
+                    st.write(f"*{article['source']['name']} - {article['publishedAt'].split('T')[0]}*")
+                    st.write(article.get("description", "No description available."))
+                    st.markdown(f"[🔗 Read More]({article['url']})")
+            else:
+                st.warning("No articles found.")
+        else:
+            st.error("Unable to fetch news articles. Please check API or query.")
 
 # Company Info - Stock Details
 elif selected == "Company Info":
@@ -193,96 +211,313 @@ elif selected == "Learning":
 
 # Volume Spike - Stock Volume Insights
 elif selected == "Volume Spike":
-    st.title("\U0001F4C8 Volume Spike Analysis")
-    st.info("Volume spike analysis is coming soon!")
+    st.title("📈 Volume Spike Detector")
+
+    ticker = st.text_input("Enter Stock Ticker (e.g., TCS.NS, INFY.NS):", "TCS.NS")
+    days = st.slider("Select Days of Historical Data:", 30, 365, 90)
+
+    if ticker:
+        try:
+            # Download historical data
+            data = yf.download(ticker, period=f"{days}d")
+
+            if data.empty:
+                st.warning("No data found. Please check the ticker symbol.")
+            else:
+                # Compute 10-day average volume
+                data["Avg_Volume"] = data["Volume"].rolling(window=10).mean()
+                data["Spike"] = data["Volume"] > (1.5 * data["Avg_Volume"])
+                data.dropna(subset=["Avg_Volume"], inplace=True)
+
+                st.markdown("### 🚀 Volume Spike Chart")
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(x=data.index, y=data["Volume"],
+                                         mode='lines', name='Volume', line=dict(color='blue')))
+                fig.add_trace(go.Scatter(x=data.index, y=data["Avg_Volume"],
+                                         mode='lines', name='10-Day Avg Volume', line=dict(color='orange')))
+
+                # Highlight spikes
+                spike_data = data[data["Spike"]]
+                fig.add_trace(go.Scatter(x=spike_data.index, y=spike_data["Volume"],
+                                         mode='markers', name='Volume Spikes',
+                                         marker=dict(size=10, color='red', symbol='star')))
+
+                fig.update_layout(title=f"Volume Spike Analysis for {ticker}",
+                                  xaxis_title="Date",
+                                  yaxis_title="Volume",
+                                  template="plotly_dark",
+                                  height=500)
+                st.plotly_chart(fig, use_container_width=True)
+
+                st.markdown("### 🔍 Spike Events")
+                st.dataframe(spike_data[["Volume", "Avg_Volume"]].style.format("{:,.0f}"), use_container_width=True)
+
+        except Exception as e:
+            st.error(f"Error occurred: {e}")
 
 # Stock Screener - Filter Stocks Based on Criteria
 elif selected == "Screener":
-    st.title("\U0001F50E Stock Screener")
-    st.info("Stock screener is under development. Stay tuned for more!")
+    st.title("🧠 Smart Stock Screener")
+
+    # Screener criteria inputs
+    st.sidebar.header("📌 Filter Criteria")
+    market_cap = st.sidebar.selectbox("Market Cap", ["All", "Large Cap", "Mid Cap", "Small Cap"])
+    pe_min = st.sidebar.number_input("Min PE Ratio", value=0.0)
+    pe_max = st.sidebar.number_input("Max PE Ratio", value=50.0)
+    price_range = st.sidebar.slider("Price Range (₹)", 10, 5000, (50, 1000))
+    volume_min = st.sidebar.number_input("Minimum Daily Volume", value=100000)
+
+    # Example NSE tickers list (replace with a full list or CSV)
+    tickers = {
+        "RELIANCE.NS": "Reliance",
+        "TCS.NS": "TCS",
+        "INFY.NS": "Infosys",
+        "HDFCBANK.NS": "HDFC Bank",
+        "ICICIBANK.NS": "ICICI Bank",
+        "LT.NS": "L&T",
+        "SBIN.NS": "SBI",
+    }
+
+    results = []
+
+    st.info("🔍 Scanning Stocks... Please wait.")
+    for ticker, name in tickers.items():
+        try:
+            stock = yf.Ticker(ticker)
+            info = stock.info
+
+            pe = info.get("trailingPE", None)
+            mc = info.get("marketCap", 0)
+            price = info.get("regularMarketPrice", 0)
+            volume = info.get("volume", 0)
+
+            if not pe or pe < pe_min or pe > pe_max:
+                continue
+            if price < price_range[0] or price > price_range[1]:
+                continue
+            if volume < volume_min:
+                continue
+            if market_cap == "Large Cap" and mc < 200000000000:
+                continue
+            if market_cap == "Mid Cap" and (mc < 50000000000 or mc > 200000000000):
+                continue
+            if market_cap == "Small Cap" and mc > 50000000000:
+                continue
+
+            results.append({
+                "Ticker": ticker,
+                "Name": name,
+                "Price": price,
+                "PE Ratio": pe,
+                "Volume": volume,
+                "Market Cap": mc
+            })
+
+        except:
+            continue
+
+    if results:
+        df = pd.DataFrame(results)
 
 # Predictions - AI-Powered Stock Predictions
-elif selected == "Predictions":
-    st.title("🤖 AI-Based Stock Predictions")
+import numpy as np
+import pandas as pd
+import yfinance as yf
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, LSTM
+from sklearn.model_selection import train_test_split
+import plotly.graph_objects as go
+import streamlit as st
 
-    ticker = st.text_input("Enter Stock Ticker for Prediction:", "AAPL")
 
-    if ticker:
-        st.info(f"Fetching and predicting for {ticker.upper()}...")
+# Function to create the LSTM model
+def create_lstm_model(input_shape):
+    model = Sequential()
+    model.add(LSTM(units=50, return_sequences=True, input_shape=input_shape))
+    model.add(LSTM(units=50, return_sequences=False))
+    model.add(Dense(units=1))  # Output layer (1 unit for predicting closing price)
+    model.compile(optimizer='adam', loss='mean_squared_error')
+    return model
 
-        # Fetch data
-        data = yf.download(ticker, period="6mo", interval="1d")
-        if data.empty:
-            st.warning("No data found for the ticker.")
-        else:
-            # Feature engineering
-            data['Return'] = data['Close'].pct_change()
-            data['Lag1'] = data['Close'].shift(1)
-            data['Lag2'] = data['Close'].shift(2)
-            data['Lag3'] = data['Close'].shift(3)
-            data.dropna(inplace=True)
 
-            # Define features and target
-            features = data[['Lag1', 'Lag2', 'Lag3']]
-            target = data['Close']
+# Function for LSTM prediction
+def predict_with_lstm(data):
+    # Step 1: Preprocess data
+    data = data[['Close']]  # We only need the closing prices for prediction
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    scaled_data = scaler.fit_transform(data)
 
-            # Split into train and test
-            X_train, X_test = features[:-1], features[-1:]
-            y_train = target[:-1]
+    # Step 2: Prepare the data for LSTM input
+    X = []
+    y = []
+    look_back = 60  # Look-back window of 60 days
 
-            # Train a simple XGBoost regressor
-            model = XGBRegressor(n_estimators=100, max_depth=3)
-            model.fit(X_train, y_train)
+    for i in range(look_back, len(scaled_data)):
+        X.append(scaled_data[i - look_back:i, 0])
+        y.append(scaled_data[i, 0])
 
-            # Predict
-            predicted_price = model.predict(X_test)[0]
-            st.success(f"📈 Predicted Next Close Price for {ticker.upper()}: **${predicted_price:.2f}**")
+    X = np.array(X)
+    y = np.array(y)
 
-            # Plot
-            st.subheader("📊 Historical vs Predicted Price")
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=data.index, y=data['Close'], mode='lines', name='Historical Close'))
-            fig.add_trace(go.Scatter(x=[data.index[-1] + timedelta(days=1)],
-                                     y=[predicted_price], mode='markers+text',
-                                     text=["Predicted"], name='Prediction',
-                                     marker=dict(color='red', size=10)))
-            st.plotly_chart(fig, use_container_width=True)
+    # Reshape X to be in the shape [samples, time steps, features] for LSTM input
+    X = np.reshape(X, (X.shape[0], X.shape[1], 1))
+
+    # Step 3: Split the data into training and test sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
+
+    # Step 4: Create and train the LSTM model
+    model = create_lstm_model((X_train.shape[1], 1))
+    model.fit(X_train, y_train, epochs=10, batch_size=32)
+
+    # Step 5: Predict the next 30 days closing prices
+    predictions = model.predict(X_test)
+    predictions = scaler.inverse_transform(predictions)  # Rescale to original values
+
+    # Prepare the predicted data as a DataFrame
+    prediction_dates = data.index[-len(predictions):]
+    prediction_df = pd.DataFrame(predictions, columns=['Predicted'], index=prediction_dates)
+
+    return prediction_df
+
+
+# Streamlit app UI
+st.title("📈 AI-Powered Stock Predictions")
+
+# Prediction Model Selection
+model_type = st.selectbox("Choose Prediction Model", ["LSTM (Long Short Term Memory)", "XGBoost"])
+
+# Stock Ticker input
+ticker_input = st.text_input("Enter Stock Ticker (e.g., AAPL, TSLA)", "AAPL")
+st.sidebar.info("The models predict next 30 days closing price for the given stock.")
+
+if ticker_input:
+    st.info(f"🔍 Fetching data for {ticker_input}...")
+
+    # Fetch Stock Data
+    data = yf.download(ticker_input, period="1y", interval="1d")
+
+    # Preprocess Data for Predictions
+    data['Date'] = pd.to_datetime(data.index)
+    data.set_index('Date', inplace=True)
+
+    # AI Model Predictions
+    if model_type == "LSTM (Long Short Term Memory)":
+        st.write("Using LSTM model for prediction...")
+        prediction = predict_with_lstm(data)  # This will predict using the LSTM model
+        st.write("Predicted Closing Prices for the Next 30 Days:")
+        st.dataframe(prediction)
+
+        # Visualize LSTM prediction
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=prediction.index, y=prediction['Predicted'], name='Predicted', mode='lines'))
+        fig.add_trace(go.Scatter(x=data.index, y=data['Close'], name='Actual', mode='lines', line=dict(color='red')))
+        fig.update_layout(title=f"LSTM Prediction vs Actual for {ticker_input}", xaxis_title="Date",
+                          yaxis_title="Price", template="plotly_dark")
+        st.plotly_chart(fig, use_container_width=True)
+
+# This is the Streamlit app structure, which integrates LSTM-based AI predictions
 
 # Buy/Sell Predictor - AI-Based Buy/Sell Predictor
-elif selected == "Buy/Sell Predictor":
-    st.title("\U0001F91D Buy/Sell Predictor - AI Recommendation")
-    ticker = st.text_input("Enter Stock Ticker for Buy/Sell Analysis:", "AAPL")
-    if ticker:
-        try:
-            data = yf.download(ticker, period="3mo", interval="1d")
-            data['SMA20'] = data['Close'].rolling(window=20).mean()
-            data['SMA50'] = data['Close'].rolling(window=50).mean()
+import numpy as np
+import pandas as pd
+import yfinance as yf
+from sklearn.preprocessing import MinMaxScaler
+import xgboost as xgb
+from sklearn.model_selection import train_test_split
+import plotly.graph_objects as go
+import streamlit as st
 
-            st.subheader("📊 Price Chart with SMA20 & SMA50")
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=data.index, y=data['Close'], name="Close Price"))
-            fig.add_trace(go.Scatter(x=data.index, y=data['SMA20'], name="SMA 20"))
-            fig.add_trace(go.Scatter(x=data.index, y=data['SMA50'], name="SMA 50"))
-            fig.update_layout(title=f"{ticker.upper()} Buy/Sell Strategy", xaxis_title="Date", yaxis_title="Price")
-            st.plotly_chart(fig, use_container_width=True)
 
-            latest_close = data['Close'].iloc[-1]
-            latest_sma20 = data['SMA20'].iloc[-1]
-            latest_sma50 = data['SMA50'].iloc[-1]
+# Function to fetch and prepare data
+def prepare_data(ticker):
+    data = yf.download(ticker, period="1y", interval="1d")
+    data['Date'] = pd.to_datetime(data.index)
+    data.set_index('Date', inplace=True)
 
-            if latest_sma20 > latest_sma50 and latest_close > latest_sma20:
-                st.success("✅ Recommendation: **BUY** (Uptrend confirmed)")
-            elif latest_sma20 < latest_sma50 and latest_close < latest_sma20:
-                st.error("❌ Recommendation: **SELL** (Downtrend detected)")
-            else:
-                st.warning("⚠️ Recommendation: **HOLD** (No clear trend)")
+    # Feature engineering: Adding technical indicators (e.g., moving averages, RSI)
+    data['SMA_50'] = data['Close'].rolling(window=50).mean()
+    data['SMA_200'] = data['Close'].rolling(window=200).mean()
+    data['RSI'] = 100 - (100 / (1 + (data['Close'].diff(1).gt(0).rolling(window=14).mean() /
+                                     data['Close'].diff(1).lt(0).rolling(window=14).mean())))
 
-            st.markdown(f"**Current Price:** ${round(latest_close, 2)}")
-            st.markdown(f"**SMA 20:** ${round(latest_sma20, 2)}")
-            st.markdown(f"**SMA 50:** ${round(latest_sma50, 2)}")
+    # Drop missing values
+    data.dropna(inplace=True)
 
-        except Exception as e:
-            st.error(f"Error fetching data: {e}")
+    # Defining the target: 1 if price increases, 0 if price decreases
+    data['Target'] = (data['Close'].shift(-1) > data['Close']).astype(int)
+
+    # Features and target
+    X = data[['Close', 'SMA_50', 'SMA_200', 'RSI']]
+    y = data['Target']
+
+    # Scale the features
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    X_scaled = scaler.fit_transform(X)
+
+    return X_scaled, y, data
+
+
+# XGBoost model for Buy/Sell Prediction
+def train_buy_sell_model(X_train, y_train):
+    model = xgb.XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+    model.fit(X_train, y_train)
+    return model
+
+
+# Prediction using XGBoost
+def predict_buy_sell(model, X_test):
+    return model.predict(X_test)
+
+
+# Streamlit UI for Buy/Sell Prediction
+st.title("📈 AI-Based Buy/Sell Stock Predictor")
+
+# Stock Ticker input
+ticker_input = st.text_input("Enter Stock Ticker (e.g., AAPL, TSLA)", "AAPL", key="stock_ticker_input")
+st.sidebar.info("The model predicts Buy/Sell signal based on stock price trends.")
+
+if ticker_input:
+    st.info(f"🔍 Fetching data for {ticker_input}...")
+
+    # Prepare Data
+    X, y, data = prepare_data(ticker_input)
+
+    # Split data into train and test sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
+
+    # Train the model
+    model = train_buy_sell_model(X_train, y_train)
+
+    # Make predictions
+    predictions = predict_buy_sell(model, X_test)
+
+    # Convert predictions to Buy/Sell signals
+    prediction_df = pd.DataFrame({'Date': data.index[-len(predictions):], 'Prediction': predictions})
+    prediction_df['Prediction'] = prediction_df['Prediction'].map({1: 'Buy', 0: 'Sell'})
+
+    st.write("Buy/Sell Predictions for the Stock:")
+    st.dataframe(prediction_df)
+
+    # Visualize the Buy/Sell predictions on stock price chart
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(x=data.index, y=data['Close'], mode='lines', name='Stock Price', line=dict(color='blue')))
+
+    buy_signals = prediction_df[prediction_df['Prediction'] == 'Buy']
+    sell_signals = prediction_df[prediction_df['Prediction'] == 'Sell']
+
+    fig.add_trace(go.Scatter(x=buy_signals['Date'], y=data.loc[buy_signals['Date']]['Close'],
+                             mode='markers', name='Buy Signal',
+                             marker=dict(symbol='triangle-up', color='green', size=10)))
+
+    fig.add_trace(go.Scatter(x=sell_signals['Date'], y=data.loc[sell_signals['Date']]['Close'],
+                             mode='markers', name='Sell Signal',
+                             marker=dict(symbol='triangle-down', color='red', size=10)))
+
+    fig.update_layout(title=f"Buy/Sell Predictions for {ticker_input}",
+                      xaxis_title="Date", yaxis_title="Price", template="plotly_dark")
+    st.plotly_chart(fig, use_container_width=True)
 
 # News Sentiment - Sentiment Analysis of News
 elif selected == "News Sentiment":
