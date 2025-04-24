@@ -34,7 +34,7 @@ st.set_page_config(page_title="Smart Stock Market Dashboard", layout="wide")
 with st.sidebar:
     selected = option_menu(
         "Smart Market Dashboard",
-        ["Home", "Company Info", "Market Movers", "Global Markets", "Mutual Funds", "Sectors", "News", "Learning", "Volume Spike", "Stock Screener", "Predictions", "Buy/Sell Predictor", "News Sentiment"],
+        ["Home", "Company Info", "Market Movers", "Global Markets", "Mutual Funds", "SIP Calculator","IPO Tracker","Predictions for Mutual Funds & IPOs","Mutual Fund NAV Viewer","Sectors", "News", "Learning", "Volume Spike", "Stock Screener", "Predictions", "Buy/Sell Predictor", "News Sentiment"],
         icons=['house', 'graph-up', 'globe', 'bank', 'boxes', 'newspaper', 'building', 'book', 'activity', 'search'],
         menu_icon="cast",
         default_index=0
@@ -538,3 +538,227 @@ elif selected == "Stock Screener":
                 st.dataframe(pd.DataFrame(data.items(), columns=["Stock", "Price"]))
             else:
                 st.warning("Please enter valid stock tickers.")
+
+#----------------Mutual Fund----------------#
+
+elif selected == "Mutual Funds":
+    st.title("💼 Mutual Funds Overview")
+
+    import requests
+
+    scheme_code = "118550"
+    url = f"https://api.mfapi.in/mf/{scheme_code}"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        scheme_name = data['meta']['scheme_name']
+        nav_data = data['data']
+        nav_df = pd.DataFrame(nav_data)
+        nav_df['nav'] = nav_df['nav'].astype(float)
+        nav_df['date'] = pd.to_datetime(nav_df['date'], format='%d-%m-%Y')
+        nav_df = nav_df.sort_values('date')
+
+        st.subheader(f"{scheme_name}")
+        st.write(f"Latest NAV: ₹{nav_df.iloc[-1]['nav']} as of {nav_df.iloc[-1]['date'].date()}")
+        st.line_chart(nav_df.set_index('date')['nav'])
+    else:
+        st.error("Failed to fetch mutual fund data.")
+
+
+        #----------------------SIP Calculator--------------------------------#
+
+elif selected == "SIP Calculator":
+    st.title("📈 SIP Calculator")
+
+    monthly_investment = st.number_input("Monthly Investment (₹)", value=5000)
+    years = st.slider("Investment Duration (Years)", 1, 30, 10)
+    expected_return = st.slider("Expected Annual Return (%)", 1, 25, 12)
+
+    months = years * 12
+    monthly_rate = expected_return / 12 / 100
+
+    future_value = monthly_investment * (((1 + monthly_rate)**months - 1) * (1 + monthly_rate)) / monthly_rate
+    invested = monthly_investment * months
+    gain = future_value - invested
+
+    st.success(f"📊 Future Value: ₹{future_value:,.2f}")
+    st.info(f"💰 Invested: ₹{invested:,.2f}")
+    st.warning(f"📈 Estimated Gains: ₹{gain:,.2f}")
+
+#--------------------------IP0 Tracker------------------------------------------#
+
+elif selected == "IPO Tracker":
+    st.title("🆕 IPO Tracker")
+
+    ipo_data = pd.DataFrame({
+        "Company": ["ABC Tech", "SmartFin Ltd", "GreenPower", "NetPay Corp"],
+        "Issue Price (₹)": [100, 240, 150, 280],
+        "Current Price (₹)": [145, 190, 170, 260],
+        "Gain/Loss (%)": [45, -20.8, 13.3, -7.1],
+        "Sentiment": ["Bullish", "Bearish", "Neutral", "Bearish"]
+    })
+
+    st.dataframe(ipo_data)
+    st.bar_chart(ipo_data.set_index("Company")["Gain/Loss (%)"])
+
+#------------------------------Predictions for Mutual Funds & IPOs------------------------------------#
+elif selected == "Predictions for Mutual Funds & IPOs":
+    st.title("🔮 Predictions for Mutual Funds & IPOs")
+
+    st.subheader("📊 Mutual Fund NAV Forecast (Simulated)")
+    import numpy as np
+    dates = pd.date_range(start=pd.to_datetime("2023-01-01"), periods=12, freq='M')
+    navs = np.linspace(100, 160, 12) + np.random.normal(0, 2, 12)
+
+    nav_forecast = pd.DataFrame({'Month': dates, 'Predicted NAV': navs})
+    nav_forecast.set_index("Month", inplace=True)
+    st.line_chart(nav_forecast)
+
+    st.subheader("🚀 IPO Price Movement Prediction (Simulated)")
+    ipo_prediction = pd.DataFrame({
+        "IPO": ["ABC Tech", "SmartFin Ltd", "GreenPower"],
+        "Predicted Return (%)": [20.5, -5.2, 12.7]
+    })
+    st.dataframe(ipo_prediction)
+
+
+#---------------------------------------------------Mutual Fund Nav Viewver code-------------------------------------#
+# 📈 Mutual Funds - Live NAV
+elif selected == "Mutual Fund NAV Viewer":
+    st.title("📈 Mutual Fund NAV Viewer")
+
+    # Default scheme code for Axis Bluechip Fund
+    scheme_code = st.text_input("Enter Mutual Fund Scheme Code (e.g. 118550)", "118550")
+
+    if scheme_code:
+        try:
+            api_url = f"https://api.mfapi.in/mf/{scheme_code}"
+            response = requests.get(api_url)
+
+            if response.status_code == 200:
+                nav_data = response.json()
+                st.subheader(f"🔷 {nav_data['meta']['scheme_name']}")
+
+                # Prepare NAV DataFrame
+                nav_df = pd.DataFrame(nav_data['data'])
+                nav_df['nav'] = nav_df['nav'].astype(float)
+                nav_df['date'] = pd.to_datetime(nav_df['date'])
+                nav_df = nav_df.sort_values(by='date', ascending=False)
+
+                # Show latest NAV
+                st.metric(label="📊 Latest NAV", value=f"₹{nav_df.iloc[0]['nav']}", delta=None)
+
+                # Line Chart for NAV
+                st.subheader("📉 NAV Trend (Last 30 Days)")
+                st.line_chart(nav_df.set_index('date')['nav'].head(30).sort_index())
+
+                # Show Data Table
+                with st.expander("🔍 View All NAVs"):
+                    st.dataframe(nav_df[['date', 'nav']].rename(columns={'date': 'Date', 'nav': 'NAV'}))
+
+            else:
+                st.error("⚠️ Failed to fetch mutual fund data. Please check the scheme code.")
+        except Exception as e:
+            st.error(f"❌ Error: {e}")
+
+
+
+#-------------------------------Company Management Deatils Info---------------------------#
+def company_info_page():
+    st.title("📊 Company Info with Employee & Management Details")
+
+    # Add unique key to avoid duplicate element error
+    ticker = st.text_input("Enter Company Ticker (e.g., RELIANCE.NS)", "RELIANCE.NS", key="company_ticker_input")
+
+    if ticker:
+        try:
+            stock = yf.Ticker(ticker)
+            info = stock.info
+
+            # Company Overview
+            st.header(f"🏢 {info.get('longName', 'N/A')} ({info.get('symbol', ticker)})")
+
+            # Basic Info
+            col1, col2 = st.columns(2)
+            with col1:
+                st.subheader("📌 Basic Info")
+                st.write(pd.DataFrame({
+                    "Detail": [
+                        "Exchange", "Sector", "Industry", "Country", "Market Cap", "Volume",
+                        "52W High", "52W Low", "Dividend Yield", "Book Value", "Face Value"
+                    ],
+                    "Value": [
+                        info.get("exchange", "N/A"), info.get("sector", "N/A"), info.get("industry", "N/A"),
+                        info.get("country", "N/A"), info.get("marketCap", "N/A"), info.get("volume", "N/A"),
+                        info.get("fiftyTwoWeekHigh", "N/A"), info.get("fiftyTwoWeekLow", "N/A"),
+                        info.get("dividendYield", "N/A"), info.get("bookValue", "N/A"), info.get("faceValue", "N/A")
+                    ]
+                }))
+
+            with col2:
+                st.subheader("👔 Executive Info")
+                st.markdown(f"**CEO**: {info.get('CEO', 'N/A')}")
+                st.markdown(f"**Employees**: {info.get('fullTimeEmployees', 'N/A')}")
+                website = info.get('website', '')
+                if website:
+                    st.markdown(f"**Website**: [{website}]({website})")
+
+            # Simulated Higher Management Details (Age, Salary, Contact, LinkedIn, etc.)
+            st.subheader("🏢 Higher Management")
+            higher_management = {
+                "Name": ["John Doe", "Jane Smith", "Michael Johnson"],
+                "Position": ["CEO", "CFO", "COO"],
+                "Age": [48, 52, 45],
+                "Salary (in ₹)": ["₹2,50,00,000", "₹2,10,00,000", "₹1,80,00,000"],
+                "Email": ["johndoe@company.com", "janesmith@company.com", "michaelj@company.com"],
+                "Contact": ["+91 123 456 7890", "+91 987 654 3210", "+91 555 123 4567"],
+                "LinkedIn": [
+                    "https://www.linkedin.com/in/johndoe/",
+                    "https://www.linkedin.com/in/janesmith/",
+                    "https://www.linkedin.com/in/michaeljohnson/"
+                ]
+            }
+
+            # Create DataFrame for Higher Management Details
+            management_df = pd.DataFrame(higher_management)
+
+            st.dataframe(management_df)
+
+            # Shareholding Pattern (Simulated)
+            st.subheader("📊 Shareholding Pattern")
+            share_pattern = {
+                "Promoters": 49.5,
+                "FIIs": 24.2,
+                "DIIs": 13.4,
+                "Retail": 12.9
+            }
+            st.bar_chart(pd.Series(share_pattern))
+
+            # Company Summary
+            st.subheader("📘 About the Company")
+            st.write(info.get("longBusinessSummary", "No description available."))
+
+            # Competitor Comparison (Simulated)
+            st.subheader("🏁 Compare with Competitors")
+            competitors = [ticker, "TCS.NS", "INFY.NS"]
+            comp_data = {
+                "Company": competitors,
+                "PE Ratio": [22.5, 25.3, 30.1],
+                "PB Ratio": [4.2, 5.0, 6.2],
+                "ROE (%)": [18.5, 17.2, 19.5],
+                "ROCE (%)": [22.1, 21.3, 22.0],
+                "Debt/Equity": [0.35, 0.4, 0.3]
+            }
+            st.dataframe(pd.DataFrame(comp_data))
+
+            # Coming Soon
+            st.subheader("🗞️ News & Sentiment")
+            st.info("Live news & sentiment analysis coming in next version 🚀")
+
+        except Exception as e:
+            st.error(f"❌ Could not retrieve data for ticker: {e}")
+
+# Add this part in your navigation section:
+if selected == "Company Info":
+    company_info_page()
