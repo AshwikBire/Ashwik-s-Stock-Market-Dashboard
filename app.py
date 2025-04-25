@@ -34,7 +34,7 @@ st.set_page_config(page_title="Smart Stock Market Dashboard", layout="wide")
 with st.sidebar:
     selected = option_menu(
         "Smart Market Dashboard",
-        ["Home", "Company Info", "Market Movers", "Global Markets", "Mutual Funds", "SIP Calculator","IPO Tracker","Predictions for Mutual Funds & IPOs","Mutual Fund NAV Viewer","Sectors", "News", "Learning", "Volume Spike", "Stock Screener", "Predictions", "Buy/Sell Predictor", "News Sentiment"],
+        ["Home","Company Overview", "Market Movers", "F&O", "Global Markets", "Mutual Funds", "SIP Calculator","IPO Tracker","Predictions for Mutual Funds & IPOs","Mutual Fund NAV Viewer","Sectors", "News", "Learning", "Volume Spike", "Stock Screener", "Predictions", "Buy/Sell Predictor", "News Sentiment"],
         icons=['house', 'graph-up', 'globe', 'bank', 'boxes', 'newspaper', 'building', 'book', 'activity', 'search'],
         menu_icon="cast",
         default_index=0
@@ -269,93 +269,6 @@ elif selected == "News Sentiment":
                     st.markdown("**➖ Overall Sentiment: Neutral**")
         else:
             st.error("Failed to fetch news articles.")
-#company info----------------------------#
-import streamlit as st
-import yfinance as yf
-import pandas as pd
-
-# ✅ Define the function first
-def company_info_page():
-    st.title("📊 Company Info")
-
-    ticker = st.text_input("Enter Company Ticker (e.g., RELIANCE.NS)", "RELIANCE.NS")
-
-    if ticker:
-        try:
-            stock = yf.Ticker(ticker)
-            info = stock.info
-
-            # Company Overview
-            st.header(f"🏢 {info.get('longName', 'N/A')} ({info.get('symbol', ticker)})")
-
-            # Basic Info
-            col1, col2 = st.columns(2)
-            with col1:
-                st.subheader("📌 Basic Info")
-                st.write(pd.DataFrame({
-                    "Detail": [
-                        "Exchange", "Sector", "Industry", "Country", "Market Cap", "Volume",
-                        "52W High", "52W Low", "Dividend Yield", "Book Value", "Face Value"
-                    ],
-                    "Value": [
-                        info.get("exchange", "N/A"), info.get("sector", "N/A"), info.get("industry", "N/A"),
-                        info.get("country", "N/A"), info.get("marketCap", "N/A"), info.get("volume", "N/A"),
-                        info.get("fiftyTwoWeekHigh", "N/A"), info.get("fiftyTwoWeekLow", "N/A"),
-                        info.get("dividendYield", "N/A"), info.get("bookValue", "N/A"), info.get("faceValue", "N/A")
-                    ]
-                }))
-
-            with col2:
-                st.subheader("👔 Executive Info")
-                st.markdown(f"**CEO**: {info.get('CEO', 'N/A')}")
-                st.markdown(f"**Employees**: {info.get('fullTimeEmployees', 'N/A')}")
-                website = info.get('website', '')
-                if website:
-                    st.markdown(f"**Website**: [{website}]({website})")
-
-                st.subheader("📉 Financial Ratios (Simulated)")
-                st.write(pd.DataFrame({
-                    "Metric": ["PE Ratio", "PB Ratio", "EPS", "ROE", "ROCE", "Debt to Equity"],
-                    "Value": [22.5, 4.2, 85.3, "18.5%", "22.1%", "0.35"]
-                }))
-
-            # Shareholding Pattern (Simulated)
-            st.subheader("📊 Shareholding Pattern")
-            share_pattern = {
-                "Promoters": 49.5,
-                "FIIs": 24.2,
-                "DIIs": 13.4,
-                "Retail": 12.9
-            }
-            st.bar_chart(pd.Series(share_pattern))
-
-            # Company Summary
-            st.subheader("📘 About the Company")
-            st.write(info.get("longBusinessSummary", "No description available."))
-
-            # Competitor Comparison (Simulated)
-            st.subheader("🏁 Compare with Competitors")
-            competitors = [ticker, "TCS.NS", "INFY.NS"]
-            comp_data = {
-                "Company": competitors,
-                "PE Ratio": [22.5, 25.3, 30.1],
-                "PB Ratio": [4.2, 5.0, 6.2],
-                "ROE (%)": [18.5, 17.2, 19.5],
-                "ROCE (%)": [22.1, 21.3, 22.0],
-                "Debt/Equity": [0.35, 0.4, 0.3]
-            }
-            st.dataframe(pd.DataFrame(comp_data))
-
-            # Coming Soon
-            st.subheader("🗞️ News & Sentiment")
-            st.info("Live news & sentiment analysis coming in next version 🚀")
-
-        except Exception as e:
-            st.error(f"❌ Could not retrieve data for ticker: {e}")
-
-# ✅ THEN call the function in navigation
-if selected == "Company Info":
-    company_info_page()
 
 
 
@@ -663,102 +576,202 @@ elif selected == "Mutual Fund NAV Viewer":
             st.error(f"❌ Error: {e}")
 
 
+import streamlit as st
+import yfinance as yf
+import pandas as pd
+import matplotlib.pyplot as plt
 
-#-------------------------------Company Management Deatils Info---------------------------#
-def company_info_page():
-    st.title("📊 Company Info with Employee & Management Details")
+# ---------------------------- CACHE TICKER DATA -------------------------
+@st.cache_resource
+def load_data(ticker):
+    stock = yf.Ticker(ticker)
+    hist = stock.history(period="2y")
+    return stock, hist
 
-    # Add unique key to avoid duplicate element error
-    ticker = st.text_input("Enter Company Ticker (e.g., RELIANCE.NS)", "RELIANCE.NS", key="company_ticker_input")
+# ---------------------------- COMPANY OVERVIEW PAGE -------------------------
+import streamlit as st
+import yfinance as yf
+import pandas as pd
+
+# Cached data loader
+@st.cache_resource
+def load_data(ticker):
+    stock = yf.Ticker(ticker)
+    hist = stock.history(period="2y")
+    return stock, hist
+
+# Sidebar Navigation
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to", ["📊 Overview", "🔮 Prediction & Forecasting", "📢 News & Events", "💥 Volume Spike Detector"])
+
+# ---------------------------- Overview Page -------------------------
+import streamlit as st
+import yfinance as yf
+import plotly.graph_objects as go
+
+# Cached Data Loader
+@st.cache_resource
+def load_data(ticker):
+    stock = yf.Ticker(ticker)
+    hist = stock.history(period="6mo")
+    return stock, hist
+
+
+# 📊 F&O Overview Page
+import streamlit as st
+import pandas as pd
+import plotly.graph_objects as go
+
+def fo_page():
+    st.title("📑 F&O Stocks - Live Overview")
+
+    # Simulated F&O Data
+    fo_data = {
+        "Symbol": ["RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK"],
+        "LTP": [2820.5, 3480.7, 1463.2, 1640.0, 1103.5],
+        "Volume": [1250000, 850000, 650000, 920000, 870000],
+        "Market Cap": [19e12, 13e12, 8e12, 10e12, 9e12],
+        "Sector": ["Energy", "IT", "IT", "Banking", "Banking"]
+    }
+
+    df = pd.DataFrame(fo_data)
+
+    # Sidebar filters
+    st.sidebar.header("🔍 Filters")
+    sectors = st.sidebar.multiselect("Select Sector", df["Sector"].unique(), default=df["Sector"].unique())
+    min_market_cap = st.sidebar.slider("Minimum Market Cap (₹ Cr)", 0, int(df["Market Cap"].max() // 1e7), 1000)
+
+    filtered_df = df[
+        (df["Sector"].isin(sectors)) &
+        (df["Market Cap"] >= min_market_cap * 1e7)
+    ]
+
+    st.subheader("📊 Filtered F&O Stocks")
+    st.dataframe(filtered_df)
+
+    # LTP Trend Chart (Simulated)
+    st.subheader("📈 RELIANCE LTP - Candlestick Chart (Simulated)")
+    hist_data = pd.DataFrame({
+        "Date": pd.date_range(start="2023-04-01", periods=5, freq='D'),
+        "Open": [2800, 2825, 2810, 2830, 2820],
+        "High": [2830, 2850, 2825, 2840, 2835],
+        "Low": [2780, 2805, 2795, 2810, 2800],
+        "Close": [2820, 2815, 2805, 2825, 2810]
+    })
+
+    fig = go.Figure(data=[go.Candlestick(
+        x=hist_data['Date'],
+        open=hist_data['Open'],
+        high=hist_data['High'],
+        low=hist_data['Low'],
+        close=hist_data['Close']
+    )])
+    fig.update_layout(title="📈 RELIANCE - Candlestick Chart", xaxis_title="Date", yaxis_title="Price")
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Option Chain Placeholder
+    st.subheader("🧾 Option Chain (Coming Soon)")
+    st.info("Real-time Option Chain data using NSE API will be integrated in the next update 🔄")
+    # Multi-Line LTP Trend Chart (Simulated)
+    st.subheader("📊 LTP Trend - F&O Stocks (Simulated)")
+
+    trend_data = pd.DataFrame({
+        "Date": pd.date_range(start="2023-04-01", periods=5, freq='D'),
+        "RELIANCE": [2800, 2815, 2825, 2830, 2820],
+        "TCS": [3450, 3465, 3475, 3480, 3485],
+        "INFY": [1440, 1450, 1460, 1465, 1463],
+        "HDFCBANK": [1620, 1630, 1635, 1640, 1645],
+        "ICICIBANK": [1080, 1090, 1100, 1105, 1103]
+    })
+
+    fig = go.Figure()
+    for symbol in ["RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK"]:
+        fig.add_trace(go.Scatter(
+            x=trend_data["Date"],
+            y=trend_data[symbol],
+            mode='lines+markers',
+            name=symbol
+        ))
+
+    fig.update_layout(
+        title="📈 F&O Stocks - LTP Trend (5-Day Simulated)",
+        xaxis_title="Date",
+        yaxis_title="LTP (₹)",
+        legend_title="Stock Symbol",
+        template="plotly_white"
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
+if selected == "F&O":
+    fo_page()
+
+# ----------------------- Overview Page ----------------------------
+# 📊 Overview Page
+import streamlit as st
+import plotly.graph_objects as go
+
+# 📊 Overview Page
+if page == "📊 Overview":
+    st.markdown("## Company Detailed Overview")
+    st.markdown("Enter a valid stock ticker below to see live updates and historical trends.")
+
+    ticker = st.text_input("🔎 Enter Stock Ticker (e.g., AAPL, TCS.NS)", "AAPL")
 
     if ticker:
-        try:
-            stock = yf.Ticker(ticker)
-            info = stock.info
+        stock, hist = load_data(ticker)
+        info = stock.info
 
-            # Company Overview
-            st.header(f"🏢 {info.get('longName', 'N/A')} ({info.get('symbol', ticker)})")
+        # Live metrics
+        st.markdown("### 📌 Key Market Metrics")
+        with st.container():
+            col1, col2, col3 = st.columns(3)
+            col1.metric("💰 Current Price", f"${info.get('regularMarketPrice', 'N/A')}")
+            col2.metric("📈 Day High", f"${info.get('dayHigh', 'N/A')}")
+            col3.metric("📉 Day Low", f"${info.get('dayLow', 'N/A')}")
 
-            # Basic Info
-            col1, col2 = st.columns(2)
-            with col1:
-                st.subheader("📌 Basic Info")
-                st.write(pd.DataFrame({
-                    "Detail": [
-                        "Exchange", "Sector", "Industry", "Country", "Market Cap", "Volume",
-                        "52W High", "52W Low", "Dividend Yield", "Book Value", "Face Value"
-                    ],
-                    "Value": [
-                        info.get("exchange", "N/A"), info.get("sector", "N/A"), info.get("industry", "N/A"),
-                        info.get("country", "N/A"), info.get("marketCap", "N/A"), info.get("volume", "N/A"),
-                        info.get("fiftyTwoWeekHigh", "N/A"), info.get("fiftyTwoWeekLow", "N/A"),
-                        info.get("dividendYield", "N/A"), info.get("bookValue", "N/A"), info.get("faceValue", "N/A")
-                    ]
-                }))
+        st.markdown("---")
 
-            with col2:
-                st.subheader("👔 Executive Info")
-                st.markdown(f"**CEO**: {info.get('CEO', 'N/A')}")
-                st.markdown(f"**Employees**: {info.get('fullTimeEmployees', 'N/A')}")
-                website = info.get('website', '')
-                if website:
-                    st.markdown(f"**Website**: [{website}]({website})")
+        # Interactive price chart
+        st.markdown("### 📈 Price Trend")
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name="Close Price", line=dict(color='deepskyblue')))
+        fig.update_layout(
+            title=f"{ticker.upper()} Historical Price Chart",
+            xaxis_title="Date",
+            yaxis_title="Price (USD)",
+            template="plotly_white",
+            hovermode="x unified",
+            height=400,
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
-            # Simulated Higher Management Details (Age, Salary, Contact, LinkedIn, etc.)
-            st.subheader("🏢 Higher Management")
-            higher_management = {
-                "Name": ["John Doe", "Jane Smith", "Michael Johnson"],
-                "Position": ["CEO", "CFO", "COO"],
-                "Age": [48, 52, 45],
-                "Salary (in ₹)": ["₹2,50,00,000", "₹2,10,00,000", "₹1,80,00,000"],
-                "Email": ["johndoe@company.com", "janesmith@company.com", "michaelj@company.com"],
-                "Contact": ["+91 123 456 7890", "+91 987 654 3210", "+91 555 123 4567"],
-                "LinkedIn": [
-                    "https://www.linkedin.com/in/johndoe/",
-                    "https://www.linkedin.com/in/janesmith/",
-                    "https://www.linkedin.com/in/michaeljohnson/"
-                ]
-            }
+        st.markdown("---")
 
-            # Create DataFrame for Higher Management Details
-            management_df = pd.DataFrame(higher_management)
+        # Organized info display
+        st.markdown("### 🏢 Company Snapshot")
+        with st.expander("📘 General Information", expanded=True):
+            st.markdown(f"**Name:** {info.get('longName', 'N/A')}")
+            st.markdown(f"**Sector:** {info.get('sector', 'N/A')}")
+            st.markdown(f"**Industry:** {info.get('industry', 'N/A')}")
+            st.markdown(f"**Website:** [{info.get('website', 'N/A')}]({info.get('website', '#')})")
+            st.markdown(
+                f"**Headquarters:** {info.get('address1', '')}, {info.get('city', '')}, {info.get('state', '')}, {info.get('country', '')}")
+            st.markdown(f"**Employees:** {info.get('fullTimeEmployees', 'N/A')}")
 
-            st.dataframe(management_df)
+        with st.expander("📄 Business Description"):
+            st.write(info.get("longBusinessSummary", "No summary available."))
 
-            # Shareholding Pattern (Simulated)
-            st.subheader("📊 Shareholding Pattern")
-            share_pattern = {
-                "Promoters": 49.5,
-                "FIIs": 24.2,
-                "DIIs": 13.4,
-                "Retail": 12.9
-            }
-            st.bar_chart(pd.Series(share_pattern))
+        with st.expander("💼 Officers"):
+            officers = info.get("companyOfficers", [])
+            if officers:
+                for officer in officers:
+                    st.markdown(
+                        f"- **{officer.get('name', 'N/A')}** — {officer.get('title', 'N/A')}, Age {officer.get('age', 'N/A')}")
+            else:
+                st.write("Officer data not available.")
 
-            # Company Summary
-            st.subheader("📘 About the Company")
-            st.write(info.get("longBusinessSummary", "No description available."))
-
-            # Competitor Comparison (Simulated)
-            st.subheader("🏁 Compare with Competitors")
-            competitors = [ticker, "TCS.NS", "INFY.NS"]
-            comp_data = {
-                "Company": competitors,
-                "PE Ratio": [22.5, 25.3, 30.1],
-                "PB Ratio": [4.2, 5.0, 6.2],
-                "ROE (%)": [18.5, 17.2, 19.5],
-                "ROCE (%)": [22.1, 21.3, 22.0],
-                "Debt/Equity": [0.35, 0.4, 0.3]
-            }
-            st.dataframe(pd.DataFrame(comp_data))
-
-            # Coming Soon
-            st.subheader("🗞️ News & Sentiment")
-            st.info("Live news & sentiment analysis coming in next version 🚀")
-
-        except Exception as e:
-            st.error(f"❌ Could not retrieve data for ticker: {e}")
-
-# Add this part in your navigation section:
-if selected == "Company Info":
-    company_info_page()
+        st.markdown("---")
+        with st.expander("🧠 Full JSON Info (For Developers)"):
+            st.json(info)
