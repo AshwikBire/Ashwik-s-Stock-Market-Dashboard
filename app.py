@@ -187,53 +187,76 @@ elif selected == "Learning":
     """)
 
 
-# Volume Spike - Stock Volume Insights
+# ----------------------- Volume Spike Detector ------------------------
+# --------------------------- Volume Spike Detector --------------------------- #
 elif selected == "Volume Spike":
     st.title("📈 Volume Spike Detector")
+    st.markdown("This tool detects unusual volume surges in a stock based on a 10-day rolling average.")
 
-    ticker = st.text_input("Enter Stock Ticker (e.g., TCS.NS, INFY.NS):", "TCS.NS")
-    days = st.slider("Select Days of Historical Data:", 30, 365, 90)
+    ticker = st.text_input("🔎 Enter Stock Ticker (e.g., TCS.NS, INFY.NS):", "TCS.NS")
+    days = st.slider("🗓️ Select Days of Historical Data:", 30, 365, 90)
 
     if ticker:
         try:
-            # Download historical data
+            # Download historical stock data
             data = yf.download(ticker, period=f"{days}d")
 
             if data.empty:
-                st.warning("No data found. Please check the ticker symbol.")
+                st.warning("⚠️ No data found. Please check the ticker symbol.")
             else:
-                # Compute 10-day average volume
+                # Compute rolling average & spike detection
                 data["Avg_Volume"] = data["Volume"].rolling(window=10).mean()
                 data["Spike"] = data["Volume"] > (1.5 * data["Avg_Volume"])
-                data.dropna(subset=["Avg_Volume"], inplace=True)
+                data.dropna(inplace=True)
 
-                st.markdown("### 🚀 Volume Spike Chart")
+                # --- Chart Section ---
+                st.subheader("📊 Volume Trend with Spike Detection")
                 fig = go.Figure()
-                fig.add_trace(go.Scatter(x=data.index, y=data["Volume"],
-                                         mode='lines', name='Volume', line=dict(color='blue')))
-                fig.add_trace(go.Scatter(x=data.index, y=data["Avg_Volume"],
-                                         mode='lines', name='10-Day Avg Volume', line=dict(color='orange')))
 
-                # Highlight spikes
-                spike_data = data[data["Spike"]]
-                fig.add_trace(go.Scatter(x=spike_data.index, y=spike_data["Volume"],
-                                         mode='markers', name='Volume Spikes',
-                                         marker=dict(size=10, color='red', symbol='star')))
+                # Volume line
+                fig.add_trace(go.Scatter(
+                    x=data.index, y=data["Volume"],
+                    mode='lines', name='Daily Volume',
+                    line=dict(color='royalblue')
+                ))
 
-                fig.update_layout(title=f"Volume Spike Analysis for {ticker}",
-                                  xaxis_title="Date",
-                                  yaxis_title="Volume",
-                                  template="plotly_dark",
-                                  height=500)
+                # 10-Day Avg Volume line
+                fig.add_trace(go.Scatter(
+                    x=data.index, y=data["Avg_Volume"],
+                    mode='lines', name='10-Day Avg Volume',
+                    line=dict(color='orange')
+                ))
+
+                # Volume spikes
+                spikes = data[data["Spike"]]
+                fig.add_trace(go.Scatter(
+                    x=spikes.index, y=spikes["Volume"],
+                    mode='markers', name='Spikes',
+                    marker=dict(size=10, color='red', symbol='star')
+                ))
+
+                fig.update_layout(
+                    title=f"🔍 Volume Spike Detection for {ticker.upper()}",
+                    xaxis_title="Date",
+                    yaxis_title="Volume",
+                    legend_title="Legend",
+                    template="plotly_dark",
+                    height=500
+                )
+
                 st.plotly_chart(fig, use_container_width=True)
 
-                st.markdown("### 🔍 Spike Events")
-                st.dataframe(spike_data[["Volume", "Avg_Volume"]].style.format("{:,.0f}"), use_container_width=True)
+                # --- Spike Events Table ---
+                st.subheader("📌 Detected Volume Spike Events")
+                st.dataframe(
+                    spikes[["Volume", "Avg_Volume"]]
+                    .rename(columns={"Volume": "Actual Volume", "Avg_Volume": "10-Day Avg"})
+                    .style.format("{:,.0f}"),
+                    use_container_width=True
+                )
 
         except Exception as e:
-            st.error(f"Error occurred: {e}")
-
-
+            st.error(f"❌ Error occurred: {e}")
 
 # News Sentiment - Sentiment Analysis of News
 elif selected == "News Sentiment":
@@ -576,47 +599,6 @@ elif selected == "Mutual Fund NAV Viewer":
             st.error(f"❌ Error: {e}")
 
 
-import streamlit as st
-import yfinance as yf
-import pandas as pd
-import matplotlib.pyplot as plt
-
-# ---------------------------- CACHE TICKER DATA -------------------------
-@st.cache_resource
-def load_data(ticker):
-    stock = yf.Ticker(ticker)
-    hist = stock.history(period="2y")
-    return stock, hist
-
-# ---------------------------- COMPANY OVERVIEW PAGE -------------------------
-import streamlit as st
-import yfinance as yf
-import pandas as pd
-
-# Cached data loader
-@st.cache_resource
-def load_data(ticker):
-    stock = yf.Ticker(ticker)
-    hist = stock.history(period="2y")
-    return stock, hist
-
-# Sidebar Navigation
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["📊 Overview", "🔮 Prediction & Forecasting", "📢 News & Events", "💥 Volume Spike Detector"])
-
-# ---------------------------- Overview Page -------------------------
-import streamlit as st
-import yfinance as yf
-import plotly.graph_objects as go
-
-# Cached Data Loader
-@st.cache_resource
-def load_data(ticker):
-    stock = yf.Ticker(ticker)
-    hist = stock.history(period="6mo")
-    return stock, hist
-
-
 # 📊 F&O Overview Page
 import streamlit as st
 import pandas as pd
@@ -708,13 +690,44 @@ if selected == "F&O":
     fo_page()
 
 # ----------------------- Overview Page ----------------------------
+
+import streamlit as st
+import yfinance as yf
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# ---------------------------- CACHE TICKER DATA -------------------------
+@st.cache_resource
+def load_data(ticker):
+    stock = yf.Ticker(ticker)
+    hist = stock.history(period="2y")
+    return stock, hist
+
+# ---------------------------- COMPANY OVERVIEW PAGE -------------------------
+
+# Sidebar Navigation
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to", ["Company Overview"])
+
+# ---------------------------- Overview Page -------------------------
+import streamlit as st
+import yfinance as yf
+import plotly.graph_objects as go
+
+# Cached Data Loader
+@st.cache_resource
+def load_data(ticker):
+    stock = yf.Ticker(ticker)
+    hist = stock.history(period="6mo")
+    return stock, hist
+
 # 📊 Overview Page
 import streamlit as st
 import plotly.graph_objects as go
 
 # 📊 Overview Page
-if page == "📊 Overview":
-    st.markdown("## Company Detailed Overview")
+if page == "Company Overview":
+    st.markdown("## Company Overview")
     st.markdown("Enter a valid stock ticker below to see live updates and historical trends.")
 
     ticker = st.text_input("🔎 Enter Stock Ticker (e.g., AAPL, TCS.NS)", "AAPL")
@@ -775,3 +788,6 @@ if page == "📊 Overview":
         st.markdown("---")
         with st.expander("🧠 Full JSON Info (For Developers)"):
             st.json(info)
+
+if selected == "Company Overview":
+    fo_page()
