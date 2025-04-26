@@ -33,7 +33,7 @@ st.set_page_config(page_title="MarketMentor", layout="wide")
 # Sidebar menu
 with st.sidebar:
     selected = option_menu(
-        "Smart Market Dashboard",
+        "MarketMentor",
         ["Home","Company Overview", "Market Movers", "F&O", "Global Markets", "Mutual Funds", "SIP Calculator","IPO Tracker","Predictions for Mutual Funds & IPOs","Mutual Fund NAV Viewer","Sectors", "News", "Learning", "Volume Spike", "Stock Screener", "Predictions", "Buy/Sell Predictor", "News Sentiment"],
         icons=['house', 'graph-up', 'globe', 'bank', 'boxes', 'newspaper', 'building', 'book', 'activity', 'search'],
         menu_icon="cast",
