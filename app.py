@@ -28,7 +28,7 @@ import streamlit as st
 NEWS_API_KEY = "0b08be107dca45d3be30ca7e06544408"
 
 # Set page config
-st.set_page_config(page_title="Smart Stock Market Dashboard", layout="wide")
+st.set_page_config(page_title="MarketMentor", layout="wide")
 
 # Sidebar menu
 with st.sidebar:
