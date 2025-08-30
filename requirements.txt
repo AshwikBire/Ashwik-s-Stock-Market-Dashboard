@@ -14,3 +14,4 @@ tensorflow
 ta
 fpdf2
 fredapi
+investpy
