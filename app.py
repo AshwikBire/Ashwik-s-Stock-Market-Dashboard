@@ -344,7 +344,7 @@ with st.sidebar:
         default_index=0,
         styles={
             "container": {"padding": "0!important", "background-color": "#262730"},
-            "icon": {"color": #FF4B4B", "font-size": "18px"},
+            "icon": {"color": "#FF4B4B", "font-size": "18px"},
             "nav-link": {"font-size": "16px", "text-align": "left", "margin": "0px", "color": "#FAFAFA"},
             "nav-link-selected": {"background-color": "#FF4B4B", "color": "#0E1117"},
         }
@@ -546,7 +546,7 @@ elif selected == "Company Overview":
                 current_price = data['Close'][-1]
                 prev_close = data['Close'][-2] if len(data) > 1 else current_price
                 price_change = current_price - prev_close
-                percent_change = (price_change / prev_change) * 100
+                percent_change = (price_change / prev_close) * 100
                 
                 # Display company header
                 company_name = info.get('longName', ticker)
@@ -701,6 +701,3 @@ elif selected == "Company Overview":
 else:
     st.title(f"{selected} Section")
     st.info("This section is under development. Check back soon for updates!")
-
-# Note: The other menu options would need to be implemented similarly
-# For now, they just display a placeholder message
