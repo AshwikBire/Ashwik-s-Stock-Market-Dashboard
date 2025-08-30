@@ -6,171 +6,34 @@ import seaborn as sns
 import yfinance as yf
 import requests
 from plotly import graph_objects as go
-import plotly.express as px
 from streamlit_option_menu import option_menu
 from textblob import TextBlob
 from xgboost import XGBRegressor
-from datetime import timedelta, datetime
+from datetime import timedelta
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM
 from sklearn.model_selection import train_test_split
-import ta  # Technical analysis library
-import warnings
-import json
-warnings.filterwarnings('ignore')
 
 # News API Key
 NEWS_API_KEY = "0b08be107dca45d3be30ca7e06544408"
 
 # Set page config
-st.set_page_config(page_title="MarketMentor", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="MarketMentor", layout="wide")
 
-# Custom CSS for dark theme with red and black
-st.markdown("""
-<style>
-    /* Main background */
-    .stApp {
-        background-color: #0E1117;
-        color: #FFFFFF;
-    }
-    
-    /* Headers */
-    h1, h2, h3, h4, h5, h6 {
-        color: #FF4B4B !important;
-    }
-    
-    /* Sidebar */
-    .css-1d391kg, .css-1d391kg p {
-        background-color: #000000 !important;
-        color: #FFFFFF !important;
-    }
-    
-    /* Metric cards */
-    .metric-card {
-        background-color: #1A1A1A;
-        padding: 15px;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(255, 75, 75, 0.2);
-        border-left: 4px solid #FF4B4B;
-        margin-bottom: 15px;
-    }
-    
-    /* Positive and negative changes */
-    .positive-change {
-        color: #00CC96 !important;
-        font-weight: bold;
-    }
-    .negative-change {
-        color: #FF4B4B !important;
-        font-weight: bold;
-    }
-    
-    /* Buttons */
-    .stButton button {
-        background-color: #FF4B4B;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        padding: 10px 20px;
-        font-weight: bold;
-    }
-    
-    .stButton button:hover {
-        background-color: #CC3C3C;
-        color: white;
-    }
-    
-    /* Select boxes and inputs */
-    .stSelectbox, .stTextInput, .stNumberInput, .stSlider {
-        background-color: #1A1A1A;
-        color: white;
-        border-radius: 5px;
-    }
-    
-    /* Tabs */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-    }
-    
-    .stTabs [data-baseweb="tab"] {
-        background-color: #1A1A1A;
-        border-radius: 8px 8px 0 0;
-        padding: 10px 16px;
-        border: 1px solid #333333;
-    }
-    
-    .stTabs [aria-selected="true"] {
-        background-color: #FF4B4B;
-        color: white;
-    }
-    
-    /* Dataframes */
-    .dataframe {
-        background-color: #1A1A1A;
-        color: white;
-    }
-    
-    /* Expanders */
-    .streamlit-expanderHeader {
-        background-color: #1A1A1A;
-        color: white;
-        border: 1px solid #333333;
-        border-radius: 5px;
-    }
-    
-    /* JSON formatting */
-    .json-container {
-        background-color: #1A1A1A;
-        padding: 15px;
-        border-radius: 10px;
-        margin: 10px 0;
-        max-height: 400px;
-        overflow-y: auto;
-        font-family: monospace;
-        font-size: 14px;
-        border: 1px solid #333333;
-    }
-    
-    /* Custom toggle for dark mode */
-    .dark-mode-toggle {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 999;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# Sidebar menu with custom styling
+# Sidebar menu
 with st.sidebar:
-    st.markdown("<h1 style='text-align: center; color: #FF4B4B;'>MarketMentor</h1>", unsafe_allow_html=True)
     selected = option_menu(
-        "",
-        ["Home", "Company Overview", "Market Movers", "F&O", "Global Markets", "Mutual Funds", "SIP Calculator", 
-         "IPO Tracker", "Predictions for Mutual Funds & IPOs", "Mutual Fund NAV Viewer", "Sectors", "News", 
-         "Learning", "Volume Spike", "Stock Screener", "Predictions", "Buy/Sell Predictor", "News Sentiment", 
-         "Technical Analysis", "Portfolio Tracker"],
-        icons=['house', 'building', 'graph-up', 'arrow-left-right', 'globe', 'bank', 'calculator', 'rocket', 
-               'graph-up-arrow', 'bar-chart', 'grid-3x3', 'newspaper', 'book', 'activity', 'search', 'lightbulb', 
-               'currency-exchange', 'chat-quote', 'speedometer', 'briefcase'],
+        "MarketMentor",
+        ["Home","Company Overview", "Market Movers", "F&O", "Global Markets", "Mutual Funds", "SIP Calculator","IPO Tracker","Predictions for Mutual Funds & IPOs","Mutual Fund NAV Viewer","Sectors", "News", "Learning", "Volume Spike", "Stock Screener", "Predictions", "Buy/Sell Predictor", "News Sentiment"],
+        icons=['house', 'graph-up', 'globe', 'bank', 'boxes', 'newspaper', 'building', 'book', 'activity', 'search'],
         menu_icon="cast",
-        default_index=0,
-        styles={
-            "container": {"padding": "0!important", "background-color": "#000000"},
-            "icon": {"color": "#FF4B4B", "font-size": "18px"}, 
-            "nav-link": {"font-size": "16px", "text-align": "left", "margin": "0px", "color": "#FFFFFF", "--hover-color": "#262730"},
-            "nav-link-selected": {"background-color": "#FF4B4B", "color": "#FFFFFF"},
-        }
+        default_index=0
     )
 
-# Cache data fetching functions
-@st.cache_data(ttl=3600)  # Cache for 1 hour
-def get_stock_data(ticker, period="1y"):
-    return yf.Ticker(ticker).history(period=period)
-
-@st.cache_data(ttl=3600)
-def get_index_data():
+# Home - Market Overview
+if selected == "Home":
+    st.title("\U0001F3E0 Home - Market Overview")
     indices = {
         "^NSEI": "Nifty 50",
         "^BSESN": "Sensex",
@@ -178,18 +41,48 @@ def get_index_data():
         "^IXIC": "NASDAQ",
         "^GSPC": "S&P 500",
     }
-    data = {}
-    for symbol, name in indices.items():
-        ticker_data = yf.Ticker(symbol).history(period="1d")
-        data[name] = {
-            'last_close': round(ticker_data['Close'].iloc[-1], 2),
-            'change': round(ticker_data['Close'].iloc[-1] - ticker_data['Open'].iloc[-1], 2),
-            'percent_change': round(((ticker_data['Close'].iloc[-1] - ticker_data['Open'].iloc[-1]) / ticker_data['Open'].iloc[-1]) * 100, 2)
-        }
-    return data
+    st.subheader("Major Indices Performance")
+    cols = st.columns(len(indices))
+    for idx, (symbol, name) in enumerate(indices.items()):
+        data = yf.Ticker(symbol).history(period="1d")
+        last_close = round(data['Close'].iloc[-1], 2)
+        change = round(data['Close'].iloc[-1] - data['Open'].iloc[-1], 2)
+        percent_change = round((change / data['Open'].iloc[-1]) * 100, 2)
+        cols[idx].metric(label=name, value=f"{last_close}", delta=f"{percent_change}%")
 
-@st.cache_data(ttl=3600)
-def get_global_markets():
+# Market Movers - Top Gainers & Losers
+elif selected == "Market Movers":
+    st.title("📈 Market Movers - Active Stocks, Top Gainers & Losers")
+
+    # Active Stocks (Example: Nifty 50 stocks)
+    tickers_list = 'RELIANCE.NS TCS.NS INFY.NS HDFCBANK.NS ICICIBANK.NS'
+    nifty = yf.Tickers(tickers_list)
+
+    # Fetching recent closing prices
+    data = {ticker: nifty.tickers[ticker].history(period="1d")['Close'].iloc[-1] for ticker in nifty.tickers}
+
+    # Sorting stocks for gainers and losers
+    gainers = sorted(data.items(), key=lambda x: x[1], reverse=True)
+    losers = sorted(data.items(), key=lambda x: x[1])
+
+    # Displaying Active Stocks
+    st.subheader("📊 Active Stocks (Recent Close Prices)")
+    active_stocks = pd.DataFrame(data.items(), columns=["Stock", "Price"])
+    st.dataframe(active_stocks)
+
+    # Top Gainers
+    st.subheader("🚀 Top Gainers")
+    top_gainers = pd.DataFrame(gainers, columns=['Stock', 'Price'])
+    st.dataframe(top_gainers)
+
+    # Top Losers
+    st.subheader("📉 Top Losers")
+    top_losers = pd.DataFrame(losers, columns=['Stock', 'Price'])
+    st.dataframe(top_losers)
+
+# Global Markets - Major Indices
+elif selected == "Global Markets":
+    st.title("\U0001F30E Global Markets Status")
     global_indices = {
         "^DJI": "Dow Jones",
         "^IXIC": "NASDAQ",
@@ -197,172 +90,614 @@ def get_global_markets():
         "^FTSE": "FTSE 100",
         "^N225": "Nikkei 225",
         "^HSI": "Hang Seng",
-        "^GDAXI": "DAX",
-        "^FCHI": "CAC 40",
     }
-    data = {}
-    for symbol, name in global_indices.items():
-        try:
-            ticker_data = yf.Ticker(symbol).history(period="1d")
-            data[name] = {
-                'last_close': round(ticker_data['Close'].iloc[-1], 2),
-                'change': round(ticker_data['Close'].iloc[-1] - ticker_data['Open'].iloc[-1], 2),
-                'percent_change': round(((ticker_data['Close'].iloc[-1] - ticker_data['Open'].iloc[-1]) / ticker_data['Open'].iloc[-1]) * 100, 2)
-            }
-        except:
-            data[name] = {'last_close': 'N/A', 'change': 'N/A', 'percent_change': 'N/A'}
-    return data
+    st.subheader("Major Global Indices")
+    cols = st.columns(3)
+    for idx, (symbol, name) in enumerate(global_indices.items()):
+        data = yf.Ticker(symbol).history(period="1d")
+        last_close = round(data['Close'].iloc[-1], 2)
+        change = round(data['Close'].iloc[-1] - data['Open'].iloc[-1], 2)
+        percent_change = round((change / data['Open'].iloc[-1]) * 100, 2)
+        cols[idx % 3].metric(label=name, value=f"{last_close}", delta=f"{percent_change}%")
 
-# Home - Market Overview
-if selected == "Home":
-    st.title("🏠 Home - Market Overview")
-    
-    # Display major indices
-    st.subheader("📊 Major Indices Performance")
-    index_data = get_index_data()
-    cols = st.columns(len(index_data))
-    for idx, (name, data) in enumerate(index_data.items()):
-        with cols[idx]:
-            st.markdown(f'<div class="metric-card">', unsafe_allow_html=True)
-            delta_color = "positive-change" if data['percent_change'] >= 0 else "negative-change"
-            st.markdown(f"<h3 style='color: white;'>{name}</h3>", unsafe_allow_html=True)
-            st.markdown(f"<h2 style='color: white;'>{data['last_close']}</h2>", unsafe_allow_html=True)
-            st.markdown(f"<p class='{delta_color}'>Δ {data['percent_change']}%</p>", unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Market sentiment
-    st.subheader("📈 Market Sentiment")
-    sentiment_cols = st.columns(3)
-    with sentiment_cols[0]:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.markdown("<h3 style='color: white;'>Advancers</h3>", unsafe_allow_html=True)
-        st.markdown("<h2 style='color: #00CC96;'>1,245</h2>", unsafe_allow_html=True)
-        st.markdown("<p class='positive-change'>52%</p>", unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    with sentiment_cols[1]:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.markdown("<h3 style='color: white;'>Decliners</h3>", unsafe_allow_html=True)
-        st.markdown("<h2 style='color: #FF4B4B;'>987</h2>", unsafe_allow_html=True)
-        st.markdown("<p class='negative-change'>41%</p>", unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    with sentiment_cols[2]:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.markdown("<h3 style='color: white;'>Unchanged</h3>", unsafe_allow_html=True)
-        st.markdown("<h2 style='color: white;'>168</h2>", unsafe_allow_html=True)
-        st.markdown("<p>7%</p>", unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    # Recent news
-    st.subheader("📰 Top Financial News")
-    try:
-        url = f"https://newsapi.org/v2/top-headlines?category=business&apiKey={NEWS_API_KEY}&language=en&pageSize=3"
+# Mutual Funds - Insights
+elif selected == "Mutual Funds":
+    st.title("\U0001F3E6 Mutual Funds Insights")
+    mf_data = {
+        "Axis Bluechip Fund": "15% Returns",
+        "Mirae Asset Large Cap Fund": "13.2% Returns",
+        "Parag Parikh Flexi Cap Fund": "17.5% Returns",
+        "UTI Nifty Index Fund": "12% Returns",
+    }
+    st.dataframe(pd.DataFrame(mf_data.items(), columns=['Mutual Fund', '1Y Return']))
+    st.info("Live Mutual Fund API integration coming soon!")
+
+# Sectors - Sector Performance
+elif selected == "Sectors":
+    st.title("\U0001F4CA Sector Wise Performance")
+    sector_performance = {
+        "Banking": "+1.8%",
+        "IT": "-0.5%",
+        "Energy": "+2.1%",
+        "FMCG": "+0.9%",
+        "Pharma": "-1.2%",
+        "Auto": "+1.0%",
+    }
+    st.dataframe(pd.DataFrame(sector_performance.items(), columns=['Sector', 'Performance']))
+
+# News - Latest Financial News
+elif selected == "News":
+    st.title("📰 Latest Financial News")
+    news_query = st.text_input("Search Financial News:", "stock market")
+
+    if news_query:
+        url = f"https://newsapi.org/v2/everything?q={news_query}&apiKey={NEWS_API_KEY}&language=en&sortBy=publishedAt&pageSize=10"
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            articles = response.json().get("articles", [])
+            if articles:
+                for article in articles:
+                    st.markdown("----")
+                    st.subheader(article["title"])
+                    st.write(f"*{article['source']['name']} - {article['publishedAt'].split('T')[0]}*")
+                    st.write(article.get("description", "No description available."))
+                    st.markdown(f"[🔗 Read More]({article['url']})")
+            else:
+                st.warning("No articles found.")
+        else:
+            st.error("Unable to fetch news articles. Please check API or query.")
+
+# Learning - Stock Market Resources
+elif selected == "Learning":
+    st.title("📘 Learn the Stock Market")
+
+    st.markdown("""
+    Welcome to the **Learning Hub** of the Smart Stock Market Dashboard by [Ashwik Bire](https://www.linkedin.com/in/ashwik-bire-b2a000186/)!  
+    This section is crafted to help **beginners, enthusiasts, and investors** understand how the stock market works — with a strong foundation in both **technical and fundamental analysis**, along with insights from **AI and machine learning**.
+
+    ### 🎯 Purpose:
+    - To **educate** users with curated stock market knowledge.
+    - To **simplify complex concepts** like indicators, price action, technical patterns, and financial ratios.
+    - To share **AI-powered learning resources** that explain how stock prediction models work.
+
+    ### 🧠 What You'll Learn:
+    - 📈 Basics of Stock Market, Trading, and Investing  
+    - 🧾 Financial Statements and Ratio Analysis  
+    - 🧮 Technical Analysis (Indicators, Patterns, Volume)  
+    - 🤖 AI/ML in the Stock Market  
+    - 🛠 Tools & Resources for Smarter Investing
+
+    ### 🔗 Connect with Ashwik Bire:
+    [![LinkedIn](https://img.shields.io/badge/Connect%20with%20me-LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/ashwik-bire-b2a000186/)
+
+    Stay tuned! We're continuously updating this section with **videos, articles, and interactive tutorials**.
+    """)
+
+# Volume Spike Detector
+elif selected == "Volume Spike":
+    st.title("📈 Volume Spike Detector")
+    st.markdown("This tool detects unusual volume surges in a stock based on a 10-day rolling average.")
+
+    ticker = st.text_input("🔎 Enter Stock Ticker (e.g., TCS.NS, INFY.NS):", "TCS.NS")
+    days = st.slider("🗓️ Select Days of Historical Data:", 30, 365, 90)
+
+    if ticker:
+        try:
+            # Download historical stock data
+            data = yf.download(ticker, period=f"{days}d")
+
+            if data.empty:
+                st.warning("⚠️ No data found. Please check the ticker symbol.")
+            else:
+                # Compute rolling average & spike detection
+                data["Avg_Volume"] = data["Volume"].rolling(window=10).mean()
+                data["Spike"] = data["Volume"] > (1.5 * data["Avg_Volume"])
+                data.dropna(inplace=True)
+
+                # --- Chart Section ---
+                st.subheader("📊 Volume Trend with Spike Detection")
+                fig = go.Figure()
+
+                # Volume line
+                fig.add_trace(go.Scatter(
+                    x=data.index, y=data["Volume"],
+                    mode='lines', name='Daily Volume',
+                    line=dict(color='royalblue')
+                ))
+
+                # 10-Day Avg Volume line
+                fig.add_trace(go.Scatter(
+                    x=data.index, y=data["Avg_Volume"],
+                    mode='lines', name='10-Day Avg Volume',
+                    line=dict(color='orange')
+                ))
+
+                # Volume spikes
+                spikes = data[data["Spike"]]
+                fig.add_trace(go.Scatter(
+                    x=spikes.index, y=spikes["Volume"],
+                    mode='markers', name='Spikes',
+                    marker=dict(size=10, color='red', symbol='star')
+                ))
+
+                fig.update_layout(
+                    title=f"🔍 Volume Spike Detection for {ticker.upper()}",
+                    xaxis_title="Date",
+                    yaxis_title="Volume",
+                    legend_title="Legend",
+                    template="plotly_dark",
+                    height=500
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
+
+                # --- Spike Events Table ---
+                st.subheader("📌 Detected Volume Spike Events")
+                st.dataframe(
+                    spikes[["Volume", "Avg_Volume"]]
+                    .rename(columns={"Volume": "Actual Volume", "Avg_Volume": "10-Day Avg"})
+                    .style.format("{:,.0f}"),
+                    use_container_width=True
+                )
+
+        except Exception as e:
+            st.error(f"❌ Error occurred: {e}")
+
+# News Sentiment - Sentiment Analysis of News
+elif selected == "News Sentiment":
+    st.title("\U0001F50D News Sentiment Analysis")
+    ticker = st.text_input("Enter Stock Ticker to analyze news sentiment:", "AAPL")
+
+    if ticker:
+        st.info(f"Fetching and analyzing recent news sentiment for {ticker.upper()}...")
+        url = f"https://newsapi.org/v2/everything?q={ticker}&apiKey={NEWS_API_KEY}&language=en&pageSize=10"
         response = requests.get(url)
         if response.status_code == 200:
             articles = response.json().get("articles", [])
+            sentiments = []
             for article in articles:
-                with st.expander(article["title"]):
-                    st.write(f"**Source:** {article['source']['name']}")
-                    st.write(article.get("description", "No description available."))
-                    st.markdown(f"[Read more]({article['url']})")
-        else:
-            st.info("News feature will be available after configuring News API")
-    except:
-        st.info("News feature will be available after configuring News API")
+                title = article["title"]
+                description = article.get("description", "")
+                text = f"{title}. {description}"
+                blob = TextBlob(text)
+                polarity = blob.sentiment.polarity
+                sentiments.append(polarity)
+                st.write(f"📰 **{title}**")
+                st.write(f"🧠 Sentiment Score: {round(polarity, 3)}")
+                st.markdown("---")
 
-# Company Overview Page - Enhanced with detailed info and JSON view
-elif selected == "Company Overview":
-    st.title("🏢 Company Overview")
-    
-    ticker = st.text_input("🔎 Enter Stock Ticker (e.g., AAPL, TCS.NS)", "RELIANCE.NS")
-    
+            if sentiments:
+                avg_sentiment = round(np.mean(sentiments), 3)
+                st.success(f"📊 **Average Sentiment Score** for {ticker.upper()}: {avg_sentiment}")
+                if avg_sentiment > 0.2:
+                    st.markdown("**📈 Overall Sentiment: Positive**")
+                elif avg_sentiment < -0.2:
+                    st.markdown("**📉 Overall Sentiment: Negative**")
+                else:
+                    st.markdown("**➖ Overall Sentiment: Neutral**")
+        else:
+            st.error("Failed to fetch news articles.")
+
+# Predictions - Stock Price Prediction
+elif selected == "Predictions":
+    st.title("📈 Stock Price Predictions")
+
+    ticker = st.text_input("Enter Company Ticker (e.g., RELIANCE.NS)", "RELIANCE.NS")
+
     if ticker:
         try:
+            # Fetch stock data from Yahoo Finance
             stock = yf.Ticker(ticker)
-            info = stock.info
-            hist = stock.history(period="6mo")
-            
-            # Display company info in tabs
-            tab1, tab2, tab3 = st.tabs(["Overview", "Financials", "Raw Data"])
-            
-            with tab1:
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.subheader("📊 Company Details")
-                    st.markdown(f"**Name:** {info.get('longName', 'N/A')}")
-                    st.markdown(f"**Sector:** {info.get('sector', 'N/A')}")
-                    st.markdown(f"**Industry:** {info.get('industry', 'N/A')}")
-                    st.markdown(f"**Market Cap:** ₹{info.get('marketCap', 0):,}")
-                    st.markdown(f"**Employees:** {info.get('fullTimeEmployees', 'N/A')}")
-                    st.markdown(f"**Country:** {info.get('country', 'N/A')}")
-                    
-                with col2:
-                    st.subheader("📈 Key Metrics")
-                    st.markdown(f"**P/E Ratio:** {info.get('trailingPE', 'N/A')}")
-                    st.markdown(f"**EPS:** {info.get('trailingEps', 'N/A')}")
-                    st.markdown(f"**Dividend Yield:** {info.get('dividendYield', 0)*100 if info.get('dividendYield') else 'N/A'}%")
-                    st.markdown(f"**52W High/Low:** ₹{info.get('fiftyTwoWeekHigh', 'N/A')}/₹{info.get('fiftyTwoWeekLow', 'N/A')}")
-                    st.markdown(f"**Beta:** {info.get('beta', 'N/A')}")
-                    st.markdown(f"**Volume Avg:** {info.get('averageVolume', 'N/A'):,}")
-                
-                # Price chart
-                st.subheader("📊 Price Chart")
-                fig = go.Figure()
-                fig.add_trace(go.Candlestick(
-                    x=hist.index,
-                    open=hist['Open'],
-                    high=hist['High'],
-                    low=hist['Low'],
-                    close=hist['Close'],
-                    name='Price'
-                ))
-                fig.update_layout(
-                    title=f"{ticker} Price Chart", 
-                    xaxis_title="Date", 
-                    yaxis_title="Price",
-                    template="plotly_dark",
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(color='white')
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            
-            with tab2:
-                st.subheader("💵 Financial Summary")
-                financials = stock.financials
-                if not financials.empty:
-                    st.write("**Recent Revenue & Earnings**")
-                    st.dataframe(financials.head().T.style.background_gradient(cmap='Reds'))
+            hist = stock.history(period="1y")  # 1 year of data
+
+            if hist.empty:
+                st.warning("No data available for this ticker.")
+            else:
+                # Show the most recent data
+                st.subheader(f"Recent Stock Data for {ticker}")
+                st.write(hist.tail())
+
+                # Plot the stock's historical closing price
+                st.subheader("📊 Stock Price History")
+                st.line_chart(hist["Close"])
+
+                # Calculate a simple moving average (SMA) for predictions
+                sma50 = hist["Close"].rolling(window=50).mean()
+                sma200 = hist["Close"].rolling(window=200).mean()
+
+                st.subheader("📉 Moving Averages")
+                st.line_chart(pd.DataFrame({
+                    "50-Day SMA": sma50,
+                    "200-Day SMA": sma200
+                }))
+
+                # Determine Buy/Sell signal based on SMA
+                st.subheader("🔍 Buy/Sell Signal")
+                current_price = hist["Close"].iloc[-1]
+                if sma50.iloc[-1] > sma200.iloc[-1]:
+                    st.success(
+                        f"📈 Signal: **BUY** - 50-day SMA is above 200-day SMA (Current Price: ₹{current_price:.2f})")
+                elif sma50.iloc[-1] < sma200.iloc[-1]:
+                    st.error(
+                        f"📉 Signal: **SELL** - 50-day SMA is below 200-day SMA (Current Price: ₹{current_price:.2f})")
                 else:
-                    st.info("Financial data not available for this ticker")
-                    
-                # Balance sheet and cash flow
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.subheader("💰 Balance Sheet")
-                    balance_sheet = stock.balance_sheet
-                    if not balance_sheet.empty:
-                        st.dataframe(balance_sheet.head().T.style.background_gradient(cmap='Reds'))
-                
-                with col2:
-                    st.subheader("💸 Cash Flow")
-                    cash_flow = stock.cashflow
-                    if not cash_flow.empty:
-                        st.dataframe(cash_flow.head().T.style.background_gradient(cmap='Reds'))
-            
-            with tab3:
-                st.subheader("📋 Raw Company Data (JSON)")
-                # Filter out very long values for display
-                display_info = {k: v for k, v in info.items() if not isinstance(v, (list, dict)) and v is not None}
-                # Format the JSON with indentation
-                formatted_json = json.dumps(display_info, indent=2)
-                st.markdown(f'<div class="json-container">{formatted_json}</div>', unsafe_allow_html=True)
-                
+                    st.warning(f"⏸️ Signal: **HOLD** - No clear trend (Current Price: ₹{current_price:.2f})")
+
+                # Show price data vs moving averages
+                st.subheader("📈 Price vs. Moving Averages")
+                st.line_chart(hist[["Close"]].join(pd.DataFrame({
+                    "50-Day SMA": sma50,
+                    "200-Day SMA": sma200
+                })))
+
         except Exception as e:
-            st.error(f"Error fetching data: {e}")
+            st.error(f"Error retrieving data: {e}")
 
-# Rest of the code remains the same for other sections, but with the dark theme applied
-# [Previous code for other sections continues here...]
+# Buy/Sell Predictor - Predict Buy or Sell Signal
+elif selected == "Buy/Sell Predictor":
+    st.title("💹 Buy/Sell Predictor")
 
-# Note: The rest of the code would follow the same pattern, with appropriate styling adjustments
-# for the dark theme with red and black colors, and white text.
+    # Input: Ticker symbol
+    ticker = st.text_input("Enter Company Ticker (e.g., RELIANCE.NS)", "RELIANCE.NS")
+
+    if ticker:
+        try:
+            # Fetch stock data from Yahoo Finance
+            stock = yf.Ticker(ticker)
+            hist = stock.history(period="1y")  # Fetch 1 year of data
+
+            if hist.empty:
+                st.warning("No data available for this ticker.")
+            else:
+                # Show the most recent data
+                st.subheader(f"Recent Stock Data for {ticker}")
+                st.write(hist.tail())
+
+                # Plot the stock's historical closing price
+                st.subheader("📊 Stock Price History")
+                st.line_chart(hist["Close"])
+
+                # Calculate Simple Moving Averages (SMA)
+                sma50 = hist["Close"].rolling(window=50).mean()
+                sma200 = hist["Close"].rolling(window=200).mean()
+
+                st.subheader("📉 Moving Averages")
+                st.line_chart(pd.DataFrame({
+                    "50-Day SMA": sma50,
+                    "200-Day SMA": sma200
+                }))
+
+                # Calculate Relative Strength Index (RSI) for additional signal
+                delta = hist["Close"].diff()
+                gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+                loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+                rs = gain / loss
+                rsi = 100 - (100 / (1 + rs))
+
+                st.subheader("📈 RSI (Relative Strength Index)")
+                st.line_chart(rsi)
+
+                # Calculate Buy/Sell signal
+                current_price = hist["Close"].iloc[-1]
+                signal = ""
+
+                # Simple Buy/Sell logic based on Moving Averages and RSI
+                if sma50.iloc[-1] > sma200.iloc[-1] and rsi.iloc[-1] < 30:
+                    signal = "Buy"
+                    st.success(f"📈 Signal: **BUY** (Current Price: ₹{current_price:.2f}) - 50-day SMA is above 200-day SMA and RSI is below 30.")
+                elif sma50.iloc[-1] < sma200.iloc[-1] and rsi.iloc[-1] > 70:
+                    signal = "Sell"
+                    st.error(f"📉 Signal: **SELL** (Current Price: ₹{current_price:.2f}) - 50-day SMA is below 200-day SMA and RSI is above 70.")
+                else:
+                    signal = "Hold"
+                    st.warning(f"⏸️ Signal: **HOLD** (Current Price: ₹{current_price:.2f}) - No clear trend.")
+
+                # Show price data vs moving averages and RSI
+                st.subheader("📊 Price vs. Indicators")
+                st.line_chart(hist[["Close"]].join(pd.DataFrame({
+                    "50-Day SMA": sma50,
+                    "200-Day SMA": sma200,
+                    "RSI": rsi
+                })))
+
+        except Exception as e:
+            st.error(f"Error retrieving data: {e}")
+
+# Stock Screener - Default 15 companies, or user input for custom tickers
+elif selected == "Stock Screener":
+    st.title("📊 Stock Screener")
+
+    # Predefined list of 15 companies (Nifty 50 or a custom list of top companies)
+    default_companies = [
+        'RELIANCE.NS', 'TCS.NS', 'INFY.NS', 'HDFCBANK.NS', 'ICICIBANK.NS', 'SBIN.NS', 'HINDUNILVR.NS',
+        'BAJAJFINSV.NS', 'HDFC.NS', 'KOTAKBANK.NS', 'BHARTIARTL.NS', 'ITC.NS', 'AXISBANK.NS', 'MARUTI.NS', 'LT.NS'
+    ]
+
+    # Ask user whether they want to use the default list or input custom tickers
+    choice = st.radio("Choose an option:", ("Use Default List", "Input Custom Tickers"))
+
+    if choice == "Use Default List":
+        # Display the stock data for the default 15 companies
+        st.subheader("Showing 15 Default Companies")
+        data = {}
+
+        for ticker in default_companies:
+            stock_data = yf.Ticker(ticker).history(period="1d")['Close']
+            if not stock_data.empty:
+                data[ticker] = stock_data.iloc[-1]
+            else:
+                data[ticker] = "No Data"
+
+        # Display the data as a dataframe
+        st.dataframe(pd.DataFrame(data.items(), columns=["Stock", "Price"]))
+
+    elif choice == "Input Custom Tickers":
+        # Input box for user to enter their own tickers
+        tickers_input = st.text_area("Enter stock tickers (separated by space or comma):", "")
+        if tickers_input:
+            tickers_list = [ticker.strip() for ticker in tickers_input.split() if ticker.strip()]
+            if len(tickers_list) > 0:
+                st.subheader("Showing Custom Tickers")
+                data = {}
+
+                for ticker in tickers_list:
+                    stock_data = yf.Ticker(ticker).history(period="1d")['Close']
+                    if not stock_data.empty:
+                        data[ticker] = stock_data.iloc[-1]
+                    else:
+                        data[ticker] = "No Data"
+
+                # Display the custom tickers data
+                st.dataframe(pd.DataFrame(data.items(), columns=["Stock", "Price"]))
+            else:
+                st.warning("Please enter valid stock tickers.")
+
+# SIP Calculator
+elif selected == "SIP Calculator":
+    st.title("📈 SIP Calculator")
+
+    monthly_investment = st.number_input("Monthly Investment (₹)", value=5000)
+    years = st.slider("Investment Duration (Years)", 1, 30, 10)
+    expected_return = st.slider("Expected Annual Return (%)", 1, 25, 12)
+
+    months = years * 12
+    monthly_rate = expected_return / 12 / 100
+
+    future_value = monthly_investment * (((1 + monthly_rate)**months - 1) * (1 + monthly_rate)) / monthly_rate
+    invested = monthly_investment * months
+    gain = future_value - invested
+
+    st.success(f"📊 Future Value: ₹{future_value:,.2f}")
+    st.info(f"💰 Invested: ₹{invested:,.2f}")
+    st.warning(f"📈 Estimated Gains: ₹{gain:,.2f}")
+
+# IPO Tracker
+elif selected == "IPO Tracker":
+    st.title("🆕 IPO Tracker")
+
+    ipo_data = pd.DataFrame({
+        "Company": ["ABC Tech", "SmartFin Ltd", "GreenPower", "NetPay Corp"],
+        "Issue Price (₹)": [100, 240, 150, 280],
+        "Current Price (₹)": [145, 190, 170, 260],
+        "Gain/Loss (%)": [45, -20.8, 13.3, -7.1],
+        "Sentiment": ["Bullish", "Bearish", "Neutral", "Bearish"]
+    })
+
+    st.dataframe(ipo_data)
+    st.bar_chart(ipo_data.set_index("Company")["Gain/Loss (%)"])
+
+# Predictions for Mutual Funds & IPOs
+elif selected == "Predictions for Mutual Funds & IPOs":
+    st.title("🔮 Predictions for Mutual Funds & IPOs")
+
+    st.subheader("📊 Mutual Fund NAV Forecast (Simulated)")
+    dates = pd.date_range(start=pd.to_datetime("2023-01-01"), periods=12, freq='M')
+    navs = np.linspace(100, 160, 12) + np.random.normal(0, 2, 12)
+
+    nav_forecast = pd.DataFrame({'Month': dates, 'Predicted NAV': navs})
+    nav_forecast.set_index("Month", inplace=True)
+    st.line_chart(nav_forecast)
+
+    st.subheader("🚀 IPO Price Movement Prediction (Simulated)")
+    ipo_prediction = pd.DataFrame({
+        "IPO": ["ABC Tech", "SmartFin Ltd", "GreenPower"],
+        "Predicted Return (%)": [20.5, -5.2, 12.7]
+    })
+    st.dataframe(ipo_prediction)
+
+# Mutual Fund NAV Viewer
+elif selected == "Mutual Fund NAV Viewer":
+    st.title("📈 Mutual Fund NAV Viewer")
+
+    # Default scheme code for Axis Bluechip Fund
+    scheme_code = st.text_input("Enter Mutual Fund Scheme Code (e.g. 118550)", "118550")
+
+    if scheme_code:
+        try:
+            api_url = f"https://api.mfapi.in/mf/{scheme_code}"
+            response = requests.get(api_url)
+
+            if response.status_code == 200:
+                nav_data = response.json()
+                st.subheader(f"🔷 {nav_data['meta']['scheme_name']}")
+
+                # Prepare NAV DataFrame
+                nav_df = pd.DataFrame(nav_data['data'])
+                nav_df['nav'] = nav_df['nav'].astype(float)
+                nav_df['date'] = pd.to_datetime(nav_df['date'])
+                nav_df = nav_df.sort_values(by='date', ascending=False)
+
+                # Show latest NAV
+                st.metric(label="📊 Latest NAV", value=f"₹{nav_df.iloc[0]['nav']}", delta=None)
+
+                # Line Chart for NAV
+                st.subheader("📉 NAV Trend (Last 30 Days)")
+                st.line_chart(nav_df.set_index('date')['nav'].head(30).sort_index())
+
+                # Show Data Table
+                with st.expander("🔍 View All NAVs"):
+                    st.dataframe(nav_df[['date', 'nav']].rename(columns={'date': 'Date', 'nav': 'NAV'}))
+
+            else:
+                st.error("⚠️ Failed to fetch mutual fund data. Please check the scheme code.")
+        except Exception as e:
+            st.error(f"❌ Error: {e}")
+
+# F&O Page Function
+def fo_page():
+    st.title("📑 F&O Stocks - Live Overview")
+
+    # Simulated F&O Data
+    fo_data = {
+        "Symbol": ["RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK"],
+        "LTP": [2820.5, 3480.7, 1463.2, 1640.0, 1103.5],
+        "Volume": [1250000, 850000, 650000, 920000, 870000],
+        "Market Cap": [19e12, 13e12, 8e12, 10e12, 9e12],
+        "Sector": ["Energy", "IT", "IT", "Banking", "Banking"]
+    }
+
+    df = pd.DataFrame(fo_data)
+
+    # Sidebar filters
+    st.sidebar.header("🔍 Filters")
+    sectors = st.sidebar.multiselect("Select Sector", df["Sector"].unique(), default=df["Sector"].unique())
+    min_market_cap = st.sidebar.slider("Minimum Market Cap (₹ Cr)", 0, int(df["Market Cap"].max() // 1e7), 1000)
+
+    filtered_df = df[
+        (df["Sector"].isin(sectors)) &
+        (df["Market Cap"] >= min_market_cap * 1e7)
+    ]
+
+    st.subheader("📊 Filtered F&O Stocks")
+    st.dataframe(filtered_df)
+
+    # LTP Trend Chart (Simulated)
+    st.subheader("📈 RELIANCE LTP - Candlestick Chart (Simulated)")
+    hist_data = pd.DataFrame({
+        "Date": pd.date_range(start="2023-04-01", periods=5, freq='D'),
+        "Open": [2800, 2825, 2810, 2830, 2820],
+        "High": [2830, 2850, 2825, 2840, 2835],
+        "Low": [2780, 2805, 2795, 2810, 2800],
+        "Close": [2820, 2815, 2805, 2825, 2810]
+    })
+
+    fig = go.Figure(data=[go.Candlestick(
+        x=hist_data['Date'],
+        open=hist_data['Open'],
+        high=hist_data['High'],
+        low=hist_data['Low'],
+        close=hist_data['Close']
+    )])
+    fig.update_layout(title="📈 RELIANCE - Candlestick Chart", xaxis_title="Date", yaxis_title="Price")
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Option Chain Placeholder
+    st.subheader("🧾 Option Chain (Coming Soon)")
+    st.info("Real-time Option Chain data using NSE API will be integrated in the next update 🔄")
+    
+    # Multi-Line LTP Trend Chart (Simulated)
+    st.subheader("📊 LTP Trend - F&O Stocks (Simulated)")
+
+    trend_data = pd.DataFrame({
+        "Date": pd.date_range(start="2023-04-01", periods=5, freq='D'),
+        "RELIANCE": [2800, 2815, 2825, 2830, 2820],
+        "TCS": [3450, 3465, 3475, 3480, 3485],
+        "INFY": [1440, 1450, 1460, 1465, 1463],
+        "HDFCBANK": [1620, 1630, 1635, 1640, 1645],
+        "ICICIBANK": [1080, 1090, 1100, 1105, 1103]
+    })
+
+    fig = go.Figure()
+    for symbol in ["RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK"]:
+        fig.add_trace(go.Scatter(
+            x=trend_data["Date"],
+            y=trend_data[symbol],
+            mode='lines+markers',
+            name=symbol
+        ))
+
+    fig.update_layout(
+        title="📈 F&O Stocks - LTP Trend (5-Day Simulated)",
+        xaxis_title="Date",
+        yaxis_title="LTP (₹)",
+        legend_title="Stock Symbol",
+        template="plotly_white"
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+# F&O Page
+elif selected == "F&O":
+    fo_page()
+
+# Company Overview Page
+elif selected == "Company Overview":
+    st.markdown("## Company Overview")
+    st.markdown("Enter a valid stock ticker below to see live updates and historical trends.")
+
+    # Cached Data Loader
+    @st.cache_resource
+    def load_data(ticker):
+        stock = yf.Ticker(ticker)
+        hist = stock.history(period="6mo")
+        return stock, hist
+
+    ticker = st.text_input("🔎 Enter Stock Ticker (e.g., AAPL, TCS.NS)", "AAPL")
+
+    if ticker:
+        stock, hist = load_data(ticker)
+        info = stock.info
+
+        # Live metrics
+        st.markdown("### 📌 Key Market Metrics")
+        with st.container():
+            col1, col2, col3 = st.columns(3)
+            col1.metric("💰 Current Price", f"${info.get('regularMarketPrice', 'N/A')}")
+            col2.metric("📈 Day High", f"${info.get('dayHigh', 'N/A')}")
+            col3.metric("📉 Day Low", f"${info.get('dayLow', 'N/A')}")
+
+        st.markdown("---")
+
+        # Interactive price chart
+        st.markdown("### 📈 Price Trend")
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name="Close Price", line=dict(color='deepskyblue')))
+        fig.update_layout(
+            title=f"{ticker.upper()} Historical Price Chart",
+            xaxis_title="Date",
+            yaxis_title="Price (USD)",
+            template="plotly_white",
+            hovermode="x unified",
+            height=400,
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+        st.markdown("---")
+
+        # Organized info display
+        st.markdown("### 🏢 Company Snapshot")
+        with st.expander("📘 General Information", expanded=True):
+            st.markdown(f"**Name:** {info.get('longName', 'N/A')}")
+            st.markdown(f"**Sector:** {info.get('sector', 'N/A')}")
+            st.markdown(f"**Industry:** {info.get('industry', 'N/A')}")
+            st.markdown(f"**Website:** [{info.get('website', 'N/A')}]({info.get('website', '#')})")
+            st.markdown(
+                f"**Headquarters:** {info.get('address1', '')}, {info.get('city', '')}, {info.get('state', '')}, {info.get('country', '')}")
+            st.markdown(f"**Employees:** {info.get('fullTimeEmployees', 'N/A')}")
+
+        with st.expander("📄 Business Description"):
+            st.write(info.get("longBusinessSummary", "No summary available."))
+
+        with st.expander("💼 Officers"):
+            officers = info.get("companyOfficers", [])
+            if officers:
+                for officer in officers:
+                    st.markdown(
+                        f"- **{officer.get('name', 'N/A')}** — {officer.get('title', 'N/A')}, Age {officer.get('age', 'N/A')}")
+            else:
+                st.write("Officer data not available.")
+
+        st.markdown("---")
+        with st.expander("🧠 Full JSON Info (For Developers)"):
+            st.json(info)
