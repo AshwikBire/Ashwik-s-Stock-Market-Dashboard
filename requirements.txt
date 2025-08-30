@@ -19,4 +19,14 @@ tqdm
 openpyxl
 streamlit-option-menu
 fpdf
-seaborn
+requests
+streamlit-option-menu
+xgboost
+tensorflow
+ta
+newsapi-python
+investpy
+ipywidgets
+base64
+ast
+
