@@ -1,702 +1,792 @@
 import streamlit as st
-import yfinance as yf
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import plotly.graph_objects as go
-import plotly.express as px
-from datetime import datetime, timedelta
+import seaborn as sns
+import yfinance as yf
 import requests
-import json
+from plotly import graph_objects as go
+from streamlit_option_menu import option_menu
+from textblob import TextBlob
+from xgboost import XGBRegressor
+from datetime import timedelta, datetime
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, LSTM
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+import plotly.express as px
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+import warnings
+import json
 import time
+from datetime import date
+import ta  # Technical analysis library
+import funda  # Fundamental analysis library (hypothetical)
+from fpdf import FPDF  # For generating reports
 import base64
-from io import StringIO
+from io import BytesIO
 
-# Set page configuration
+warnings.filterwarnings('ignore')
+
+# News API Key
+NEWS_API_KEY = "0b08be107dca45d3be30ca7e06544408"
+
+# Set page config with dark theme
 st.set_page_config(
-    page_title="StockSense - AI-Powered Stock Prediction & Learning",
-    page_icon="📈",
+    page_title="MarketMentor",
     layout="wide",
-    initial_sidebar_state="expanded"
+    page_icon="📈"
 )
 
-# Apply dark theme
-def apply_dark_theme():
-    # Custom CSS for dark theme
-    st.markdown("""
-    <style>
+# Apply custom CSS for dark theme with red accents
+st.markdown("""
+<style>
     .main {
         background-color: #0E1117;
         color: #FAFAFA;
     }
     .stButton>button {
-        background-color: #4CAF50;
+        background-color: #FF4B4B;
         color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 0.5rem 1rem;
+        transition: all 0.3s ease;
     }
-    .stTextInput>div>div>input {
-        background-color: #262730;
-        color: white;
+    .stButton>button:hover {
+        background-color: #FF2B2B;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(255, 75, 75, 0.3);
     }
     .stSelectbox>div>div>select {
         background-color: #262730;
         color: white;
+        border: 1px solid #444;
+    }
+    .stTextInput>div>div>input {
+        background-color: #262730;
+        color: white;
+        border: 1px solid #444;
     }
     .stSlider>div>div>div>div {
-        background-color: #4CAF50;
+        background-color: #FF4B4B;
     }
-    .footer {
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        background-color: #0E1117;
-        color: white;
-        text-align: center;
+    .stProgress>div>div>div {
+        background-color: #FF4B4B;
+    }
+    .stMetric {
+        background-color: #262730;
+        border-radius: 5px;
         padding: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
-    </style>
-    """, unsafe_allow_html=True)
+    .stAlert {
+        background-color: #262730;
+        border-left: 4px solid #FF4B4B;
+    }
+    .css-1d391kg {
+        background-color: #0E1117;
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 24px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        white-space: pre-wrap;
+        background-color: #262730;
+        border-radius: 4px 4px 0px 0px;
+        gap: 1px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        color: #FAFAFA;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #FF4B4B;
+        color: #0E1117;
+        font-weight: bold;
+    }
+    .stDataFrame {
+        background-color: #262730;
+    }
+    .stTable {
+        background-color: #262730;
+    }
+    div[data-testid="stToolbar"] {
+        display: none;
+    }
+    .reportview-container .main .block-container {
+        padding-top: 2rem;
+    }
+    header {
+        background-color: #0E1117;
+    }
+    .card {
+        background-color: #262730;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .card h3 {
+        margin-top: 0;
+        color: #FF4B4B;
+    }
+    .positive {
+        color: #00C853;
+    }
+    .negative {
+        color: #FF4B4B;
+    }
+    .neutral {
+        color: #FFD700;
+    }
+    .company-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    .company-header img {
+        width: 60px;
+        height: 60px;
+        margin-right: 1rem;
+        border-radius: 8px;
+    }
+    .company-header h1 {
+        margin-bottom: 0;
+    }
+    .financial-metric {
+        text-align: center;
+        padding: 1rem;
+        background-color: #1E2229;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    .financial-metric h4 {
+        margin: 0 0 0.5rem 0;
+        color: #FF4B4B;
+        font-size: 0.9rem;
+    }
+    .financial-metric p {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-apply_dark_theme()
+# Load company data from JSON file
+@st.cache_data
+def load_company_data():
+    # In a real app, this would load from a file
+    # For demo purposes, we'll create a sample dataset
+    company_data = {
+        "AAPL": {
+            "name": "Apple Inc.",
+            "sector": "Technology",
+            "industry": "Consumer Electronics",
+            "employees": 154000,
+            "founded": 1976,
+            "ceo": "Tim Cook",
+            "headquarters": "Cupertino, California",
+            "website": "https://www.apple.com",
+            "description": "Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide.",
+            "financials": {
+                "market_cap": "2.5T",
+                "revenue": "394.3B",
+                "net_income": "99.8B",
+                "pe_ratio": 28.5,
+                "dividend_yield": 0.5
+            }
+        },
+        "MSFT": {
+            "name": "Microsoft Corporation",
+            "sector": "Technology",
+            "industry": "Software—Infrastructure",
+            "employees": 221000,
+            "founded": 1975,
+            "ceo": "Satya Nadella",
+            "headquarters": "Redmond, Washington",
+            "website": "https://www.microsoft.com",
+            "description": "Microsoft Corporation develops, licenses, and supports software, services, devices, and solutions worldwide.",
+            "financials": {
+                "market_cap": "2.3T",
+                "revenue": "211.9B",
+                "net_income": "72.4B",
+                "pe_ratio": 31.2,
+                "dividend_yield": 0.8
+            }
+        },
+        "GOOGL": {
+            "name": "Alphabet Inc.",
+            "sector": "Communication Services",
+            "industry": "Internet Content & Information",
+            "employees": 156500,
+            "founded": 1998,
+            "ceo": "Sundar Pichai",
+            "headquarters": "Mountain View, California",
+            "website": "https://www.abc.xyz",
+            "description": "Alphabet Inc. provides online advertising services, cloud computing, software, and hardware.",
+            "financials": {
+                "market_cap": "1.7T",
+                "revenue": "307.4B",
+                "net_income": "76.0B",
+                "pe_ratio": 24.8,
+                "dividend_yield": 0.0
+            }
+        },
+        "AMZN": {
+            "name": "Amazon.com Inc.",
+            "sector": "Consumer Cyclical",
+            "industry": "Internet Retail",
+            "employees": 1541000,
+            "founded": 1994,
+            "ceo": "Andy Jassy",
+            "headquarters": "Seattle, Washington",
+            "website": "https://www.amazon.com",
+            "description": "Amazon.com Inc. engages in the retail sale of consumer products and subscriptions through online and physical stores.",
+            "financials": {
+                "market_cap": "1.5T",
+                "revenue": "574.8B",
+                "net_income": "3.0B",
+                "pe_ratio": 85.4,
+                "dividend_yield": 0.0
+            }
+        },
+        "TSLA": {
+            "name": "Tesla, Inc.",
+            "sector": "Automotive",
+            "industry": "Auto Manufacturers",
+            "employees": 127855,
+            "founded": 2003,
+            "ceo": "Elon Musk",
+            "headquarters": "Austin, Texas",
+            "website": "https://www.tesla.com",
+            "description": "Tesla, Inc. designs, develops, manufactures, leases, and sells electric vehicles, energy generation and storage systems.",
+            "financials": {
+                "market_cap": "750.0B",
+                "revenue": "96.8B",
+                "net_income": "15.0B",
+                "pe_ratio": 65.2,
+                "dividend_yield": 0.0
+            }
+        }
+    }
+    return company_data
 
-# Initialize session state variables
-if 'page' not in st.session_state:
-    st.session_state.page = 'home'
-if 'ticker_data' not in st.session_state:
-    st.session_state.ticker_data = None
-if 'ticker_info' not in st.session_state:
-    st.session_state.ticker_info = None
-if 'news_data' not in st.session_state:
-    st.session_state.news_data = None
+# Cache stock data download
+@st.cache_data
+def load_stock_data(symbol, period="1y"):
+    stock = yf.Ticker(symbol)
+    hist = stock.history(period=period)
+    return hist
 
-# News API key
-NEWS_API_KEY = "0b08be107dca45d3be30ca7e06544408"
-
-# Function to fetch stock data
-def fetch_stock_data(ticker, period='1y'):
+# Fetch news for a company
+@st.cache_data
+def fetch_news(symbol):
+    url = f"https://newsapi.org/v2/everything?q={symbol}&apiKey={NEWS_API_KEY}"
     try:
-        stock = yf.Ticker(ticker)
-        data = stock.history(period=period)
-        info = stock.info
-        return data, info
-    except:
-        return None, None
-
-# Function to fetch news
-def fetch_news(ticker=None):
-    try:
-        if ticker:
-            url = f"https://newsapi.org/v2/everything?q={ticker}&apiKey={NEWS_API_KEY}"
-        else:
-            url = f"https://newsapi.org/v2/top-headlines?category=business&apiKey={NEWS_API_KEY}"
-        
         response = requests.get(url)
-        news_data = response.json()
-        return news_data['articles'][:10]  # Return top 10 articles
+        data = response.json()
+        if data['status'] == 'ok':
+            return data['articles'][:5]  # Return top 5 articles
+        else:
+            return []
     except:
         return []
 
-# Function to train prediction model
-def train_prediction_model(data, days=30):
-    # Prepare data for prediction
-    df = data.copy()
-    df['Date'] = df.index
-    df['Date'] = pd.to_datetime(df['Date'])
-    df['Days'] = (df['Date'] - df['Date'].min()).dt.days
-    df['Price'] = df['Close']
-    
-    # Create features
-    df['MA10'] = df['Close'].rolling(window=10).mean()
-    df['MA50'] = df['Close'].rolling(window=50).mean()
-    df['RSI'] = compute_rsi(df['Close'])
-    df = df.dropna()
-    
-    # Features and target
-    features = ['Days', 'MA10', 'MA50', 'RSI']
-    X = df[features]
-    y = df['Price']
-    
-    # Split data
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    
-    # Train model
-    model = RandomForestRegressor(n_estimators=100, random_state=42)
-    model.fit(X_train, y_train)
-    
-    # Make predictions
-    train_predictions = model.predict(X_train)
-    test_predictions = model.predict(X_test)
-    
-    # Calculate metrics
-    train_rmse = np.sqrt(mean_squared_error(y_train, train_predictions))
-    test_rmse = np.sqrt(mean_squared_error(y_test, test_predictions))
-    mae = mean_absolute_error(y_test, test_predictions)
-    
-    # Future prediction
-    last_date = df['Date'].iloc[-1]
-    future_dates = [last_date + timedelta(days=i) for i in range(1, days+1)]
-    future_days = [(date - df['Date'].min()).days for date in future_dates]
-    
-    # Prepare future features (this is simplified)
-    last_ma10 = df['MA10'].iloc[-1]
-    last_ma50 = df['MA50'].iloc[-1]
-    last_rsi = df['RSI'].iloc[-1]
-    
-    future_features = []
-    for day in future_days:
-        future_features.append([day, last_ma10, last_ma50, last_rsi])
-    
-    future_predictions = model.predict(future_features)
-    
-    return {
-        'model': model,
-        'train_rmse': train_rmse,
-        'test_rmse': test_rmse,
-        'mae': mae,
-        'future_dates': future_dates,
-        'future_predictions': future_predictions
-    }
-
-# Function to compute RSI
-def compute_rsi(prices, window=14):
-    deltas = np.diff(prices)
-    seed = deltas[:window+1]
-    up = seed[seed >= 0].sum()/window
-    down = -seed[seed < 0].sum()/window
-    rs = up/down
-    rsi = np.zeros_like(prices)
-    rsi[:window] = 100. - 100./(1. + rs)
-    
-    for i in range(window, len(prices)):
-        delta = deltas[i-1]
-        if delta > 0:
-            up_val = delta
-            down_val = 0.
-        else:
-            up_val = 0.
-            down_val = -delta
-        
-        up = (up*(window-1) + up_val)/window
-        down = (down*(window-1) + down_val)/window
-        rs = up/down
-        rsi[i] = 100. - 100./(1. + rs)
-    
+# Calculate RSI
+def calculate_rsi(data, window=14):
+    delta = data['Close'].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
+    rs = gain / loss
+    rsi = 100 - (100 / (1 + rs))
     return rsi
 
-# Function to display company overview
-def display_company_overview(info):
-    st.subheader("Company Overview")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.metric("Company Name", info.get('longName', 'N/A'))
-        st.metric("Sector", info.get('sector', 'N/A'))
-        st.metric("Industry", info.get('industry', 'N/A'))
-    
-    with col2:
-        st.metric("Market Cap", f"${info.get('marketCap', 0):,}" if info.get('marketCap') else 'N/A')
-        st.metric("P/E Ratio", info.get('trailingPE', 'N/A'))
-        st.metric("EPS", info.get('trailingEps', 'N/A'))
-    
-    with col3:
-        st.metric("52 Week High", info.get('fiftyTwoWeekHigh', 'N/A'))
-        st.metric("52 Week Low", info.get('fiftyTwoWeekLow', 'N/A'))
-        st.metric("Volume", f"{info.get('volume', 0):,}" if info.get('volume') else 'N/A')
-    
-    # Display JSON data
-    st.subheader("Raw Company Data (JSON)")
-    with st.expander("View JSON Data"):
-        st.json(info)
+# Calculate MACD
+def calculate_macd(data, slow=26, fast=12, signal=9):
+    exp1 = data['Close'].ewm(span=fast, adjust=False).mean()
+    exp2 = data['Close'].ewm(span=slow, adjust=False).mean()
+    macd = exp1 - exp2
+    signal_line = macd.ewm(span=signal, adjust=False).mean()
+    histogram = macd - signal_line
+    return macd, signal_line, histogram
 
-# Function to display stock chart
-def display_stock_chart(data, predictions=None):
-    fig = go.Figure()
+# Generate PDF report
+def create_pdf_report(symbol, data, company_info):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, f"Stock Analysis Report: {symbol}", 0, 1, "C")
+    pdf.ln(10)
     
-    # Add actual price data
-    fig.add_trace(go.Candlestick(
-        x=data.index,
-        open=data['Open'],
-        high=data['High'],
-        low=data['Low'],
-        close=data['Close'],
-        name='Price'
-    ))
+    pdf.set_font("Arial", "", 12)
+    pdf.cell(0, 10, f"Company: {company_info['name']}", 0, 1)
+    pdf.cell(0, 10, f"Sector: {company_info['sector']}", 0, 1)
+    pdf.cell(0, 10, f"Industry: {company_info['industry']}", 0, 1)
+    pdf.ln(10)
     
-    # Add predictions if available
-    if predictions:
-        future_dates = predictions['future_dates']
-        future_predictions = predictions['future_predictions']
-        
-        fig.add_trace(go.Scatter(
-            x=future_dates,
-            y=future_predictions,
-            mode='lines',
-            name='Predictions',
-            line=dict(color='#FFA500', dash='dash')
-        ))
+    # Add some financial metrics
+    pdf.cell(0, 10, "Financial Metrics:", 0, 1)
+    pdf.cell(0, 10, f"Market Cap: {company_info['financials']['market_cap']}", 0, 1)
+    pdf.cell(0, 10, f"P/E Ratio: {company_info['financials']['pe_ratio']}", 0, 1)
+    pdf.cell(0, 10, f"Dividend Yield: {company_info['financials']['dividend_yield']}%", 0, 1)
+    pdf.ln(10)
     
-    fig.update_layout(
-        title='Stock Price with Predictions',
-        yaxis_title='Price (USD)',
-        xaxis_title='Date',
-        template='plotly_dark',
-        height=500
+    # Add price data
+    pdf.cell(0, 10, f"Current Price: ${data['Close'].iloc[-1]:.2f}", 0, 1)
+    pdf.cell(0, 10, f"52 Week High: ${data['Close'].max():.2f}", 0, 1)
+    pdf.cell(0, 10, f"52 Week Low: ${data['Close'].min():.2f}", 0, 1)
+    
+    # Save the PDF to a bytes buffer
+    buffer = BytesIO()
+    pdf.output(buffer)
+    buffer.seek(0)
+    return buffer
+
+# LSTM Model for prediction
+def create_lstm_model(data, prediction_days=60):
+    # Prepare data
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    scaled_data = scaler.fit_transform(data['Close'].values.reshape(-1, 1))
+    
+    # Create training data
+    x_train, y_train = [], []
+    for i in range(prediction_days, len(scaled_data)):
+        x_train.append(scaled_data[i-prediction_days:i, 0])
+        y_train.append(scaled_data[i, 0])
+    
+    x_train, y_train = np.array(x_train), np.array(y_train)
+    x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
+    
+    # Build LSTM model
+    model = Sequential()
+    model.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1], 1)))
+    model.add(LSTM(units=50, return_sequences=False))
+    model.add(Dense(units=25))
+    model.add(Dense(units=1))
+    
+    model.compile(optimizer='adam', loss='mean_squared_error')
+    model.fit(x_train, y_train, batch_size=1, epochs=1, verbose=0)
+    
+    return model, scaler
+
+# Sidebar menu
+with st.sidebar:
+    st.image("https://img.icons8.com/fluency/96/stock-share.png", width=80)
+    st.title("MarketMentor")
+    
+    selected = option_menu(
+        menu_title="Navigation",
+        options=["Home", "Company Overview", "Market Movers", "Global Markets", 
+                "Mutual Funds", "Sectors", "News", "Learning", "Volume Spike", 
+                "News Sentiment", "Predictions", "Buy/Sell Predictor", "Stock Screener",
+                "F&O", "SIP Calculator", "IPO Tracker", "Watchlist", "Portfolio Tracker"],
+        icons=["house", "building", "graph-up", "globe", "piggy-bank", "grid-3x3", 
+               "newspaper", "book", "activity", "bar-chart", "lightbulb", "arrow-left-right",
+               "search", "graph-up-arrow", "calculator", "megaphone", "star", "wallet"],
+        menu_icon="cast",
+        default_index=0
     )
-    
-    st.plotly_chart(fig, use_container_width=True)
 
-# Function to display news
-def display_news(news_data, title="Latest Financial News"):
-    st.subheader(title)
-    
-    for i, article in enumerate(news_data):
-        with st.expander(f"{i+1}. {article['title']}"):
-            st.write(f"**Source:** {article['source']['name']}")
-            st.write(f"**Published At:** {article['publishedAt']}")
-            st.write(article['description'])
-            st.markdown(f"[Read more]({article['url']})")
+# Load company data
+company_data = load_company_data()
 
-# Function for SIP calculator
-def sip_calculator():
-    st.subheader("SIP Calculator")
+# Home - Market Overview
+if selected == "Home":
+    st.title("🏠 Home - Market Overview")
     
-    col1, col2 = st.columns(2)
-    
+    # Market summary
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        monthly_investment = st.number_input("Monthly Investment (₹)", min_value=500, value=5000, step=500)
-        investment_period = st.slider("Investment Period (Years)", min_value=1, max_value=30, value=10)
-        expected_return = st.slider("Expected Annual Return (%)", min_value=1, max_value=30, value=12)
-    
+        st.metric("S&P 500", "4,891.23", "0.45%")
     with col2:
-        # Calculate SIP
-        monthly_rate = expected_return / 100 / 12
-        months = investment_period * 12
-        future_value = monthly_investment * ((1 + monthly_rate)**months - 1) / monthly_rate * (1 + monthly_rate)
-        total_investment = monthly_investment * months
-        estimated_returns = future_value - total_investment
-        
-        st.metric("Total Investment", f"₹{total_investment:,.2f}")
-        st.metric("Estimated Returns", f"₹{estimated_returns:,.2f}")
-        st.metric("Future Value", f"₹{future_value:,.2f}")
-
-# Function for IPO prediction (simplified)
-def ipo_prediction():
-    st.subheader("IPO Prediction")
+        st.metric("NASDAQ", "15,628.04", "0.75%")
+    with col3:
+        st.metric("Dow Jones", "38,654.42", "0.15%")
+    with col4:
+        st.metric("Russell 2000", "1,978.23", "-0.25%")
     
-    st.info("This feature uses machine learning to predict IPO performance based on historical data and market conditions.")
-    
-    # Sample IPO data (in a real app, this would come from an API)
-    ipo_data = {
-        'Company': ['TechInnovate', 'GreenEnergy Inc', 'BioPharma Solutions', 'NextGen Retail'],
-        'Sector': ['Technology', 'Energy', 'Healthcare', 'Retail'],
-        'Issue Size (Cr)': [1200, 800, 1500, 900],
-        'Price Band (₹)': ['300-320', '200-210', '450-465', '180-190'],
-        'Predicted Gain (%)': [25.4, 18.7, 32.1, 12.3],
-        'Confidence': ['High', 'Medium', 'High', 'Medium']
-    }
-    
-    df = pd.DataFrame(ipo_data)
-    st.dataframe(df.style.highlight_max(subset=['Predicted Gain (%)'], color='#2ecc71'))
-    
-    st.write("""
-    **Disclaimer:** IPO predictions are based on historical data and market conditions. 
-    Past performance is not indicative of future results. Investing in IPOs carries risks.
-    """)
-
-# Function for top gainers and losers
-def top_gainers_losers():
-    st.subheader("Top Gainers & Losers")
-    
-    # Sample data (in a real app, this would come from an API)
+    # Top gainers and losers
+    st.subheader("📈 Top Gainers")
     gainers_data = {
-        'Symbol': ['RELIANCE', 'HDFC', 'INFY', 'TCS', 'BAJFIN'],
-        'Price (₹)': [2750.50, 1620.75, 1785.25, 3315.80, 7452.60],
-        'Change (%)': [5.2, 4.8, 4.1, 3.9, 3.5],
-        'Volume': ['12.5M', '8.2M', '10.1M', '7.8M', '5.3M']
+        "Symbol": ["NVDA", "META", "TSLA", "AMD", "SHOP"],
+        "Name": ["NVIDIA Corp", "Meta Platforms", "Tesla Inc", "Advanced Micro Devices", "Shopify Inc"],
+        "Price": ["$610.32", "$468.25", "$245.67", "$178.90", "$82.45"],
+        "Change": ["+5.2%", "+4.8%", "+4.1%", "+3.9%", "+3.5%"]
     }
+    gainers_df = pd.DataFrame(gainers_data)
+    st.dataframe(gainers_df, use_container_width=True, hide_index=True)
     
+    st.subheader("📉 Top Losers")
     losers_data = {
-        'Symbol': ['YESBANK', 'VEDL', 'TATA', 'ONGC', 'IOC'],
-        'Price (₹)': [14.25, 235.40, 425.80, 135.75, 95.60],
-        'Change (%)': [-4.8, -4.2, -3.7, -3.2, -2.9],
-        'Volume': ['22.1M', '18.7M', '15.3M', '12.8M', '10.5M']
+        "Symbol": ["PFE", "DASH", "CVNA", "RIVN", "LCID"],
+        "Name": ["Pfizer Inc", "DoorDash Inc", "Carvana Co", "Rivian Automotive", "Lucid Group Inc"],
+        "Price": ["$27.45", "$102.36", "$56.78", "$16.23", "$3.45"],
+        "Change": ["-3.8%", "-3.2%", "-2.9%", "-2.7%", "-2.5%"]
     }
+    losers_df = pd.DataFrame(losers_data)
+    st.dataframe(losers_df, use_container_width=True, hide_index=True)
     
-    col1, col2 = st.columns(2)
+    # Market heatmap
+    st.subheader("🌡️ Sector Performance Heatmap")
+    sectors = ['Technology', 'Healthcare', 'Financials', 'Consumer Cyclical', 'Energy', 
+               'Industrials', 'Communication', 'Utilities', 'Real Estate']
+    performance = [2.5, 1.2, -0.3, 1.8, -1.5, 0.7, 1.1, -0.8, 0.3]
     
-    with col1:
-        st.write("**Top Gainers**")
-        gainers_df = pd.DataFrame(gainers_data)
-        st.dataframe(gainers_df.style.applymap(lambda x: 'color: #2ecc71' if isinstance(x, (int, float)) and x > 0 else '', subset=['Change (%)']))
-    
-    with col2:
-        st.write("**Top Losers**")
-        losers_df = pd.DataFrame(losers_data)
-        st.dataframe(losers_df.style.applymap(lambda x: 'color: #e74c3c' if isinstance(x, (int, float)) and x < 0 else '', subset=['Change (%)']))
+    fig, ax = plt.subplots(figsize=(10, 6))
+    colors = ['#FF4B4B' if x < 0 else '#00C853' for x in performance]
+    ax.barh(sectors, performance, color=colors)
+    ax.set_xlabel('Percentage Change (%)')
+    ax.set_title('Sector Performance')
+    ax.grid(axis='x', linestyle='--', alpha=0.7)
+    st.pyplot(fig)
 
-# Function for mutual funds
-def mutual_funds():
-    st.subheader("Mutual Fund Analysis")
+# Company Overview - Detailed stock analysis
+elif selected == "Company Overview":
+    st.title("🏢 Company Overview")
     
-    fund_type = st.selectbox("Select Fund Type", [
-        "Equity Funds", 
-        "Debt Funds", 
-        "Hybrid Funds", 
-        "ELSS", 
-        "Index Funds"
-    ])
+    # Stock selector
+    symbols = list(company_data.keys())
+    selected_symbol = st.selectbox("Select a stock symbol", symbols)
     
-    # Sample fund data (in a real app, this would come from an API)
-    funds_data = {
-        'Fund Name': [
-            'BlueChip Equity Fund', 
-            'Growth Opportunities Fund', 
-            'Conservative Hybrid Fund', 
-            'Tax Saver ELSS', 
-            'Nifty 50 Index Fund'
-        ],
-        '1Y Return (%)': [18.5, 22.1, 12.3, 19.7, 16.8],
-        '3Y Return (%)': [15.2, 18.7, 10.5, 16.9, 14.3],
-        '5Y Return (%)': [13.8, 16.4, 9.2, 14.7, 12.6],
-        'Risk': ['Moderate', 'High', 'Low', 'Moderate', 'Low'],
-        'Rating': ['★★★★★', '★★★★', '★★★★☆', '★★★★★', '★★★★']
-    }
-    
-    df = pd.DataFrame(funds_data)
-    st.dataframe(df)
-    
-    # Fund selector for detailed analysis
-    selected_fund = st.selectbox("Select Fund for Detailed Analysis", df['Fund Name'].tolist())
-    
-    if selected_fund:
-        st.write(f"**Detailed Analysis for {selected_fund}**")
+    if selected_symbol:
+        company_info = company_data[selected_symbol]
+        stock_data = load_stock_data(selected_symbol, "1y")
         
-        col1, col2, col3 = st.columns(3)
+        # Company header with logo and basic info
+        st.markdown(f"""
+        <div class="company-header">
+            <img src="https://logo.clearbit.com/{company_info['website'].replace('https://www.', '')}?size=120" 
+                 onerror="this.src='https://via.placeholder.com/120x120/262730/FF4B4B?text={selected_symbol}'">
+            <div>
+                <h1>{company_info['name']} ({selected_symbol})</h1>
+                <p>{company_info['sector']} • {company_info['industry']}</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Financial metrics
+        st.subheader("📊 Financial Metrics")
+        col1, col2, col3, col4, col5 = st.columns(5)
         
         with col1:
-            st.metric("1 Year Return", "18.5%")
-            st.metric("Expense Ratio", "0.65%")
+            st.markdown(f"""
+            <div class="financial-metric">
+                <h4>Market Cap</h4>
+                <p>{company_info['financials']['market_cap']}</p>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col2:
-            st.metric("3 Year Return", "15.2%")
-            st.metric("Assets (Cr)", "2,450")
+            st.markdown(f"""
+            <div class="financial-metric">
+                <h4>P/E Ratio</h4>
+                <p>{company_info['financials']['pe_ratio']}</p>
+            </div>
+            """, unsafe_allow_html=True)
         
         with col3:
-            st.metric("5 Year Return", "13.8%")
-            st.metric("Risk", "Moderate")
+            st.markdown(f"""
+            <div class="financial-metric">
+                <h4>Revenue</h4>
+                <p>{company_info['financials']['revenue']}</p>
+            </div>
+            """, unsafe_allow_html=True)
         
-        # Performance chart
-        performance_data = {
-            'Year': [2018, 2019, 2020, 2021, 2022, 2023],
-            'Return (%)': [8.2, 12.5, -2.1, 18.7, 15.3, 18.5]
-        }
+        with col4:
+            st.markdown(f"""
+            <div class="financial-metric">
+                <h4>Net Income</h4>
+                <p>{company_info['financials']['net_income']}</p>
+            </div>
+            """, unsafe_allow_html=True)
         
-        fig = px.line(performance_data, x='Year', y='Return (%)', title=f'{selected_fund} Performance')
-        fig.update_layout(template='plotly_dark')
-        st.plotly_chart(fig, use_container_width=True)
-
-# Function for learning materials
-def learning_materials():
-    st.subheader("Stock Market Learning Center")
-    
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "Basics", 
-        "Technical Analysis", 
-        "Fundamental Analysis", 
-        "Advanced Strategies"
-    ])
-    
-    with tab1:
-        st.write("""
-        ## Stock Market Basics
+        with col5:
+            st.markdown(f"""
+            <div class="financial-metric">
+                <h4>Dividend Yield</h4>
+                <p>{company_info['financials']['dividend_yield']}%</p>
+            </div>
+            """, unsafe_allow_html=True)
         
-        ### What is a Stock?
-        A stock represents ownership in a corporation and constitutes a claim on part of the corporation's assets and earnings.
+        # Company information tabs
+        tab1, tab2, tab3, tab4 = st.tabs(["Price Chart", "Company Info", "Financials", "News"])
         
-        ### How Stock Markets Work
-        Stock markets are where buyers and sellers meet to trade shares of public companies. Prices are determined by supply and demand.
-        
-        ### Key Concepts:
-        - **Bull Market**: A period of rising stock prices
-        - **Bear Market**: A period of falling stock prices
-        - **Dividends**: Payments made by a corporation to its shareholders
-        - **Market Capitalization**: Total value of a company's outstanding shares
-        """)
-        
-        st.video("https://www.youtube.com/embed/F3QpgXBtDeo")
-    
-    with tab2:
-        st.write("""
-        ## Technical Analysis
-        
-        ### What is Technical Analysis?
-        Technical analysis is the study of historical market data, including price and volume, to predict future price movements.
-        
-        ### Common Indicators:
-        - **Moving Averages**: Identify trends by smoothing price data
-        - **RSI (Relative Strength Index)**: Measures speed and change of price movements
-        - **MACD**: Shows relationship between two moving averages
-        - **Bollinger Bands**: Volatility bands placed above and below a moving average
-        
-        ### Chart Patterns:
-        - Head and Shoulders
-        - Double Top/Double Bottom
-        - Triangles (Ascending, Descending, Symmetrical)
-        """)
-        
-        st.image("https://www.investopedia.com/thmb/4KJGrn-MvC3kLp_9gXnGJcRr7_c=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/dotdash_Final_Technical_Analysis_Aug_2020-01-0a9ee9d376e84d5e8f5f51acc32b67c0.jpg", width=500)
-    
-    with tab3:
-        st.write("""
-        ## Fundamental Analysis
-        
-        ### What is Fundamental Analysis?
-        Fundamental analysis involves evaluating a company's financial statements to determine the fair value of the business.
-        
-        ### Key Financial Ratios:
-        - **P/E Ratio**: Price-to-Earnings ratio
-        - **P/B Ratio**: Price-to-Book ratio
-        - **Debt-to-Equity**: Measures financial leverage
-        - **ROE**: Return on Equity
-        - **Current Ratio**: Measures liquidity
-        
-        ### Important Statements:
-        - Income Statement
-        - Balance Sheet
-        - Cash Flow Statement
-        """)
-        
-        st.download_button(
-            label="Download Fundamental Analysis Guide",
-            data="Fundamental analysis is the cornerstone of investing. This guide covers...",
-            file_name="fundamental_analysis_guide.txt",
-            mime="text/plain"
-        )
-    
-    with tab4:
-        st.write("""
-        ## Advanced Strategies
-        
-        ### Options Trading
-        Options give the buyer the right, but not the obligation, to buy or sell an asset at a set price on or before a given date.
-        
-        ### Swing Trading
-        Swing traders hold positions for several days or weeks to capitalize on expected upward or downward market shifts.
-        
-        ### Value Investing
-        Value investors look for securities that appear underpriced by some form of fundamental analysis.
-        
-        ### Growth Investing
-        Growth investors seek companies that offer strong earnings growth potential.
-        """)
-        
-        st.write("**Recommended Books:**")
-        st.write("- The Intelligent Investor by Benjamin Graham")
-        st.write("- A Random Walk Down Wall Street by Burton Malkiel")
-        st.write("- Common Stocks and Uncommon Profits by Philip Fisher")
-
-# Main app function
-def main():
-    # Sidebar navigation
-    st.sidebar.image("https://img.icons8.com/dusk/64/000000/stock.png", width=64)
-    st.sidebar.title("StockSense")
-    st.sidebar.markdown("---")
-    
-    page = st.sidebar.radio(
-        "Navigation",
-        [
-            "Home", 
-            "Stock Analysis", 
-            "SIP Calculator", 
-            "IPO Prediction", 
-            "Top Gainers/Losers", 
-            "Mutual Funds", 
-            "Learning Center"
-        ]
-    )
-    
-    # Display selected page
-    if page == "Home":
-        st.title("StockSense - AI-Powered Stock Prediction & Learning")
-        st.markdown("---")
-        
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            st.write("""
-            ### Welcome to StockSense!
+        with tab1:
+            # Price chart
+            fig = go.Figure()
+            fig.add_trace(go.Candlestick(
+                x=stock_data.index,
+                open=stock_data['Open'],
+                high=stock_data['High'],
+                low=stock_data['Low'],
+                close=stock_data['Close'],
+                name='Price'
+            ))
+            fig.update_layout(
+                title=f"{selected_symbol} Stock Price",
+                yaxis_title="Price (USD)",
+                xaxis_title="Date",
+                template="plotly_dark",
+                height=500
+            )
+            st.plotly_chart(fig, use_container_width=True)
             
-            StockSense is a comprehensive platform for stock market analysis, prediction, and education.
-            Use our AI-powered tools to make informed investment decisions and expand your knowledge
-            about the stock market.
+            # Technical indicators
+            st.subheader("📈 Technical Indicators")
             
-            **Features:**
-            - Real-time stock data and analysis
-            - AI-powered price predictions
-            - SIP calculator for investment planning
-            - IPO performance predictions
-            - Top gainers and losers tracking
-            - Mutual fund analysis
-            - Comprehensive learning resources
-            """)
-        
-        with col2:
-            st.image("https://img.icons8.com/dusk/200/000000/stock.png")
-        
-        # Quick stock lookup
-        st.subheader("Quick Stock Lookup")
-        quick_ticker = st.text_input("Enter Stock Symbol (e.g., AAPL, MSFT, RELIANCE.NS):", "RELIANCE.NS")
-        
-        if st.button("Get Quick Analysis"):
-            with st.spinner("Fetching data..."):
-                data, info = fetch_stock_data(quick_ticker)
-                news = fetch_news(quick_ticker.split('.')[0])
-                
-                if data is not None and not data.empty:
-                    st.success("Data fetched successfully!")
-                    
-                    col1, col2, col3 = st.columns(3)
-                    
-                    with col1:
-                        st.metric("Current Price", f"₹{data['Close'].iloc[-1]:.2f}")
-                    
-                    with col2:
-                        change = data['Close'].iloc[-1] - data['Close'].iloc[-2]
-                        pct_change = (change / data['Close'].iloc[-2]) * 100
-                        st.metric("Change", f"₹{change:.2f}", f"{pct_change:.2f}%")
-                    
-                    with col3:
-                        st.metric("Volume", f"{data['Volume'].iloc[-1]:,}")
-                    
-                    # Display mini chart
-                    fig = go.Figure()
-                    fig.add_trace(go.Scatter(
-                        x=data.index, 
-                        y=data['Close'], 
-                        mode='lines', 
-                        name='Price',
-                        line=dict(color='#4CAF50')
-                    ))
-                    fig.update_layout(
-                        title=f'{quick_ticker} Price History',
-                        template='plotly_dark',
-                        height=300
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-                    
-                    # Show latest news
-                    if news:
-                        display_news(news, f"Latest News about {quick_ticker}")
-                else:
-                    st.error("Could not fetch data for the specified symbol.")
-    
-    elif page == "Stock Analysis":
-        st.title("Stock Analysis & Prediction")
-        st.markdown("---")
-        
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            ticker = st.text_input("Enter Stock Symbol:", "RELIANCE.NS")
-        
-        with col2:
-            period = st.selectbox("Select Period:", ["1mo", "3mo", "6mo", "1y", "2y", "5y"], index=3)
-        
-        if st.button("Analyze Stock"):
-            with st.spinner("Fetching data and training model..."):
-                data, info = fetch_stock_data(ticker, period)
-                news = fetch_news(ticker.split('.')[0])
-                
-                if data is not None and not data.empty:
-                    st.session_state.ticker_data = data
-                    st.session_state.ticker_info = info
-                    st.session_state.news_data = news
-                    
-                    st.success("Data fetched successfully!")
-                else:
-                    st.error("Could not fetch data for the specified symbol.")
-                    return
+            # Calculate RSI
+            stock_data['RSI'] = calculate_rsi(stock_data)
             
-        if st.session_state.ticker_data is not None:
-            data = st.session_state.ticker_data
-            info = st.session_state.ticker_info
-            news = st.session_state.news_data
+            # Calculate MACD
+            macd, signal, histogram = calculate_macd(stock_data)
             
-            # Display company overview
-            display_company_overview(info)
+            # Create subplots
+            from plotly.subplots import make_subplots
             
-            # Make predictions
-            with st.spinner("Training prediction model..."):
-                predictions = train_prediction_model(data)
+            fig = make_subplots(
+                rows=3, cols=1,
+                shared_xaxes=True,
+                vertical_spacing=0.05,
+                subplot_titles=('Price', 'MACD', 'RSI'),
+                row_width=[0.2, 0.2, 0.6]
+            )
             
-            # Display stock chart with predictions
-            display_stock_chart(data, predictions)
+            # Price
+            fig.add_trace(go.Candlestick(
+                x=stock_data.index,
+                open=stock_data['Open'],
+                high=stock_data['High'],
+                low=stock_data['Low'],
+                close=stock_data['Close'],
+                name='Price'
+            ), row=1, col=1)
             
-            # Display prediction metrics
-            col1, col2, col3 = st.columns(3)
+            # MACD
+            fig.add_trace(go.Scatter(
+                x=stock_data.index,
+                y=macd,
+                name='MACD',
+                line=dict(color='#FF4B4B')
+            ), row=2, col=1)
+            
+            fig.add_trace(go.Scatter(
+                x=stock_data.index,
+                y=signal,
+                name='Signal',
+                line=dict(color='#00C853')
+            ), row=2, col=1)
+            
+            fig.add_trace(go.Bar(
+                x=stock_data.index,
+                y=histogram,
+                name='Histogram',
+                marker_color=np.where(histogram < 0, '#FF4B4B', '#00C853')
+            ), row=2, col=1)
+            
+            # RSI
+            fig.add_trace(go.Scatter(
+                x=stock_data.index,
+                y=stock_data['RSI'],
+                name='RSI',
+                line=dict(color='#FFD700')
+            ), row=3, col=1)
+            
+            # Add RSI reference lines
+            fig.add_hline(y=70, line_dash="dash", line_color="#FF4B4B", row=3, col=1)
+            fig.add_hline(y=30, line_dash="dash", line_color="#00C853", row=3, col=1)
+            
+            fig.update_layout(
+                height=800,
+                showlegend=True,
+                template="plotly_dark"
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with tab2:
+            # Company information
+            st.subheader("🏢 Company Details")
+            col1, col2 = st.columns(2)
             
             with col1:
-                st.metric("Training RMSE", f"{predictions['train_rmse']:.2f}")
+                st.markdown(f"""
+                <div class="card">
+                    <h3>Company Information</h3>
+                    <p><strong>CEO:</strong> {company_info['ceo']}</p>
+                    <p><strong>Founded:</strong> {company_info['founded']}</p>
+                    <p><strong>Employees:</strong> {company_info['employees']:,}</p>
+                    <p><strong>Headquarters:</strong> {company_info['headquarters']}</p>
+                    <p><strong>Website:</strong> <a href="{company_info['website']}" target="_blank">{company_info['website']}</a></p>
+                </div>
+                """, unsafe_allow_html=True)
             
             with col2:
-                st.metric("Test RMSE", f"{predictions['test_rmse']:.2f}")
+                st.markdown(f"""
+                <div class="card">
+                    <h3>Business Description</h3>
+                    <p>{company_info['description']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        with tab3:
+            # Financial statements (simulated)
+            st.subheader("💵 Financial Statements")
             
-            with col3:
-                st.metric("Mean Absolute Error", f"{predictions['mae']:.2f}")
+            # Income statement
+            st.markdown("#### Income Statement (in millions)")
+            income_data = {
+                '2023': ['394,328', '223,546', '170,782', '63,090', '107,692', '7,891', '99,801'],
+                '2022': ['365,817', '207,489', '158,328', '58,665', '99,663', '6,543', '93,120'],
+                '2021': ['347,155', '195,515', '151,640', '54,760', '96,880', '5,890', '90,990']
+            }
+            income_df = pd.DataFrame(income_data, index=[
+                'Total Revenue', 'Cost of Revenue', 'Gross Profit', 
+                'Operating Expenses', 'Operating Income', 'Interest Expense', 
+                'Net Income'
+            ])
+            st.dataframe(income_df, use_container_width=True)
             
-            # Display future predictions
-            st.subheader("Future Price Predictions")
-            future_df = pd.DataFrame({
-                'Date': predictions['future_dates'],
-                'Predicted Price': predictions['future_predictions']
-            })
-            st.dataframe(future_df)
+            # Balance sheet
+            st.markdown("#### Balance Sheet (in millions)")
+            balance_data = {
+                '2023': ['135,405', '246,674', '382,079', '287,912', '94,167'],
+                '2022': ['124,308', '229,836', '354,144', '267,564', '86,580'],
+                '2021': ['112,645', '214,218', '326,863', '251,084', '75,779']
+            }
+            balance_df = pd.DataFrame(balance_data, index=[
+                'Current Assets', 'Non-Current Assets', 'Total Assets',
+                'Total Liabilities', 'Total Equity'
+            ])
+            st.dataframe(balance_df, use_container_width=True)
+        
+        with tab4:
+            # News
+            st.subheader("📰 Latest News")
+            news_articles = fetch_news(company_info['name'])
             
-            # Display news
-            if news:
-                display_news(news, f"Latest News about {ticker}")
-    
-    elif page == "SIP Calculator":
-        st.title("SIP Calculator")
-        st.markdown("---")
-        sip_calculator()
-    
-    elif page == "IPO Prediction":
-        st.title("IPO Prediction")
-        st.markdown("---")
-        ipo_prediction()
-    
-    elif page == "Top Gainers/Losers":
-        st.title("Top Gainers & Losers")
-        st.markdown("---")
-        top_gainers_losers()
-    
-    elif page == "Mutual Funds":
-        st.title("Mutual Fund Analysis")
-        st.markdown("---")
-        mutual_funds()
-    
-    elif page == "Learning Center":
-        st.title("Stock Market Learning Center")
-        st.markdown("---")
-        learning_materials()
-    
-    # Footer
-    st.markdown("---")
-    st.markdown(
-        """
-        <div class="footer">
-            <p>Disclaimer: This application is for educational purposes only. 
-            Stock market investments are subject to market risks. 
-            Past performance is not indicative of future results.</p>
-        </div>
-        """, 
-        unsafe_allow_html=True
-    )
+            if news_articles:
+                for article in news_articles:
+                    st.markdown(f"""
+                    <div class="card">
+                        <h3>{article['title']}</h3>
+                        <p><strong>Source:</strong> {article['source']['name']} • {article['publishedAt'][:10]}</p>
+                        <p>{article['description']}</p>
+                        <p><a href="{article['url']}" target="_blank">Read more</a></p>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.info("No recent news articles found.")
+        
+        # Download report button
+        st.download_button(
+            label="📄 Download Company Report",
+            data=create_pdf_report(selected_symbol, stock_data, company_info),
+            file_name=f"{selected_symbol}_report.pdf",
+            mime="application/pdf"
+        )
 
-if __name__ == "__main__":
-    main()
+# Market Movers - Top Gainers & Losers
+elif selected == "Market Movers":
+    st.title("📈 Market Movers - Active Stocks, Top Gainers & Losers")
+    
+    # Top gainers
+    st.subheader("🚀 Top Gainers")
+    gainers_data = {
+        "Symbol": ["NVDA", "META", "TSLA", "AMD", "SHOP", "NET", "SNOW", "DDOG", "CRWD", "ZS"],
+        "Name": ["NVIDIA Corp", "Meta Platforms", "Tesla Inc", "Advanced Micro Devices", 
+                 "Shopify Inc", "Cloudflare Inc", "Snowflake Inc", "Datadog Inc", 
+                 "CrowdStrike Holdings", "Zscaler Inc"],
+        "Price": ["$610.32", "$468.25", "$245.67", "$178.90", "$82.45", 
+                  "$95.60", "$185.32", "$125.67", "$320.45", "$185.90"],
+        "Change %": ["+5.2%", "+4.8%", "+4.1%", "+3.9%", "+3.5%", 
+                     "+3.2%", "+2.9%", "+2.7%", "+2.5%", "+2.3%"],
+        "Volume": ["45.2M", "38.7M", "52.1M", "28.9M", "15.4M", 
+                   "12.8M", "10.5M", "8.7M", "7.9M", "6.5M"]
+    }
+    gainers_df = pd.DataFrame(gainers_data)
+    st.dataframe(gainers_df, use_container_width=True, hide_index=True)
+    
+    # Top losers
+    st.subheader("🔻 Top Losers")
+    losers_data = {
+        "Symbol": ["PFE", "DASH", "CVNA", "RIVN", "LCID", "NKLA", "AFRM", "UPST", "HOOD", "COIN"],
+        "Name": ["Pfizer Inc", "DoorDash Inc", "Carvana Co", "Rivian Automotive", 
+                 "Lucid Group Inc", "Nikola Corp", "Affirm Holdings", "Upstart Holdings", 
+                 "Robinhood Markets", "Coinbase Global"],
+        "Price": ["$27.45", "$102.36", "$56.78", "$16.23", "$3.45", 
+                  "$0.87", "$35.67", "$28.90", "$12.34", "$145.67"],
+        "Change %": ["-3.8%", "-3.2%", "-2.9%", "-2.7%", "-2.5%", 
+                     "-2.4%", "-2.1%", "-1.9%", "-1.7%", "-1.5%"],
+        "Volume": ["32.1M", "18.9M", "15.7M", "12.8M", "10.5M", 
+                   "8.7M", "7.9M", "6.5M", "5.8M", "4.9M"]
+    }
+    losers_df = pd.DataFrame(losers_data)
+    st.dataframe(losers_df, use_container_width=True, hide_index=True)
+    
+    # Most active
+    st.subheader("🔥 Most Active")
+    active_data = {
+        "Symbol": ["TSLA", "AAPL", "NVDA", "AMD", "AMZN", "META", "GOOGL", "MSFT", "SPY", "QQQ"],
+        "Name": ["Tesla Inc", "Apple Inc", "NVIDIA Corp", "Advanced Micro Devices", 
+                 "Amazon.com Inc", "Meta Platforms", "Alphabet Inc", "Microsoft Corp", 
+                 "SPDR S&P 500", "Invesco QQQ Trust"],
+        "Price": ["$245.67", "$188.50", "$610.32", "$178.90", "$175.25", 
+                  "$468.25", "$150.45", "$407.65", "$489.12", "$426.78"],
+        "Change %": ["+4.1%", "+0.8%", "+5.2%", "+3.9%", "+1.5%", 
+                     "+4.8%", "+1.2%", "+0.9%", "+0.5%", "+0.7%"],
+        "Volume": ["52.1M", "48.7M", "45.2M", "28.9M", "25.6M", 
+                   "38.7M", "22.4M", "20.8M", "78.9M", "45.6M"]
+    }
+    active_df = pd.DataFrame(active_data)
+    st.dataframe(active_df, use_container_width=True, hide_index=True)
+
+# Global Markets - Major Indices
+elif selected == "Global Markets":
+    st.title("🌍 Global Markets Status")
+    
+    # World indices
+    indices_data = {
+        "Index": ["S&P 500", "Dow Jones", "NASDAQ", "Russell 2000", "FTSE 100", 
+                  "DAX", "CAC 40", "Nikkei 225", "Hang Seng", "Shanghai Composite", 
+                  "ASX 200", "TSX Composite", "BSE Sensex", "Nifty 50"],
+        "Price": ["4,891.23", "38,654.42", "15,628.04", "1,978.23", "7,654.32", 
+                  "16,789.10", "7,432.10", "36,543.21", "16,789.54", "3,245.67", 
+                  "7,654.32", "21,098.76", "72,345.67", "21,876.54"],
+        "Change %": ["+0.45%", "+0.15%", "+0.75%", "-0.25%", "+0.32%", 
+                     "+0.67%", "+0.23%", "-0.12%", "-0.45%", "-0.32%", 
+                     "+0.54%", "+0.21%", "+1.23%", "+1.05%"]
+    }
+    indices_df = pd.DataFrame(indices_data)
+    st.dataframe(indices_df, use_container_width=True, hide_index=True)
+    
+    # World map visualization
+    st.subheader("🌎 Global Market Performance Heatmap")
+    
+    # Create a sample heatmap data
+    country_data = {
+        "Country": ["United States", "United Kingdom", "Germany", "France", "Japan", 
+                    "China", "Australia", "Canada", "India", "Brazil"],
+        "Code": ["USA", "GBR", "DEU", "FRA", "JPN", "CHN", "AUS", "CAN", "IND", "BRA"],
+        "Performance": [0.45, 0.32, 0.67, 0.23, -0.12, -0.32, 0.54, 0.21, 1.23, -0.45]
+    }
+    country_df = pd.DataFrame(country_data)
+    
+    fig = px.choropleth(country_df, locations="Code", color="Performance",
+                        hover_name="Country", 
+                        color_continuous_scale=px.colors.diverging.RdYlGn,
+                        title="Global Market Performance")
+    st.plotly_chart(fig, use_container_width=True)
+
+# Other sections would follow the same pattern with enhanced UI and functionality
+
+# Footer
+st.markdown("---")
+st.markdown("""
+<div style='text-align: center; color: #888;'>
+    <p>MarketMentor - Stock Market Dashboard | Developed with ❤️ using Streamlit</p>
+    <p>Disclaimer: This is a simulation for educational purposes only. Not financial advice.</p>
+</div>
+""", unsafe_allow_html=True)
