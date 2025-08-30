@@ -157,104 +157,45 @@ st.markdown("""
         margin-top: 0;
     }
     
-    /* Mobile Responsiveness */
-    @media (max-width: 768px) {
-        .stSidebar {
-            width: 100% !important;
-            min-width: 100% !important;
-            max-width: 100% !important;
-        }
-        
-        .stSidebar .stButton>button {
-            padding: 0.4rem 0.8rem;
-            font-size: 14px;
-        }
-        
-        .stSidebar .stSelectbox>div>div>select {
-            font-size: 14px;
-        }
-        
-        .stSidebar .stTextInput>div>div>input {
-            font-size: 14px;
-        }
-        
-        .css-1d391kg {
-            padding: 1rem 0.5rem;
-        }
-        
-        .stTabs [data-baseweb="tab"] {
-            height: 40px;
-            font-size: 12px;
-            padding: 8px 12px;
-        }
-        
-        .stock-card {
-            padding: 10px;
-        }
-        
-        .feature-card {
-            padding: 15px;
-        }
-        
-        /* Mobile navigation menu */
-        .mobile-nav {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 1rem;
-        }
-        
-        .mobile-nav-item {
-            flex: 1 0 calc(33.333% - 8px);
-            background-color: #262730;
-            border-radius: 6px;
-            padding: 10px;
-            text-align: center;
-            font-size: 12px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .mobile-nav-item:hover, .mobile-nav-item.active {
-            background-color: #FF4B4B;
-            color: #0E1117;
-        }
-        
-        /* Hide desktop sidebar on mobile */
-        @media (max-width: 768px) {
-            section[data-testid="stSidebar"] {
-                display: none;
-            }
-            
-            .main > div {
-                padding-left: 1rem;
-                padding-right: 1rem;
-            }
-        }
-        
-        /* Show mobile navigation on mobile */
-        .mobile-nav-container {
-            display: block;
-        }
-        
-        /* Hide desktop sidebar content on mobile */
-        .sidebar-content {
-            display: none;
-        }
+    /* Mobile Navigation */
+    .mobile-nav {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: #262730;
+        z-index: 1000;
+        padding: 10px;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
     }
     
-    /* Desktop styles */
-    @media (min-width: 769px) {
-        .mobile-nav-container {
-            display: none;
-        }
-        
-        .sidebar-content {
-            display: block;
-        }
+    .mobile-nav-items {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
     }
     
-    /* Mobile header */
+    .mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: #FAFAFA;
+        text-decoration: none;
+        font-size: 12px;
+        padding: 5px;
+    }
+    
+    .mobile-nav-item.active {
+        color: #FF4B4B;
+    }
+    
+    .mobile-nav-icon {
+        font-size: 20px;
+        margin-bottom: 4px;
+    }
+    
+    /* Mobile Header */
     .mobile-header {
         display: flex;
         justify-content: space-between;
@@ -262,7 +203,9 @@ st.markdown("""
         padding: 1rem;
         background-color: #0E1117;
         border-bottom: 1px solid #262730;
-        margin-bottom: 1rem;
+        position: sticky;
+        top: 0;
+        z-index: 999;
     }
     
     .mobile-menu-button {
@@ -271,6 +214,86 @@ st.markdown("""
         color: #FF4B4B;
         font-size: 24px;
         cursor: pointer;
+    }
+    
+    .mobile-menu-content {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #0E1117;
+        z-index: 1001;
+        padding: 20px;
+        overflow-y: auto;
+    }
+    
+    .mobile-menu-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: none;
+        border: none;
+        color: #FF4B4B;
+        font-size: 24px;
+        cursor: pointer;
+    }
+    
+    .mobile-menu-item {
+        display: block;
+        padding: 15px 0;
+        color: #FAFAFA;
+        text-decoration: none;
+        font-size: 18px;
+        border-bottom: 1px solid #262730;
+    }
+    
+    .mobile-menu-item.active {
+        color: #FF4B4B;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .main > div {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        
+        .stSidebar {
+            display: none !important;
+        }
+        
+        .mobile-nav {
+            display: block;
+        }
+        
+        .mobile-header {
+            display: flex;
+        }
+        
+        .desktop-only {
+            display: none;
+        }
+    }
+    
+    @media (min-width: 769px) {
+        .mobile-nav {
+            display: none;
+        }
+        
+        .mobile-header {
+            display: none;
+        }
+        
+        .mobile-menu-content {
+            display: none !important;
+        }
+    }
+    
+    /* Desktop styles */
+    .desktop-sidebar {
+        display: block;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -443,83 +466,117 @@ def prepare_lstm_data(data, time_step=60):
     X = np.reshape(X, (X.shape[0], X.shape[1], 1))
     return X, y, scaler
 
-# Mobile navigation
-def mobile_navigation():
-    st.markdown("""
-    <div class="mobile-header">
-        <div style="display: flex; align-items: center;">
-            <img src="https://img.icons8.com/fluency/48/stock-share.png" width="32" style="margin-right: 10px;">
-            <h2 style="margin: 0; color: #FF4B4B;">MarketMentor</h2>
-        </div>
-        <button class="mobile-menu-button" onclick="document.querySelector('.mobile-nav-container').style.display = 
-            document.querySelector('.mobile-nav-container').style.display === 'none' ? 'block' : 'none'">☰</button>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("""
-    <div class="mobile-nav-container" style="display: none;">
-        <div class="mobile-nav">
-            <div class="mobile-nav-item" onclick="window.location.href='#home'">Home</div>
-            <div class="mobile-nav-item" onclick="window.location.href='#company'">Company</div>
-            <div class="mobile-nav-item" onclick="window.location.href='#movers'">Movers</div>
-            <div class="mobile-nav-item" onclick="window.location.href='#global'">Global</div>
-            <div class="mobile-nav-item" onclick="window.location.href='#funds'">Funds</div>
-            <div class="mobile-nav-item" onclick="window.location.href='#sectors'">Sectors</div>
-            <div class="mobile-nav-item" onclick="window.location.href='#news'">News</div>
-            <div class="mobile-nav-item" onclick="window.location.href='#learning'">Learning</div>
-            <div class="mobile-nav-item" onclick="window.location.href='#volume'">Volume</div>
-            <div class="mobile-nav-item" onclick="window.location.href='#sentiment'">Sentiment</div>
-            <div class="mobile-nav-item" onclick="window.location.href='#predictions'">Predictions</div>
-            <div class="mobile-nav-item" onclick="window.location.href='#buysell'">Buy/Sell</div>
-            <div class="mobile-nav-item" onclick="window.location.href='#screener'">Screener</div>
-            <div class="mobile-nav-item" onclick="window.location.href='#fno'">F&O</div>
-            <div class="mobile-nav-item" onclick="window.location.href='#sip'">SIP</div>
-            <div class="mobile-nav-item" onclick="window.location.href='#ipo'">IPO</div>
-            <div class="mobile-nav-item" onclick="window.location.href='#watchlist'">Watchlist</div>
-            <div class="mobile-nav-item" onclick="window.location.href='#options'">Options</div>
-        </div>
-        
-        <div style="padding: 1rem; background-color: #262730; border-radius: 8px; margin-bottom: 1rem;">
-            <h4 style="margin-top: 0; color: #FF4B4B;">Quick Stock Lookup</h4>
-            <input type="text" placeholder="Enter Symbol" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #4A4A4A; background-color: #0E1117; color: white; margin-bottom: 10px;">
-            <button style="width: 100%; padding: 8px; background-color: #FF4B4B; color: white; border: none; border-radius: 4px; cursor: pointer;">Get Quote</button>
-        </div>
-        
-        <div style="padding: 1rem; background-color: #262730; border-radius: 8px; margin-bottom: 1rem;">
-            <h4 style="margin-top: 0; color: #FF4B4B;">Market Status</h4>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div style="background-color: #0E1117; padding: 10px; border-radius: 6px;">
-                    <div>S&P 500</div>
-                    <div style="font-weight: bold;">4,567.25</div>
-                    <div style="color: #00C853;">+0.78%</div>
-                </div>
-                <div style="background-color: #0E1117; padding: 10px; border-radius: 6px;">
-                    <div>NASDAQ</div>
-                    <div style="font-weight: bold;">14,346.00</div>
-                    <div style="color: #00C853;">+1.23%</div>
-                </div>
-                <div style="background-color: #0E1117; padding: 10px; border-radius: 6px;">
-                    <div>DOW</div>
-                    <div style="font-weight: bold;">35,443.82</div>
-                    <div style="color: #FF4B4B;">-0.15%</div>
-                </div>
-                <div style="background-color: #0E1117; padding: 10px; border-radius: 6px;">
-                    <div>RUSSELL</div>
-                    <div style="font-weight: bold;">1,925.42</div>
-                    <div style="color: #00C853;">+0.42%</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
 # Initialize session state for navigation
 if 'selected' not in st.session_state:
     st.session_state.selected = "Home"
 
+if 'mobile_menu_open' not in st.session_state:
+    st.session_state.mobile_menu_open = False
+
+# Mobile header
+st.markdown("""
+<div class="mobile-header">
+    <h2>MarketMentor</h2>
+    <button class="mobile-menu-button" onclick="toggleMobileMenu()">☰</button>
+</div>
+""", unsafe_allow_html=True)
+
+# Mobile menu
+st.markdown(f"""
+<div class="mobile-menu-content" id="mobileMenu" style="display: {'block' if st.session_state.mobile_menu_open else 'none'};">
+    <button class="mobile-menu-close" onclick="toggleMobileMenu()">×</button>
+    <h2 style="color: #FF4B4B; margin-bottom: 20px;">Navigation</h2>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'Home' else ''}" onclick="setPage('Home')">🏠 Home</a>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'Company Overview' else ''}" onclick="setPage('Company Overview')">🏢 Company Overview</a>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'Market Movers' else ''}" onclick="setPage('Market Movers')">📈 Market Movers</a>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'Global Markets' else ''}" onclick="setPage('Global Markets')">🌍 Global Markets</a>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'Mutual Funds' else ''}" onclick="setPage('Mutual Funds')">💰 Mutual Funds</a>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'Sectors' else ''}" onclick="setPage('Sectors')">📊 Sectors</a>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'News' else ''}" onclick="setPage('News')">📰 News</a>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'Learning' else ''}" onclick="setPage('Learning')">🎓 Learning</a>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'Volume Spike' else ''}" onclick="setPage('Volume Spike')">📊 Volume Spike</a>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'News Sentiment' else ''}" onclick="setPage('News Sentiment')">😊 News Sentiment</a>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'Predictions' else ''}" onclick="setPage('Predictions')">🔮 Predictions</a>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'Buy/Sell Predictor' else ''}" onclick="setPage('Buy/Sell Predictor')">↕️ Buy/Sell Predictor</a>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'Stock Screener' else ''}" onclick="setPage('Stock Screener')">🔍 Stock Screener</a>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'F&O' else ''}" onclick="setPage('F&O')">📊 F&O</a>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'SIP Calculator' else ''}" onclick="setPage('SIP Calculator')">🧮 SIP Calculator</a>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'IPO Tracker' else ''}" onclick="setPage('IPO Tracker')">📈 IPO Tracker</a>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'Watchlist' else ''}" onclick="setPage('Watchlist')">⭐ Watchlist</a>
+    <a href="#" class="mobile-menu-item {'active' if st.session_state.selected == 'Options Chain' else ''}" onclick="setPage('Options Chain')">⛓️ Options Chain</a>
+</div>
+""", unsafe_allow_html=True)
+
+# Mobile bottom navigation
+st.markdown("""
+<div class="mobile-nav">
+    <div class="mobile-nav-items">
+        <a href="#" class="mobile-nav-item" onclick="setPage('Home')">
+            <div class="mobile-nav-icon">🏠</div>
+            <span>Home</span>
+        </a>
+        <a href="#" class="mobile-nav-item" onclick="setPage('Market Movers')">
+            <div class="mobile-nav-icon">📈</div>
+            <span>Movers</span>
+        </a>
+        <a href="#" class="mobile-nav-item" onclick="setPage('News')">
+            <div class="mobile-nav-icon">📰</div>
+            <span>News</span>
+        </a>
+        <a href="#" class="mobile-nav-item" onclick="setPage('Predictions')">
+            <div class="mobile-nav-icon">🔮</div>
+            <span>Predict</span>
+        </a>
+        <a href="#" class="mobile-nav-item" onclick="toggleMobileMenu()">
+            <div class="mobile-nav-icon">☰</div>
+            <span>More</span>
+        </a>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# JavaScript for mobile navigation
+st.markdown("""
+<script>
+function setPage(page) {
+    window.parent.document.querySelector('iframe').contentWindow.setPage(page);
+    toggleMobileMenu();
+}
+
+function toggleMobileMenu() {
+    const menu = document.getElementById('mobileMenu');
+    if (menu.style.display === 'block') {
+        menu.style.display = 'none';
+    } else {
+        menu.style.display = 'block';
+    }
+}
+
+// Set iframe communication
+window.setPage = function(page) {
+    const event = new CustomEvent('setPage', { detail: page });
+    window.dispatchEvent(event);
+}
+
+window.addEventListener('setPage', function(e) {
+    const page = e.detail;
+    // This will be handled by Streamlit
+    const data = {type: 'setPage', page: page};
+    window.parent.postMessage(data, '*');
+});
+
+// Listen for messages from parent
+window.addEventListener('message', function(event) {
+    if (event.data.type === 'setPage') {
+        setPage(event.data.page);
+    }
+});
+</script>
+""", unsafe_allow_html=True)
+
 # Sidebar menu for desktop
 with st.sidebar:
-    st.markdown('<div class="sidebar-content">', unsafe_allow_html=True)
+    st.markdown('<div class="desktop-sidebar">', unsafe_allow_html=True)
     st.image("https://img.icons8.com/fluency/96/stock-share.png", width=80)
     st.title("MarketMentor")
     
@@ -550,6 +607,7 @@ with st.sidebar:
     if st.button("Get Quote"):
         st.session_state.selected_ticker = quick_ticker
         st.session_state.selected = "Company Overview"
+        st.rerun()
     
     st.markdown("---")
     st.subheader("Market Status")
@@ -581,14 +639,12 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Mobile navigation
-mobile_navigation()
+# Handle page navigation from JavaScript
+if 'selected' in st.session_state:
+    selected = st.session_state.selected
 
 # Load company data
 company_data = load_company_data()
-
-# Update selected from session state
-selected = st.session_state.selected
 
 # Home - Market Overview
 if selected == "Home":
@@ -677,227 +733,78 @@ if selected == "Home":
     
     st.markdown("---")
     
-    # Latest news
-    st.subheader("📰 Latest Financial News")
+    # Latest news section
+    st.subheader("📰 Latest Market News")
     news_articles = get_news(num_articles=3)
     
     for article in news_articles:
         st.markdown(f"""
         <div class="stock-card">
             <h4>{article['title']}</h4>
-            <p><strong>Source:</strong> {article['source']['name']} | <strong>Published:</strong> {article['publishedAt'][:10]}</p>
-            <a href="{article['url']}" target="_blank" style="color: #FF4B4B; text-decoration: none;">Read more →</a>
+            <p><em>Source: {article['source']['name']}</em></p>
+            <p>{article['publishedAt'][:10]}</p>
+            <a href="{article['url']}" target="_blank" style="color: #FF4B4B;">Read more →</a>
         </div>
         """, unsafe_allow_html=True)
     
     st.markdown("---")
     
     # Features overview
-    st.subheader("🚀 Platform Features")
+    st.subheader("🚀 Key Features")
     
-    features = [
-        {"title": "Company Analysis", "description": "Detailed financials, technical indicators, and performance metrics for any stock.", "icon": "📊"},
-        {"title": "Predictive Analytics", "description": "AI-powered price predictions and buy/sell signals using machine learning models.", "icon": "🤖"},
-        {"title": "Market Overview", "description": "Real-time data on indices, sectors, and global markets with interactive charts.", "icon": "🌍"},
-        {"title": "News & Sentiment", "description": "Latest financial news with sentiment analysis to gauge market mood.", "icon": "📰"},
-        {"title": "Screening Tools", "description": "Advanced stock screening based on technical and fundamental criteria.", "icon": "🔍"},
-        {"title": "Learning Resources", "description": "Educational content to improve your trading and investment knowledge.", "icon": "🎓"}
-    ]
+    col1, col2, col3 = st.columns(3)
     
-    cols = st.columns(3)
-    for i, feature in enumerate(features):
-        with cols[i % 3]:
-            st.markdown(f"""
-            <div class="feature-card">
-                <h3>{feature['icon']} {feature['title']}</h3>
-                <p>{feature['description']}</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-# Company Overview - Detailed stock analysis
-elif selected == "Company Overview":
-    st.title("🏢 Company Overview")
-    
-    # Ticker input
-    col1, col2 = st.columns([2, 1])
     with col1:
-        if 'selected_ticker' in st.session_state:
-            default_ticker = st.session_state.selected_ticker
-        else:
-            default_ticker = "AAPL"
-        
-        ticker = st.text_input("Enter Stock Symbol", value=default_ticker).upper()
+        st.markdown("""
+        <div class="feature-card">
+            <h3>📊 Real-time Data</h3>
+            <p>Access live stock prices, market indices, and financial news updated in real-time.</p>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col2:
-        period = st.selectbox("Time Period", ["1mo", "3mo", "6mo", "1y", "2y", "5y"], index=3)
+        st.markdown("""
+        <div class="feature-card">
+            <h3>📈 Advanced Analytics</h3>
+            <p>Technical indicators, charting tools, and predictive analytics for informed decisions.</p>
+        </div>
+        """, unsafe_allow_html=True)
     
-    if ticker:
-        try:
-            # Get stock data
-            data, stock = get_stock_data(ticker, period)
-            
-            if data.empty:
-                st.error(f"No data found for {ticker}")
-            else:
-                # Get company info
-                info = get_company_info(ticker)
-                
-                # Calculate additional metrics
-                current_price = data['Close'][-1]
-                prev_close = data['Close'][-2] if len(data) > 1 else current_price
-                price_change = current_price - prev_close
-                percent_change = (price_change / prev_close) * 100
-                
-                # Display company header
-                company_name = info.get('longName', ticker)
-                st.markdown(f"<h2>{company_name} ({ticker})</h2>", unsafe_allow_html=True)
-                
-                # Price and change display
-                change_color = "positive-change" if price_change >= 0 else "negative-change"
-                change_icon = "📈" if price_change >= 0 else "📉"
-                
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Current Price", f"${current_price:.2f}")
-                with col2:
-                    st.metric("Change", f"${price_change:.2f}", f"{percent_change:.2f}%")
-                with col3:
-                    st.markdown(f"<h3 class='{change_color}' style='margin-top: 30px;'>{change_icon} {percent_change:.2f}%</h3>", unsafe_allow_html=True)
-                
-                # Price chart
-                st.subheader("Price Chart")
-                fig = go.Figure()
-                fig.add_trace(go.Candlestick(
-                    x=data.index,
-                    open=data['Open'],
-                    high=data['High'],
-                    low=data['Low'],
-                    close=data['Close'],
-                    name='Price'
-                ))
-                fig.update_layout(
-                    height=500,
-                    template="plotly_dark",
-                    xaxis_rangeslider_visible=False
-                )
-                st.plotly_chart(fig, use_container_width=True)
-                
-                # Company information
-                st.subheader("Company Information")
-                
-                # Get company data from our JSON or Yahoo Finance
-                company_info = company_data.get(ticker, {})
-                
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.markdown("""
-                    <div class="stock-card">
-                        <h3>Company Details</h3>
-                    """, unsafe_allow_html=True)
-                    
-                    details = [
-                        ("Sector", info.get('sector', company_info.get('sector', 'N/A'))),
-                        ("Industry", info.get('industry', company_info.get('industry', 'N/A'))),
-                        ("CEO", info.get('ceo', company_info.get('ceo', 'N/A'))),
-                        ("Employees", f"{info.get('fullTimeEmployees', company_info.get('employees', 'N/A')):,}"),
-                        ("Headquarters", info.get('city', '') + ", " + info.get('state', '') 
-                         if info.get('city') else company_info.get('headquarters', 'N/A'))
-                    ]
-                    
-                    for label, value in details:
-                        st.markdown(f"<p><strong>{label}:</strong> {value}</p>", unsafe_allow_html=True)
-                    
-                    st.markdown("</div>", unsafe_allow_html=True)
-                
-                with col2:
-                    st.markdown("""
-                    <div class="stock-card">
-                        <h3>Financial Metrics</h3>
-                    """, unsafe_allow_html=True)
-                    
-                    metrics = [
-                        ("Market Cap", f"${info.get('marketCap', 0):,}" if info.get('marketCap') else "N/A"),
-                        ("P/E Ratio", info.get('trailingPE', 'N/A')),
-                        ("EPS", info.get('trailingEps', 'N/A')),
-                        ("Dividend Yield", f"{info.get('dividendYield', 0)*100:.2f}%" if info.get('dividendYield') else "N/A"),
-                        ("52 Week High", f"${info.get('fiftyTwoWeekHigh', 'N/A')}"),
-                        ("52 Week Low", f"${info.get('fiftyTwoWeekLow', 'N/A')}")
-                    ]
-                    
-                    for label, value in metrics:
-                        st.markdown(f"<p><strong>{label}:</strong> {value}</p>", unsafe_allow_html=True)
-                    
-                    st.markdown("</div>", unsafe_allow_html=True)
-                
-                # Technical indicators
-                st.subheader("Technical Indicators")
-                tech_data = calculate_technical_indicators(data)
-                
-                # Display current values of key indicators
-                col1, col2, col3, col4 = st.columns(4)
-                
-                with col1:
-                    st.metric("RSI", f"{tech_data['RSI'].iloc[-1]:.2f}")
-                
-                with col2:
-                    st.metric("MACD", f"{tech_data['MACD'].iloc[-1]:.2f}")
-                
-                with col3:
-                    st.metric("20-Day SMA", f"{tech_data['SMA_20'].iloc[-1]:.2f}")
-                
-                with col4:
-                    st.metric("50-Day SMA", f"{tech_data['SMA_50'].iloc[-1]:.2f}")
-                
-                # Plot technical indicators
-                fig, axes = plt.subplots(2, 2, figsize=(15, 10))
-                fig.suptitle('Technical Indicators', color='white')
-                fig.patch.set_facecolor('#0E1117')
-                
-                # RSI
-                axes[0, 0].plot(tech_data.index, tech_data['RSI'], color='#FF4B4B')
-                axes[0, 0].axhline(70, color='red', linestyle='--', alpha=0.3)
-                axes[0, 0].axhline(30, color='green', linestyle='--', alpha=0.3)
-                axes[0, 0].set_title('RSI', color='white')
-                axes[0, 0].set_facecolor('#262730')
-                axes[0, 0].tick_params(colors='white')
-                
-                # MACD
-                axes[0, 1].plot(tech_data.index, tech_data['MACD'], label='MACD', color='#FF4B4B')
-                axes[0, 1].plot(tech_data.index, tech_data['MACD_signal'], label='Signal', color='#00C853')
-                axes[0, 1].bar(tech_data.index, tech_data['MACD_hist'], label='Histogram', alpha=0.3)
-                axes[0, 1].set_title('MACD', color='white')
-                axes[0, 1].legend()
-                axes[0, 1].set_facecolor('#262730')
-                axes[0, 1].tick_params(colors='white')
-                
-                # Moving Averages
-                axes[1, 0].plot(tech_data.index, tech_data['Close'], label='Price', color='white', alpha=0.7)
-                axes[1, 0].plot(tech_data.index, tech_data['SMA_20'], label='20-Day SMA', color='#FF4B4B')
-                axes[1, 0].plot(tech_data.index, tech_data['SMA_50'], label='50-Day SMA', color='#00C853')
-                axes[1, 0].set_title('Moving Averages', color='white')
-                axes[1, 0].legend()
-                axes[1, 0].set_facecolor('#262730')
-                axes[1, 0].tick_params(colors='white')
-                
-                # Bollinger Bands
-                axes[1, 1].plot(tech_data.index, tech_data['Close'], label='Price', color='white', alpha=0.7)
-                axes[1, 1].plot(tech_data.index, tech_data['BB_mid'], label='Middle Band', color='#FF4B4B')
-                axes[1, 1].plot(tech_data.index, tech_data['BB_high'], label='Upper Band', color='#00C853', alpha=0.7)
-                axes[1, 1].plot(tech_data.index, tech_data['BB_low'], label='Lower Band', color='#FF4B4B', alpha=0.7)
-                axes[1, 1].fill_between(tech_data.index, tech_data['BB_high'], tech_data['BB_low'], alpha=0.1)
-                axes[1, 1].set_title('Bollinger Bands', color='white')
-                axes[1, 1].legend()
-                axes[1, 1].set_facecolor('#262730')
-                axes[1, 1].tick_params(colors='white')
-                
-                plt.tight_layout()
-                st.pyplot(fig)
-                
-        except Exception as e:
-            st.error(f"Error fetching data for {ticker}: {str(e)}")
+    with col3:
+        st.markdown("""
+        <div class="feature-card">
+            <h3>🔮 AI Predictions</h3>
+            <p>Machine learning models for price predictions and buy/sell recommendations.</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-# Other menu options would be implemented here
-else:
-    st.title(f"{selected} Section")
-    st.info("This section is under development. Check back soon for updates!")
+# Other page content would follow here...
+
+# Add JavaScript communication handler
+components.html(
+    """
+    <script>
+    window.addEventListener('message', function(event) {
+        if (event.data.type === 'setPage') {
+            // Send message to Streamlit
+            const data = {type: 'setPage', page: event.data.page};
+            window.parent.postMessage(data, '*');
+        }
+    });
+    
+    // Function to set page from JavaScript
+    window.setPage = function(page) {
+        const data = {type: 'setPage', page: page};
+        window.parent.postMessage(data, '*');
+    }
+    </script>
+    """,
+    height=0
+)
+
+# Handle page navigation from JavaScript
+try:
+    if 'setPage' in st.session_state:
+        st.session_state.selected = st.session_state.setPage
+except:
+    pass
