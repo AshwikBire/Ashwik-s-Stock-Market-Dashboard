@@ -435,7 +435,7 @@ if selected == "Home":
                'Industrials', 'Communication', 'Utilities', 'Real Estate']
     performance = [2.5, 1.2, -0.3, 1.8, -1.5, 0.7, 1.1, -0.8, 0.3]
     
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subfaces(figsize=(10, 6))
     colors = ['#FF4B4B' if x < 0 else '#00C853' for x in performance]
     ax.barh(sectors, performance, color=colors)
     ax.set_xlabel('Percentage Change (%)')
