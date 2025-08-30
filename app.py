@@ -22,7 +22,6 @@ import json
 import time
 from datetime import date
 import ta  # Technical analysis library
-import funda  # Fundamental analysis library (hypothetical)
 from fpdf import FPDF  # For generating reports
 import base64
 from io import BytesIO
@@ -178,8 +177,6 @@ st.markdown("""
 # Load company data from JSON file
 @st.cache_data
 def load_company_data():
-    # In a real app, this would load from a file
-    # For demo purposes, we'll create a sample dataset
     company_data = {
         "AAPL": {
             "name": "Apple Inc.",
@@ -780,7 +777,62 @@ elif selected == "Global Markets":
                         title="Global Market Performance")
     st.plotly_chart(fig, use_container_width=True)
 
-# Other sections would follow the same pattern with enhanced UI and functionality
+# Placeholder implementations for other menu options
+elif selected == "Mutual Funds":
+    st.title("💰 Mutual Funds")
+    st.info("This section is under development. Coming soon!")
+
+elif selected == "Sectors":
+    st.title("🏭 Sectors")
+    st.info("This section is under development. Coming soon!")
+
+elif selected == "News":
+    st.title("📰 News")
+    st.info("This section is under development. Coming soon!")
+
+elif selected == "Learning":
+    st.title("📚 Learning Center")
+    st.info("This section is under development. Coming soon!")
+
+elif selected == "Volume Spike":
+    st.title("📊 Volume Spike Analysis")
+    st.info("This section is under development. Coming soon!")
+
+elif selected == "News Sentiment":
+    st.title("😊 News Sentiment Analysis")
+    st.info("This section is under development. Coming soon!")
+
+elif selected == "Predictions":
+    st.title("🔮 Price Predictions")
+    st.info("This section is under development. Coming soon!")
+
+elif selected == "Buy/Sell Predictor":
+    st.title("📈 Buy/Sell Predictor")
+    st.info("This section is under development. Coming soon!")
+
+elif selected == "Stock Screener":
+    st.title("🔍 Stock Screener")
+    st.info("This section is under development. Coming soon!")
+
+elif selected == "F&O":
+    st.title("📊 Futures & Options")
+    st.info("This section is under development. Coming soon!")
+
+elif selected == "SIP Calculator":
+    st.title("🧮 SIP Calculator")
+    st.info("This section is under development. Coming soon!")
+
+elif selected == "IPO Tracker":
+    st.title("📋 IPO Tracker")
+    st.info("This section is under development. Coming soon!")
+
+elif selected == "Watchlist":
+    st.title("⭐ Watchlist")
+    st.info("This section is under development. Coming soon!")
+
+elif selected == "Portfolio Tracker":
+    st.title("💼 Portfolio Tracker")
+    st.info("This section is under development. Coming soon!")
 
 # Footer
 st.markdown("---")
