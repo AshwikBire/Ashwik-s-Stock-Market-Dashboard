@@ -12,5 +12,4 @@ xgboost
 scikit-learn
 tensorflow
 ta
-fpdf
-lxml
+fpdf2
