@@ -1,34 +1,144 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt  # Make sure this line is included at the top
+import matplotlib.pyplot as plt
 import seaborn as sns
-import yfinance as yf  # Ensure that yfinance is imported for stock data
+import yfinance as yf
 import requests
 from plotly import graph_objects as go
-from streamlit_option_menu import option_menu  # Import the option_menu
+from streamlit_option_menu import option_menu
 from textblob import TextBlob
 from xgboost import XGBRegressor
 from datetime import timedelta
-import yfinance as yf
-import pandas as pd
-import plotly.graph_objects as go
-import streamlit as st
-import numpy as np
-import pandas as pd
-import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM
 from sklearn.model_selection import train_test_split
-import plotly.graph_objects as go
-import streamlit as st
 
 # News API Key
 NEWS_API_KEY = "0b08be107dca45d3be30ca7e06544408"
 
-# Set page config
-st.set_page_config(page_title="MarketMentor", layout="wide")
+# Set page config with dark theme
+st.set_page_config(page_title="MarketMentor", layout="wide", page_icon="📈")
+
+# Apply custom CSS for navy blue + dark + red theme
+st.markdown("""
+<style>
+    .main {
+        background-color: #0e1117;
+        color: #fafafa;
+    }
+    .stSidebar {
+        background-color: #001f3f;
+    }
+    div[data-testid="stMetric"] {
+        background-color: #162447;
+        border: 1px solid #e63946;
+        padding: 5px;
+        border-radius: 5px;
+    }
+    div[data-testid="stMetricValue"] {
+        color: #fafafa;
+    }
+    div[data-testid="stMetricLabel"] {
+        color: #a8dadc;
+    }
+    .st-bb {
+        background-color: transparent;
+    }
+    .st-at {
+        background-color: #162447;
+    }
+    .st-ae {
+        background-color: #0e1117;
+    }
+    .st-af {
+        color: #fafafa;
+    }
+    .st-ag {
+        color: #a8dadc;
+    }
+    .st-ah {
+        color: #fafafa;
+    }
+    .st-ai {
+        color: #0e1117;
+    }
+    .css-1kyxreq etr89bj2 {
+        background-color: #162447;
+    }
+    header {
+        background-color: #001f3f;
+    }
+    .css-1d391kg etr89bj1 {
+        background-color: #0e1117;
+    }
+    .stAlert {
+        background-color: #162447;
+        border: 1px solid #e63946;
+    }
+    .st-bh, .st-bi, .st-bj, .st-bk {
+        color: #fafafa;
+    }
+    .st-bx {
+        background-color: #162447;
+    }
+    .st-by {
+        background-color: #0e1117;
+    }
+    .st-bz {
+        background-color: #001f3f;
+    }
+    .st-c0 {
+        background-color: #162447;
+    }
+    .stSelectbox:first-child > div > div {
+        background-color: #162447;
+    }
+    div[data-baseweb="select"] > div {
+        background-color: #162447;
+        color: #fafafa;
+    }
+    .stTextInput > div > div > input {
+        background-color: #162447;
+        color: #fafafa;
+    }
+    .stNumberInput > div > div > input {
+        background-color: #162447;
+        color: #fafafa;
+    }
+    .stSlider > div > div > div > div {
+        background-color: #e63946;
+    }
+    .stRadio > div {
+        background-color: #162447;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    .stDataFrame {
+        background-color: #162447;
+    }
+    .stExpander {
+        background-color: #162447;
+        border: 1px solid #e63946;
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 24px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        white-space: pre-wrap;
+        background-color: #162447;
+        border-radius: 4px 4px 0px 0px;
+        gap: 1px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #e63946;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Sidebar menu
 with st.sidebar:
@@ -37,12 +147,18 @@ with st.sidebar:
         ["Home","Company Overview", "Market Movers", "F&O", "Global Markets", "Mutual Funds", "SIP Calculator","IPO Tracker","Predictions for Mutual Funds & IPOs","Mutual Fund NAV Viewer","Sectors", "News", "Learning", "Volume Spike", "Stock Screener", "Predictions", "Buy/Sell Predictor", "News Sentiment"],
         icons=['house', 'graph-up', 'globe', 'bank', 'boxes', 'newspaper', 'building', 'book', 'activity', 'search'],
         menu_icon="cast",
-        default_index=0
+        default_index=0,
+        styles={
+            "container": {"padding": "5!important", "background-color": "#001f3f"},
+            "icon": {"color": "#fafafa", "font-size": "25px"}, 
+            "nav-link": {"font-size": "16px", "text-align": "left", "margin":"0px", "color": "#fafafa"},
+            "nav-link-selected": {"background-color": "#e63946"},
+        }
     )
 
 # Home - Market Overview
 if selected == "Home":
-    st.title("\U0001F3E0 Home - Market Overview")
+    st.title("🏠 Home - Market Overview")
     indices = {
         "^NSEI": "Nifty 50",
         "^BSESN": "Sensex",
@@ -57,11 +173,13 @@ if selected == "Home":
         last_close = round(data['Close'].iloc[-1], 2)
         change = round(data['Close'].iloc[-1] - data['Open'].iloc[-1], 2)
         percent_change = round((change / data['Open'].iloc[-1]) * 100, 2)
-        cols[idx].metric(label=name, value=f"{last_close}", delta=f"{percent_change}%")
-
+        
+        # Determine currency symbol
+        currency_symbol = "₹" if symbol in ["^NSEI", "^BSESN"] else "$"
+        
+        cols[idx].metric(label=name, value=f"{currency_symbol}{last_close:,}", delta=f"{percent_change}%")
 
 # Market Movers - Top Gainers & Losers
-# Market Movers - Active Stocks, Top Gainers & Losers
 elif selected == "Market Movers":
     st.title("📈 Market Movers - Active Stocks, Top Gainers & Losers")
 
@@ -70,7 +188,14 @@ elif selected == "Market Movers":
     nifty = yf.Tickers(tickers_list)
 
     # Fetching recent closing prices
-    data = {ticker: nifty.tickers[ticker].history(period="1d")['Close'].iloc[-1] for ticker in nifty.tickers}
+    data = {}
+    for ticker in nifty.tickers:
+        try:
+            hist = nifty.tickers[ticker].history(period="1d")
+            if not hist.empty:
+                data[ticker] = hist['Close'].iloc[-1]
+        except:
+            continue
 
     # Sorting stocks for gainers and losers
     gainers = sorted(data.items(), key=lambda x: x[1], reverse=True)
@@ -78,22 +203,22 @@ elif selected == "Market Movers":
 
     # Displaying Active Stocks
     st.subheader("📊 Active Stocks (Recent Close Prices)")
-    active_stocks = pd.DataFrame(data.items(), columns=["Stock", "Price"])
+    active_stocks = pd.DataFrame(data.items(), columns=["Stock", "Price (₹)"])
     st.dataframe(active_stocks)
 
     # Top Gainers
     st.subheader("🚀 Top Gainers")
-    top_gainers = pd.DataFrame(gainers, columns=['Stock', 'Price'])
+    top_gainers = pd.DataFrame(gainers, columns=['Stock', 'Price (₹)'])
     st.dataframe(top_gainers)
 
     # Top Losers
     st.subheader("📉 Top Losers")
-    top_losers = pd.DataFrame(losers, columns=['Stock', 'Price'])
+    top_losers = pd.DataFrame(losers, columns=['Stock', 'Price (₹)'])
     st.dataframe(top_losers)
 
 # Global Markets - Major Indices
 elif selected == "Global Markets":
-    st.title("\U0001F30E Global Markets Status")
+    st.title("🌍 Global Markets Status")
     global_indices = {
         "^DJI": "Dow Jones",
         "^IXIC": "NASDAQ",
@@ -109,11 +234,15 @@ elif selected == "Global Markets":
         last_close = round(data['Close'].iloc[-1], 2)
         change = round(data['Close'].iloc[-1] - data['Open'].iloc[-1], 2)
         percent_change = round((change / data['Open'].iloc[-1]) * 100, 2)
-        cols[idx % 3].metric(label=name, value=f"{last_close}", delta=f"{percent_change}%")
+        
+        # Determine currency symbol
+        currency_symbol = "¥" if symbol == "^N225" else "HK$" if symbol == "^HSI" else "£" if symbol == "^FTSE" else "$"
+        
+        cols[idx % 3].metric(label=name, value=f"{currency_symbol}{last_close:,}", delta=f"{percent_change}%")
 
 # Mutual Funds - Insights
 elif selected == "Mutual Funds":
-    st.title("\U0001F3E6 Mutual Funds Insights")
+    st.title("🏦 Mutual Funds Insights")
     mf_data = {
         "Axis Bluechip Fund": "15% Returns",
         "Mirae Asset Large Cap Fund": "13.2% Returns",
@@ -125,7 +254,7 @@ elif selected == "Mutual Funds":
 
 # Sectors - Sector Performance
 elif selected == "Sectors":
-    st.title("\U0001F4CA Sector Wise Performance")
+    st.title("📊 Sector Wise Performance")
     sector_performance = {
         "Banking": "+1.8%",
         "IT": "-0.5%",
@@ -159,7 +288,6 @@ elif selected == "News":
         else:
             st.error("Unable to fetch news articles. Please check API or query.")
 
-
 # Learning - Stock Market Resources
 elif selected == "Learning":
     st.title("📘 Learn the Stock Market")
@@ -173,7 +301,7 @@ elif selected == "Learning":
     - To **simplify complex concepts** like indicators, price action, technical patterns, and financial ratios.
     - To share **AI-powered learning resources** that explain how stock prediction models work.
 
-    ### 🧠 What You’ll Learn:
+    ### 🧠 What You'll Learn:
     - 📈 Basics of Stock Market, Trading, and Investing  
     - 🧾 Financial Statements and Ratio Analysis  
     - 🧮 Technical Analysis (Indicators, Patterns, Volume)  
@@ -183,12 +311,10 @@ elif selected == "Learning":
     ### 🔗 Connect with Ashwik Bire:
     [![LinkedIn](https://img.shields.io/badge/Connect%20with%20me-LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/ashwik-bire-b2a000186/)
 
-    Stay tuned! We’re continuously updating this section with **videos, articles, and interactive tutorials**.
+    Stay tuned! We're continuously updating this section with **videos, articles, and interactive tutorials**.
     """)
 
-
-# ----------------------- Volume Spike Detector ------------------------
-# --------------------------- Volume Spike Detector --------------------------- #
+# Volume Spike Detector
 elif selected == "Volume Spike":
     st.title("📈 Volume Spike Detector")
     st.markdown("This tool detects unusual volume surges in a stock based on a 10-day rolling average.")
@@ -260,7 +386,7 @@ elif selected == "Volume Spike":
 
 # News Sentiment - Sentiment Analysis of News
 elif selected == "News Sentiment":
-    st.title("\U0001F50D News Sentiment Analysis")
+    st.title("🔍 News Sentiment Analysis")
     ticker = st.text_input("Enter Stock Ticker to analyze news sentiment:", "AAPL")
 
     if ticker:
@@ -293,9 +419,6 @@ elif selected == "News Sentiment":
         else:
             st.error("Failed to fetch news articles.")
 
-
-
-#------------------predictions page---------------------------------#
 # Predictions - Stock Price Prediction
 elif selected == "Predictions":
     st.title("📈 Stock Price Predictions")
@@ -307,6 +430,11 @@ elif selected == "Predictions":
             # Fetch stock data from Yahoo Finance
             stock = yf.Ticker(ticker)
             hist = stock.history(period="1y")  # 1 year of data
+            
+            # Get currency info
+            info = stock.info
+            currency = info.get('currency', 'INR')
+            currency_symbol = "₹" if currency == "INR" else "$"
 
             if hist.empty:
                 st.warning("No data available for this ticker.")
@@ -334,12 +462,12 @@ elif selected == "Predictions":
                 current_price = hist["Close"].iloc[-1]
                 if sma50.iloc[-1] > sma200.iloc[-1]:
                     st.success(
-                        f"📈 Signal: **BUY** - 50-day SMA is above 200-day SMA (Current Price: ₹{current_price:.2f})")
+                        f"📈 Signal: **BUY** - 50-day SMA is above 200-day SMA (Current Price: {currency_symbol}{current_price:.2f})")
                 elif sma50.iloc[-1] < sma200.iloc[-1]:
                     st.error(
-                        f"📉 Signal: **SELL** - 50-day SMA is below 200-day SMA (Current Price: ₹{current_price:.2f})")
+                        f"📉 Signal: **SELL** - 50-day SMA is below 200-day SMA (Current Price: {currency_symbol}{current_price:.2f})")
                 else:
-                    st.warning(f"⏸️ Signal: **HOLD** - No clear trend (Current Price: ₹{current_price:.2f})")
+                    st.warning(f"⏸️ Signal: **HOLD** - No clear trend (Current Price: {currency_symbol}{current_price:.2f})")
 
                 # Show price data vs moving averages
                 st.subheader("📈 Price vs. Moving Averages")
@@ -348,13 +476,8 @@ elif selected == "Predictions":
                     "200-Day SMA": sma200
                 })))
 
-                # Optional: Machine learning-based predictions can be added here.
-                # For example, using a regression model or an LSTM for stock price prediction.
-
         except Exception as e:
             st.error(f"Error retrieving data: {e}")
-
-#----------------------Buy/Sell Predictor-------------#
 
 # Buy/Sell Predictor - Predict Buy or Sell Signal
 elif selected == "Buy/Sell Predictor":
@@ -368,6 +491,11 @@ elif selected == "Buy/Sell Predictor":
             # Fetch stock data from Yahoo Finance
             stock = yf.Ticker(ticker)
             hist = stock.history(period="1y")  # Fetch 1 year of data
+            
+            # Get currency info
+            info = stock.info
+            currency = info.get('currency', 'INR')
+            currency_symbol = "₹" if currency == "INR" else "$"
 
             if hist.empty:
                 st.warning("No data available for this ticker.")
@@ -407,13 +535,13 @@ elif selected == "Buy/Sell Predictor":
                 # Simple Buy/Sell logic based on Moving Averages and RSI
                 if sma50.iloc[-1] > sma200.iloc[-1] and rsi.iloc[-1] < 30:
                     signal = "Buy"
-                    st.success(f"📈 Signal: **BUY** (Current Price: ₹{current_price:.2f}) - 50-day SMA is above 200-day SMA and RSI is below 30.")
+                    st.success(f"📈 Signal: **BUY** (Current Price: {currency_symbol}{current_price:.2f}) - 50-day SMA is above 200-day SMA and RSI is below 30.")
                 elif sma50.iloc[-1] < sma200.iloc[-1] and rsi.iloc[-1] > 70:
                     signal = "Sell"
-                    st.error(f"📉 Signal: **SELL** (Current Price: ₹{current_price:.2f}) - 50-day SMA is below 200-day SMA and RSI is above 70.")
+                    st.error(f"📉 Signal: **SELL** (Current Price: {currency_symbol}{current_price:.2f}) - 50-day SMA is below 200-day SMA and RSI is above 70.")
                 else:
                     signal = "Hold"
-                    st.warning(f"⏸️ Signal: **HOLD** (Current Price: ₹{current_price:.2f}) - No clear trend.")
+                    st.warning(f"⏸️ Signal: **HOLD** (Current Price: {currency_symbol}{current_price:.2f}) - No clear trend.")
 
                 # Show price data vs moving averages and RSI
                 st.subheader("📊 Price vs. Indicators")
@@ -452,13 +580,13 @@ elif selected == "Stock Screener":
                 data[ticker] = "No Data"
 
         # Display the data as a dataframe
-        st.dataframe(pd.DataFrame(data.items(), columns=["Stock", "Price"]))
+        st.dataframe(pd.DataFrame(data.items(), columns=["Stock", "Price (₹)"]))
 
     elif choice == "Input Custom Tickers":
         # Input box for user to enter their own tickers
         tickers_input = st.text_area("Enter stock tickers (separated by space or comma):", "")
         if tickers_input:
-            tickers_list = [ticker.strip() for ticker in tickers_input.split() if ticker.strip()]
+            tickers_list = [ticker.strip() for ticker in tickers_input.replace(',', ' ').split() if ticker.strip()]
             if len(tickers_list) > 0:
                 st.subheader("Showing Custom Tickers")
                 data = {}
@@ -475,12 +603,9 @@ elif selected == "Stock Screener":
             else:
                 st.warning("Please enter valid stock tickers.")
 
-#----------------Mutual Fund----------------#
-
+# Mutual Funds - Live NAV
 elif selected == "Mutual Funds":
     st.title("💼 Mutual Funds Overview")
-
-    import requests
 
     scheme_code = "118550"
     url = f"https://api.mfapi.in/mf/{scheme_code}"
@@ -501,9 +626,7 @@ elif selected == "Mutual Funds":
     else:
         st.error("Failed to fetch mutual fund data.")
 
-
-        #----------------------SIP Calculator--------------------------------#
-
+# SIP Calculator
 elif selected == "SIP Calculator":
     st.title("📈 SIP Calculator")
 
@@ -522,8 +645,7 @@ elif selected == "SIP Calculator":
     st.info(f"💰 Invested: ₹{invested:,.2f}")
     st.warning(f"📈 Estimated Gains: ₹{gain:,.2f}")
 
-#--------------------------IP0 Tracker------------------------------------------#
-
+# IPO Tracker
 elif selected == "IPO Tracker":
     st.title("🆕 IPO Tracker")
 
@@ -538,12 +660,11 @@ elif selected == "IPO Tracker":
     st.dataframe(ipo_data)
     st.bar_chart(ipo_data.set_index("Company")["Gain/Loss (%)"])
 
-#------------------------------Predictions for Mutual Funds & IPOs------------------------------------#
+# Predictions for Mutual Funds & IPOs
 elif selected == "Predictions for Mutual Funds & IPOs":
     st.title("🔮 Predictions for Mutual Funds & IPOs")
 
     st.subheader("📊 Mutual Fund NAV Forecast (Simulated)")
-    import numpy as np
     dates = pd.date_range(start=pd.to_datetime("2023-01-01"), periods=12, freq='M')
     navs = np.linspace(100, 160, 12) + np.random.normal(0, 2, 12)
 
@@ -558,9 +679,7 @@ elif selected == "Predictions for Mutual Funds & IPOs":
     })
     st.dataframe(ipo_prediction)
 
-
-#---------------------------------------------------Mutual Fund Nav Viewver code-------------------------------------#
-# 📈 Mutual Funds - Live NAV
+# Mutual Fund NAV Viewer
 elif selected == "Mutual Fund NAV Viewer":
     st.title("📈 Mutual Fund NAV Viewer")
 
@@ -598,21 +717,16 @@ elif selected == "Mutual Fund NAV Viewer":
         except Exception as e:
             st.error(f"❌ Error: {e}")
 
-
-# 📊 F&O Overview Page
-import streamlit as st
-import pandas as pd
-import plotly.graph_objects as go
-
+# F&O Overview Page
 def fo_page():
     st.title("📑 F&O Stocks - Live Overview")
 
     # Simulated F&O Data
     fo_data = {
         "Symbol": ["RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK"],
-        "LTP": [2820.5, 3480.7, 1463.2, 1640.0, 1103.5],
+        "LTP (₹)": [2820.5, 3480.7, 1463.2, 1640.0, 1103.5],
         "Volume": [1250000, 850000, 650000, 920000, 870000],
-        "Market Cap": [19e12, 13e12, 8e12, 10e12, 9e12],
+        "Market Cap (₹ Cr)": [190000, 130000, 80000, 100000, 90000],
         "Sector": ["Energy", "IT", "IT", "Banking", "Banking"]
     }
 
@@ -621,11 +735,11 @@ def fo_page():
     # Sidebar filters
     st.sidebar.header("🔍 Filters")
     sectors = st.sidebar.multiselect("Select Sector", df["Sector"].unique(), default=df["Sector"].unique())
-    min_market_cap = st.sidebar.slider("Minimum Market Cap (₹ Cr)", 0, int(df["Market Cap"].max() // 1e7), 1000)
+    min_market_cap = st.sidebar.slider("Minimum Market Cap (₹ Cr)", 0, int(df["Market Cap (₹ Cr)"].max()), 1000)
 
     filtered_df = df[
         (df["Sector"].isin(sectors)) &
-        (df["Market Cap"] >= min_market_cap * 1e7)
+        (df["Market Cap (₹ Cr)"] >= min_market_cap)
     ]
 
     st.subheader("📊 Filtered F&O Stocks")
@@ -648,12 +762,13 @@ def fo_page():
         low=hist_data['Low'],
         close=hist_data['Close']
     )])
-    fig.update_layout(title="📈 RELIANCE - Candlestick Chart", xaxis_title="Date", yaxis_title="Price")
+    fig.update_layout(title="📈 RELIANCE - Candlestick Chart", xaxis_title="Date", yaxis_title="Price (₹)")
     st.plotly_chart(fig, use_container_width=True)
 
     # Option Chain Placeholder
     st.subheader("🧾 Option Chain (Coming Soon)")
     st.info("Real-time Option Chain data using NSE API will be integrated in the next update 🔄")
+    
     # Multi-Line LTP Trend Chart (Simulated)
     st.subheader("📊 LTP Trend - F&O Stocks (Simulated)")
 
@@ -680,114 +795,83 @@ def fo_page():
         xaxis_title="Date",
         yaxis_title="LTP (₹)",
         legend_title="Stock Symbol",
-        template="plotly_white"
+        template="plotly_dark"
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
-
 if selected == "F&O":
     fo_page()
 
-# ----------------------- Overview Page ----------------------------
-
-import streamlit as st
-import yfinance as yf
-import pandas as pd
-import matplotlib.pyplot as plt
-
-# ---------------------------- CACHE TICKER DATA -------------------------
-@st.cache_resource
-def load_data(ticker):
-    stock = yf.Ticker(ticker)
-    hist = stock.history(period="2y")
-    return stock, hist
-
-# ---------------------------- COMPANY OVERVIEW PAGE -------------------------
-
-# Sidebar Navigation
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Company Overview"])
-
-# ---------------------------- Overview Page -------------------------
-import streamlit as st
-import yfinance as yf
-import plotly.graph_objects as go
-
-# Cached Data Loader
-@st.cache_resource
-def load_data(ticker):
-    stock = yf.Ticker(ticker)
-    hist = stock.history(period="6mo")
-    return stock, hist
-
-# 📊 Overview Page
-import streamlit as st
-import plotly.graph_objects as go
-
-# 📊 Overview Page
-if page == "Company Overview":
+# Company Overview Page
+if selected == "Company Overview":
     st.markdown("## Company Overview")
     st.markdown("Enter a valid stock ticker below to see live updates and historical trends.")
 
-    ticker = st.text_input("🔎 Enter Stock Ticker (e.g., AAPL, TCS.NS)", "AAPL")
+    ticker = st.text_input("🔎 Enter Stock Ticker (e.g., AAPL, TCS.NS)", "TCS.NS")
 
     if ticker:
-        stock, hist = load_data(ticker)
-        info = stock.info
+        try:
+            stock = yf.Ticker(ticker)
+            hist = stock.history(period="6mo")
+            info = stock.info
+            
+            # Determine currency symbol
+            currency = info.get('currency', 'INR')
+            currency_symbol = "₹" if currency == "INR" else "$"
 
-        # Live metrics
-        st.markdown("### 📌 Key Market Metrics")
-        with st.container():
-            col1, col2, col3 = st.columns(3)
-            col1.metric("💰 Current Price", f"${info.get('regularMarketPrice', 'N/A')}")
-            col2.metric("📈 Day High", f"${info.get('dayHigh', 'N/A')}")
-            col3.metric("📉 Day Low", f"${info.get('dayLow', 'N/A')}")
+            # Live metrics
+            st.markdown("### 📌 Key Market Metrics")
+            with st.container():
+                col1, col2, col3 = st.columns(3)
+                col1.metric("💰 Current Price", f"{currency_symbol}{info.get('regularMarketPrice', 'N/A')}")
+                col2.metric("📈 Day High", f"{currency_symbol}{info.get('dayHigh', 'N/A')}")
+                col3.metric("📉 Day Low", f"{currency_symbol}{info.get('dayLow', 'N/A')}")
 
-        st.markdown("---")
+            st.markdown("---")
 
-        # Interactive price chart
-        st.markdown("### 📈 Price Trend")
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name="Close Price", line=dict(color='deepskyblue')))
-        fig.update_layout(
-            title=f"{ticker.upper()} Historical Price Chart",
-            xaxis_title="Date",
-            yaxis_title="Price (USD)",
-            template="plotly_white",
-            hovermode="x unified",
-            height=400,
-        )
-        st.plotly_chart(fig, use_container_width=True)
+            # Interactive price chart
+            st.markdown("### 📈 Price Trend")
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name="Close Price", line=dict(color='#e63946')))
+            fig.update_layout(
+                title=f"{ticker.upper()} Historical Price Chart",
+                xaxis_title="Date",
+                yaxis_title=f"Price ({currency_symbol})",
+                template="plotly_dark",
+                hovermode="x unified",
+                height=400,
+            )
+            st.plotly_chart(fig, use_container_width=True)
 
-        st.markdown("---")
+            st.markdown("---")
 
-        # Organized info display
-        st.markdown("### 🏢 Company Snapshot")
-        with st.expander("📘 General Information", expanded=True):
-            st.markdown(f"**Name:** {info.get('longName', 'N/A')}")
-            st.markdown(f"**Sector:** {info.get('sector', 'N/A')}")
-            st.markdown(f"**Industry:** {info.get('industry', 'N/A')}")
-            st.markdown(f"**Website:** [{info.get('website', 'N/A')}]({info.get('website', '#')})")
-            st.markdown(
-                f"**Headquarters:** {info.get('address1', '')}, {info.get('city', '')}, {info.get('state', '')}, {info.get('country', '')}")
-            st.markdown(f"**Employees:** {info.get('fullTimeEmployees', 'N/A')}")
+            # Organized info display
+            st.markdown("### 🏢 Company Snapshot")
+            with st.expander("📘 General Information", expanded=True):
+                st.markdown(f"**Name:** {info.get('longName', 'N/A')}")
+                st.markdown(f"**Sector:** {info.get('sector', 'N/A')}")
+                st.markdown(f"**Industry:** {info.get('industry', 'N/A')}")
+                st.markdown(f"**Website:** [{info.get('website', 'N/A')}]({info.get('website', '#')})")
+                st.markdown(
+                    f"**Headquarters:** {info.get('address1', '')}, {info.get('city', '')}, {info.get('state', '')}, {info.get('country', '')}")
+                st.markdown(f"**Employees:** {info.get('fullTimeEmployees', 'N/A')}")
 
-        with st.expander("📄 Business Description"):
-            st.write(info.get("longBusinessSummary", "No summary available."))
+            with st.expander("📄 Business Description"):
+                st.write(info.get("longBusinessSummary", "No summary available."))
 
-        with st.expander("💼 Officers"):
-            officers = info.get("companyOfficers", [])
-            if officers:
-                for officer in officers:
-                    st.markdown(
-                        f"- **{officer.get('name', 'N/A')}** — {officer.get('title', 'N/A')}, Age {officer.get('age', 'N/A')}")
-            else:
-                st.write("Officer data not available.")
+            with st.expander("💼 Officers"):
+                officers = info.get("companyOfficers", [])
+                if officers:
+                    for officer in officers:
+                        st.markdown(
+                            f"- **{officer.get('name', 'N/A')}** — {officer.get('title', 'N/A')}, Age {officer.get('age', 'N/A')}")
+                else:
+                    st.write("Officer data not available.")
 
-        st.markdown("---")
-        with st.expander("🧠 Full JSON Info (For Developers)"):
-            st.json(info)
-
-if selected == "Company Overview":
-    fo_page()
+            st.markdown("---")
+            with st.expander("🧠 Full JSON Info (For Developers)"):
+                st.json(info)
+                
+        except Exception as e:
+            st.error(f"Error retrieving data: {e}")
