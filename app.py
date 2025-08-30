@@ -1,19 +1,28 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # Make sure this line is included at the top
 import seaborn as sns
-import yfinance as yf
+import yfinance as yf  # Ensure that yfinance is imported for stock data
 import requests
 from plotly import graph_objects as go
-from streamlit_option_menu import option_menu
+from streamlit_option_menu import option_menu  # Import the option_menu
 from textblob import TextBlob
 from xgboost import XGBRegressor
 from datetime import timedelta
+import yfinance as yf
+import pandas as pd
+import plotly.graph_objects as go
+import streamlit as st
+import numpy as np
+import pandas as pd
+import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, LSTM
 from sklearn.model_selection import train_test_split
+import plotly.graph_objects as go
+import streamlit as st
 
 # News API Key
 NEWS_API_KEY = "0b08be107dca45d3be30ca7e06544408"
@@ -50,7 +59,9 @@ if selected == "Home":
         percent_change = round((change / data['Open'].iloc[-1]) * 100, 2)
         cols[idx].metric(label=name, value=f"{last_close}", delta=f"{percent_change}%")
 
+
 # Market Movers - Top Gainers & Losers
+# Market Movers - Active Stocks, Top Gainers & Losers
 elif selected == "Market Movers":
     st.title("📈 Market Movers - Active Stocks, Top Gainers & Losers")
 
@@ -148,6 +159,7 @@ elif selected == "News":
         else:
             st.error("Unable to fetch news articles. Please check API or query.")
 
+
 # Learning - Stock Market Resources
 elif selected == "Learning":
     st.title("📘 Learn the Stock Market")
@@ -161,7 +173,7 @@ elif selected == "Learning":
     - To **simplify complex concepts** like indicators, price action, technical patterns, and financial ratios.
     - To share **AI-powered learning resources** that explain how stock prediction models work.
 
-    ### 🧠 What You'll Learn:
+    ### 🧠 What You’ll Learn:
     - 📈 Basics of Stock Market, Trading, and Investing  
     - 🧾 Financial Statements and Ratio Analysis  
     - 🧮 Technical Analysis (Indicators, Patterns, Volume)  
@@ -171,10 +183,12 @@ elif selected == "Learning":
     ### 🔗 Connect with Ashwik Bire:
     [![LinkedIn](https://img.shields.io/badge/Connect%20with%20me-LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/ashwik-bire-b2a000186/)
 
-    Stay tuned! We're continuously updating this section with **videos, articles, and interactive tutorials**.
+    Stay tuned! We’re continuously updating this section with **videos, articles, and interactive tutorials**.
     """)
 
-# Volume Spike Detector
+
+# ----------------------- Volume Spike Detector ------------------------
+# --------------------------- Volume Spike Detector --------------------------- #
 elif selected == "Volume Spike":
     st.title("📈 Volume Spike Detector")
     st.markdown("This tool detects unusual volume surges in a stock based on a 10-day rolling average.")
@@ -279,6 +293,9 @@ elif selected == "News Sentiment":
         else:
             st.error("Failed to fetch news articles.")
 
+
+
+#------------------predictions page---------------------------------#
 # Predictions - Stock Price Prediction
 elif selected == "Predictions":
     st.title("📈 Stock Price Predictions")
@@ -331,8 +348,13 @@ elif selected == "Predictions":
                     "200-Day SMA": sma200
                 })))
 
+                # Optional: Machine learning-based predictions can be added here.
+                # For example, using a regression model or an LSTM for stock price prediction.
+
         except Exception as e:
             st.error(f"Error retrieving data: {e}")
+
+#----------------------Buy/Sell Predictor-------------#
 
 # Buy/Sell Predictor - Predict Buy or Sell Signal
 elif selected == "Buy/Sell Predictor":
@@ -453,7 +475,35 @@ elif selected == "Stock Screener":
             else:
                 st.warning("Please enter valid stock tickers.")
 
-# SIP Calculator
+#----------------Mutual Fund----------------#
+
+elif selected == "Mutual Funds":
+    st.title("💼 Mutual Funds Overview")
+
+    import requests
+
+    scheme_code = "118550"
+    url = f"https://api.mfapi.in/mf/{scheme_code}"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        scheme_name = data['meta']['scheme_name']
+        nav_data = data['data']
+        nav_df = pd.DataFrame(nav_data)
+        nav_df['nav'] = nav_df['nav'].astype(float)
+        nav_df['date'] = pd.to_datetime(nav_df['date'], format='%d-%m-%Y')
+        nav_df = nav_df.sort_values('date')
+
+        st.subheader(f"{scheme_name}")
+        st.write(f"Latest NAV: ₹{nav_df.iloc[-1]['nav']} as of {nav_df.iloc[-1]['date'].date()}")
+        st.line_chart(nav_df.set_index('date')['nav'])
+    else:
+        st.error("Failed to fetch mutual fund data.")
+
+
+        #----------------------SIP Calculator--------------------------------#
+
 elif selected == "SIP Calculator":
     st.title("📈 SIP Calculator")
 
@@ -472,7 +522,8 @@ elif selected == "SIP Calculator":
     st.info(f"💰 Invested: ₹{invested:,.2f}")
     st.warning(f"📈 Estimated Gains: ₹{gain:,.2f}")
 
-# IPO Tracker
+#--------------------------IP0 Tracker------------------------------------------#
+
 elif selected == "IPO Tracker":
     st.title("🆕 IPO Tracker")
 
@@ -487,11 +538,12 @@ elif selected == "IPO Tracker":
     st.dataframe(ipo_data)
     st.bar_chart(ipo_data.set_index("Company")["Gain/Loss (%)"])
 
-# Predictions for Mutual Funds & IPOs
+#------------------------------Predictions for Mutual Funds & IPOs------------------------------------#
 elif selected == "Predictions for Mutual Funds & IPOs":
     st.title("🔮 Predictions for Mutual Funds & IPOs")
 
     st.subheader("📊 Mutual Fund NAV Forecast (Simulated)")
+    import numpy as np
     dates = pd.date_range(start=pd.to_datetime("2023-01-01"), periods=12, freq='M')
     navs = np.linspace(100, 160, 12) + np.random.normal(0, 2, 12)
 
@@ -506,7 +558,9 @@ elif selected == "Predictions for Mutual Funds & IPOs":
     })
     st.dataframe(ipo_prediction)
 
-# Mutual Fund NAV Viewer
+
+#---------------------------------------------------Mutual Fund Nav Viewver code-------------------------------------#
+# 📈 Mutual Funds - Live NAV
 elif selected == "Mutual Fund NAV Viewer":
     st.title("📈 Mutual Fund NAV Viewer")
 
@@ -544,7 +598,12 @@ elif selected == "Mutual Fund NAV Viewer":
         except Exception as e:
             st.error(f"❌ Error: {e}")
 
-# F&O Page Function
+
+# 📊 F&O Overview Page
+import streamlit as st
+import pandas as pd
+import plotly.graph_objects as go
+
 def fo_page():
     st.title("📑 F&O Stocks - Live Overview")
 
@@ -595,7 +654,6 @@ def fo_page():
     # Option Chain Placeholder
     st.subheader("🧾 Option Chain (Coming Soon)")
     st.info("Real-time Option Chain data using NSE API will be integrated in the next update 🔄")
-    
     # Multi-Line LTP Trend Chart (Simulated)
     st.subheader("📊 LTP Trend - F&O Stocks (Simulated)")
 
@@ -627,21 +685,50 @@ def fo_page():
 
     st.plotly_chart(fig, use_container_width=True)
 
-# F&O Page
-elif selected == "F&O":
+
+if selected == "F&O":
     fo_page()
 
-# Company Overview Page
-elif selected == "Company Overview":
+# ----------------------- Overview Page ----------------------------
+
+import streamlit as st
+import yfinance as yf
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# ---------------------------- CACHE TICKER DATA -------------------------
+@st.cache_resource
+def load_data(ticker):
+    stock = yf.Ticker(ticker)
+    hist = stock.history(period="2y")
+    return stock, hist
+
+# ---------------------------- COMPANY OVERVIEW PAGE -------------------------
+
+# Sidebar Navigation
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to", ["Company Overview"])
+
+# ---------------------------- Overview Page -------------------------
+import streamlit as st
+import yfinance as yf
+import plotly.graph_objects as go
+
+# Cached Data Loader
+@st.cache_resource
+def load_data(ticker):
+    stock = yf.Ticker(ticker)
+    hist = stock.history(period="6mo")
+    return stock, hist
+
+# 📊 Overview Page
+import streamlit as st
+import plotly.graph_objects as go
+
+# 📊 Overview Page
+if page == "Company Overview":
     st.markdown("## Company Overview")
     st.markdown("Enter a valid stock ticker below to see live updates and historical trends.")
-
-    # Cached Data Loader
-    @st.cache_resource
-    def load_data(ticker):
-        stock = yf.Ticker(ticker)
-        hist = stock.history(period="6mo")
-        return stock, hist
 
     ticker = st.text_input("🔎 Enter Stock Ticker (e.g., AAPL, TCS.NS)", "AAPL")
 
@@ -701,3 +788,6 @@ elif selected == "Company Overview":
         st.markdown("---")
         with st.expander("🧠 Full JSON Info (For Developers)"):
             st.json(info)
+
+if selected == "Company Overview":
+    fo_page()
