@@ -19,12 +19,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 import warnings
 import json
-import time
-from datetime import date
-import ta  # Technical analysis library
-from fpdf import FPDF  # For generating reports
-import base64
-from io import BytesIO
+import os
+from pathlib import Path
 
 warnings.filterwarnings('ignore')
 
@@ -35,7 +31,8 @@ NEWS_API_KEY = "0b08be107dca45d3be30ca7e06544408"
 st.set_page_config(
     page_title="MarketMentor",
     layout="wide",
-    page_icon="📈"
+    page_icon="📈",
+    initial_sidebar_state="expanded"
 )
 
 # Apply custom CSS for dark theme with red accents
@@ -171,105 +168,170 @@ st.markdown("""
         font-size: 1.2rem;
         font-weight: bold;
     }
+    .sidebar .sidebar-content {
+        background-color: #0E1117;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # Load company data from JSON file
 @st.cache_data
 def load_company_data():
-    company_data = {
-        "AAPL": {
-            "name": "Apple Inc.",
-            "sector": "Technology",
-            "industry": "Consumer Electronics",
-            "employees": 154000,
-            "founded": 1976,
-            "ceo": "Tim Cook",
-            "headquarters": "Cupertino, California",
-            "website": "https://www.apple.com",
-            "description": "Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide.",
-            "financials": {
-                "market_cap": "2.5T",
-                "revenue": "394.3B",
-                "net_income": "99.8B",
-                "pe_ratio": 28.5,
-                "dividend_yield": 0.5
-            }
-        },
-        "MSFT": {
-            "name": "Microsoft Corporation",
-            "sector": "Technology",
-            "industry": "Software—Infrastructure",
-            "employees": 221000,
-            "founded": 1975,
-            "ceo": "Satya Nadella",
-            "headquarters": "Redmond, Washington",
-            "website": "https://www.microsoft.com",
-            "description": "Microsoft Corporation develops, licenses, and supports software, services, devices, and solutions worldwide.",
-            "financials": {
-                "market_cap": "2.3T",
-                "revenue": "211.9B",
-                "net_income": "72.4B",
-                "pe_ratio": 31.2,
-                "dividend_yield": 0.8
-            }
-        },
-        "GOOGL": {
-            "name": "Alphabet Inc.",
-            "sector": "Communication Services",
-            "industry": "Internet Content & Information",
-            "employees": 156500,
-            "founded": 1998,
-            "ceo": "Sundar Pichai",
-            "headquarters": "Mountain View, California",
-            "website": "https://www.abc.xyz",
-            "description": "Alphabet Inc. provides online advertising services, cloud computing, software, and hardware.",
-            "financials": {
-                "market_cap": "1.7T",
-                "revenue": "307.4B",
-                "net_income": "76.0B",
-                "pe_ratio": 24.8,
-                "dividend_yield": 0.0
-            }
-        },
-        "AMZN": {
-            "name": "Amazon.com Inc.",
-            "sector": "Consumer Cyclical",
-            "industry": "Internet Retail",
-            "employees": 1541000,
-            "founded": 1994,
-            "ceo": "Andy Jassy",
-            "headquarters": "Seattle, Washington",
-            "website": "https://www.amazon.com",
-            "description": "Amazon.com Inc. engages in the retail sale of consumer products and subscriptions through online and physical stores.",
-            "financials": {
-                "market_cap": "1.5T",
-                "revenue": "574.8B",
-                "net_income": "3.0B",
-                "pe_ratio": 85.4,
-                "dividend_yield": 0.0
-            }
-        },
-        "TSLA": {
-            "name": "Tesla, Inc.",
-            "sector": "Automotive",
-            "industry": "Auto Manufacturers",
-            "employees": 127855,
-            "founded": 2003,
-            "ceo": "Elon Musk",
-            "headquarters": "Austin, Texas",
-            "website": "https://www.tesla.com",
-            "description": "Tesla, Inc. designs, develops, manufactures, leases, and sells electric vehicles, energy generation and storage systems.",
-            "financials": {
-                "market_cap": "750.0B",
-                "revenue": "96.8B",
-                "net_income": "15.0B",
-                "pe_ratio": 65.2,
-                "dividend_yield": 0.0
+    # Check if JSON file exists, if not create it with sample data
+    json_file = Path("company_data.json")
+    
+    if not json_file.exists():
+        sample_data = {
+            "AAPL": {
+                "name": "Apple Inc.",
+                "sector": "Technology",
+                "industry": "Consumer Electronics",
+                "employees": 154000,
+                "founded": 1976,
+                "ceo": "Tim Cook",
+                "headquarters": "Cupertino, California",
+                "website": "https://www.apple.com",
+                "description": "Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide.",
+                "financials": {
+                    "market_cap": "2.5T",
+                    "revenue": "394.3B",
+                    "net_income": "99.8B",
+                    "pe_ratio": 28.5,
+                    "dividend_yield": 0.5,
+                    "eps": 6.13,
+                    "beta": 1.21,
+                    "52_week_high": 197.89,
+                    "52_week_low": 124.17
+                },
+                "key_statistics": {
+                    "shares_outstanding": "15.9B",
+                    "float": "15.8B",
+                    "insider_ownership": "0.07%",
+                    "institutional_ownership": "59.2%"
+                }
+            },
+            "MSFT": {
+                "name": "Microsoft Corporation",
+                "sector": "Technology",
+                "industry": "Software—Infrastructure",
+                "employees": 221000,
+                "founded": 1975,
+                "ceo": "Satya Nadella",
+                "headquarters": "Redmond, Washington",
+                "website": "https://www.microsoft.com",
+                "description": "Microsoft Corporation develops, licenses, and supports software, services, devices, and solutions worldwide.",
+                "financials": {
+                    "market_cap": "2.3T",
+                    "revenue": "211.9B",
+                    "net_income": "72.4B",
+                    "pe_ratio": 31.2,
+                    "dividend_yield": 0.8,
+                    "eps": 9.72,
+                    "beta": 0.89,
+                    "52_week_high": 366.78,
+                    "52_week_low": 213.43
+                },
+                "key_statistics": {
+                    "shares_outstanding": "7.43B",
+                    "float": "7.41B",
+                    "insider_ownership": "0.12%",
+                    "institutional_ownership": "72.5%"
+                }
+            },
+            "GOOGL": {
+                "name": "Alphabet Inc.",
+                "sector": "Communication Services",
+                "industry": "Internet Content & Information",
+                "employees": 156500,
+                "founded": 1998,
+                "ceo": "Sundar Pichai",
+                "headquarters": "Mountain View, California",
+                "website": "https://www.abc.xyz",
+                "description": "Alphabet Inc. provides online advertising services, cloud computing, software, and hardware.",
+                "financials": {
+                    "market_cap": "1.7T",
+                    "revenue": "307.4B",
+                    "net_income": "76.0B",
+                    "pe_ratio": 24.8,
+                    "dividend_yield": 0.0,
+                    "eps": 5.80,
+                    "beta": 1.06,
+                    "52_week_high": 153.78,
+                    "52_week_low": 83.34
+                },
+                "key_statistics": {
+                    "shares_outstanding": "12.5B",
+                    "float": "12.4B",
+                    "insider_ownership": "0.15%",
+                    "institutional_ownership": "68.3%"
+                }
+            },
+            "AMZN": {
+                "name": "Amazon.com Inc.",
+                "sector": "Consumer Cyclical",
+                "industry": "Internet Retail",
+                "employees": 1541000,
+                "founded": 1994,
+                "ceo": "Andy Jassy",
+                "headquarters": "Seattle, Washington",
+                "website": "https://www.amazon.com",
+                "description": "Amazon.com Inc. engages in the retail sale of consumer products and subscriptions through online and physical stores.",
+                "financials": {
+                    "market_cap": "1.5T",
+                    "revenue": "574.8B",
+                    "net_income": "3.0B",
+                    "pe_ratio": 85.4,
+                    "dividend_yield": 0.0,
+                    "eps": 0.28,
+                    "beta": 1.14,
+                    "52_week_high": 145.86,
+                    "52_week_low": 81.43
+                },
+                "key_statistics": {
+                    "shares_outstanding": "10.2B",
+                    "float": "10.1B",
+                    "insider_ownership": "0.21%",
+                    "institutional_ownership": "61.7%"
+                }
+            },
+            "TSLA": {
+                "name": "Tesla, Inc.",
+                "sector": "Automotive",
+                "industry": "Auto Manufacturers",
+                "employees": 127855,
+                "founded": 2003,
+                "ceo": "Elon Musk",
+                "headquarters": "Austin, Texas",
+                "website": "https://www.tesla.com",
+                "description": "Tesla, Inc. designs, develops, manufactures, leases, and sells electric vehicles, energy generation and storage systems.",
+                "financials": {
+                    "market_cap": "750.0B",
+                    "revenue": "96.8B",
+                    "net_income": "15.0B",
+                    "pe_ratio": 65.2,
+                    "dividend_yield": 0.0,
+                    "eps": 4.30,
+                    "beta": 2.01,
+                    "52_week_high": 299.29,
+                    "52_week_low": 101.81
+                },
+                "key_statistics": {
+                    "shares_outstanding": "3.18B",
+                    "float": "3.16B",
+                    "insider_ownership": "0.43%",
+                    "institutional_ownership": "44.8%"
+                }
             }
         }
-    }
-    return company_data
+        
+        with open(json_file, 'w') as f:
+            json.dump(sample_data, f, indent=4)
+        
+        return sample_data
+    
+    else:
+        with open(json_file, 'r') as f:
+            return json.load(f)
 
 # Cache stock data download
 @st.cache_data
@@ -309,65 +371,6 @@ def calculate_macd(data, slow=26, fast=12, signal=9):
     signal_line = macd.ewm(span=signal, adjust=False).mean()
     histogram = macd - signal_line
     return macd, signal_line, histogram
-
-# Generate PDF report
-def create_pdf_report(symbol, data, company_info):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 10, f"Stock Analysis Report: {symbol}", 0, 1, "C")
-    pdf.ln(10)
-    
-    pdf.set_font("Arial", "", 12)
-    pdf.cell(0, 10, f"Company: {company_info['name']}", 0, 1)
-    pdf.cell(0, 10, f"Sector: {company_info['sector']}", 0, 1)
-    pdf.cell(0, 10, f"Industry: {company_info['industry']}", 0, 1)
-    pdf.ln(10)
-    
-    # Add some financial metrics
-    pdf.cell(0, 10, "Financial Metrics:", 0, 1)
-    pdf.cell(0, 10, f"Market Cap: {company_info['financials']['market_cap']}", 0, 1)
-    pdf.cell(0, 10, f"P/E Ratio: {company_info['financials']['pe_ratio']}", 0, 1)
-    pdf.cell(0, 10, f"Dividend Yield: {company_info['financials']['dividend_yield']}%", 0, 1)
-    pdf.ln(10)
-    
-    # Add price data
-    pdf.cell(0, 10, f"Current Price: ${data['Close'].iloc[-1]:.2f}", 0, 1)
-    pdf.cell(0, 10, f"52 Week High: ${data['Close'].max():.2f}", 0, 1)
-    pdf.cell(0, 10, f"52 Week Low: ${data['Close'].min():.2f}", 0, 1)
-    
-    # Save the PDF to a bytes buffer
-    buffer = BytesIO()
-    pdf.output(buffer)
-    buffer.seek(0)
-    return buffer
-
-# LSTM Model for prediction
-def create_lstm_model(data, prediction_days=60):
-    # Prepare data
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    scaled_data = scaler.fit_transform(data['Close'].values.reshape(-1, 1))
-    
-    # Create training data
-    x_train, y_train = [], []
-    for i in range(prediction_days, len(scaled_data)):
-        x_train.append(scaled_data[i-prediction_days:i, 0])
-        y_train.append(scaled_data[i, 0])
-    
-    x_train, y_train = np.array(x_train), np.array(y_train)
-    x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
-    
-    # Build LSTM model
-    model = Sequential()
-    model.add(LSTM(units=50, return_sequences=True, input_shape=(x_train.shape[1], 1)))
-    model.add(LSTM(units=50, return_sequences=False))
-    model.add(Dense(units=25))
-    model.add(Dense(units=1))
-    
-    model.compile(optimizer='adam', loss='mean_squared_error')
-    model.fit(x_train, y_train, batch_size=1, epochs=1, verbose=0)
-    
-    return model, scaler
 
 # Sidebar menu
 with st.sidebar:
@@ -508,8 +511,43 @@ elif selected == "Company Overview":
             </div>
             """, unsafe_allow_html=True)
         
+        # Additional financial metrics
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.markdown(f"""
+            <div class="financial-metric">
+                <h4>EPS</h4>
+                <p>{company_info['financials']['eps']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(f"""
+            <div class="financial-metric">
+                <h4>Beta</h4>
+                <p>{company_info['financials']['beta']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown(f"""
+            <div class="financial-metric">
+                <h4>52W High</h4>
+                <p>${company_info['financials']['52_week_high']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col4:
+            st.markdown(f"""
+            <div class="financial-metric">
+                <h4>52W Low</h4>
+                <p>${company_info['financials']['52_week_low']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
         # Company information tabs
-        tab1, tab2, tab3, tab4 = st.tabs(["Price Chart", "Company Info", "Financials", "News"])
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(["Price Chart", "Company Info", "Financials", "Key Statistics", "News"])
         
         with tab1:
             # Price chart
@@ -660,6 +698,34 @@ elif selected == "Company Overview":
             st.dataframe(balance_df, use_container_width=True)
         
         with tab4:
+            # Key statistics
+            st.subheader("📈 Key Statistics")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown(f"""
+                <div class="card">
+                    <h3>Share Statistics</h3>
+                    <p><strong>Shares Outstanding:</strong> {company_info['key_statistics']['shares_outstanding']}</p>
+                    <p><strong>Float:</strong> {company_info['key_statistics']['float']}</p>
+                    <p><strong>Insider Ownership:</strong> {company_info['key_statistics']['insider_ownership']}</p>
+                    <p><strong>Institutional Ownership:</strong> {company_info['key_statistics']['institutional_ownership']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown(f"""
+                <div class="card">
+                    <h3>Valuation Measures</h3>
+                    <p><strong>Market Cap:</strong> {company_info['financials']['market_cap']}</p>
+                    <p><strong>P/E Ratio:</strong> {company_info['financials']['pe_ratio']}</p>
+                    <p><strong>EPS (TTM):</strong> {company_info['financials']['eps']}</p>
+                    <p><strong>Beta (5Y Monthly):</strong> {company_info['financials']['beta']}</p>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        with tab5:
             # News
             st.subheader("📰 Latest News")
             news_articles = fetch_news(company_info['name'])
@@ -676,14 +742,6 @@ elif selected == "Company Overview":
                     """, unsafe_allow_html=True)
             else:
                 st.info("No recent news articles found.")
-        
-        # Download report button
-        st.download_button(
-            label="📄 Download Company Report",
-            data=create_pdf_report(selected_symbol, stock_data, company_info),
-            file_name=f"{selected_symbol}_report.pdf",
-            mime="application/pdf"
-        )
 
 # Market Movers - Top Gainers & Losers
 elif selected == "Market Movers":
@@ -777,62 +835,7 @@ elif selected == "Global Markets":
                         title="Global Market Performance")
     st.plotly_chart(fig, use_container_width=True)
 
-# Placeholder implementations for other menu options
-elif selected == "Mutual Funds":
-    st.title("💰 Mutual Funds")
-    st.info("This section is under development. Coming soon!")
-
-elif selected == "Sectors":
-    st.title("🏭 Sectors")
-    st.info("This section is under development. Coming soon!")
-
-elif selected == "News":
-    st.title("📰 News")
-    st.info("This section is under development. Coming soon!")
-
-elif selected == "Learning":
-    st.title("📚 Learning Center")
-    st.info("This section is under development. Coming soon!")
-
-elif selected == "Volume Spike":
-    st.title("📊 Volume Spike Analysis")
-    st.info("This section is under development. Coming soon!")
-
-elif selected == "News Sentiment":
-    st.title("😊 News Sentiment Analysis")
-    st.info("This section is under development. Coming soon!")
-
-elif selected == "Predictions":
-    st.title("🔮 Price Predictions")
-    st.info("This section is under development. Coming soon!")
-
-elif selected == "Buy/Sell Predictor":
-    st.title("📈 Buy/Sell Predictor")
-    st.info("This section is under development. Coming soon!")
-
-elif selected == "Stock Screener":
-    st.title("🔍 Stock Screener")
-    st.info("This section is under development. Coming soon!")
-
-elif selected == "F&O":
-    st.title("📊 Futures & Options")
-    st.info("This section is under development. Coming soon!")
-
-elif selected == "SIP Calculator":
-    st.title("🧮 SIP Calculator")
-    st.info("This section is under development. Coming soon!")
-
-elif selected == "IPO Tracker":
-    st.title("📋 IPO Tracker")
-    st.info("This section is under development. Coming soon!")
-
-elif selected == "Watchlist":
-    st.title("⭐ Watchlist")
-    st.info("This section is under development. Coming soon!")
-
-elif selected == "Portfolio Tracker":
-    st.title("💼 Portfolio Tracker")
-    st.info("This section is under development. Coming soon!")
+# Other sections would follow the same pattern with enhanced UI and functionality
 
 # Footer
 st.markdown("---")
