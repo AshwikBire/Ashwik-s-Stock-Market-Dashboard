@@ -1,1367 +1,793 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MarketMentor - Smart Stock Market Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/luxon@3.0.4/build/global/luxon.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <style>
-        :root {
-            --primary: #0a1930;
-            --secondary: #1e3a8a;
-            --accent: #3b82f6;
-            --light: #1e293b;
-            --dark: #f8fafc;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-            --sidebar-width: 280px;
-            --header-height: 70px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: #0f172a;
-            color: #cbd5e1;
-            overflow-x: hidden;
-        }
-
-        /* Sidebar Styles */
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: var(--sidebar-width);
-            background: linear-gradient(180deg, var(--primary) 0%, #0a1930 100%);
-            color: white;
-            z-index: 1000;
-            overflow-y: auto;
-            transition: all 0.3s ease;
-            box-shadow: 3px 0 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .sidebar-header h3 {
-            font-weight: 700;
-            font-size: 1.5rem;
-            margin: 0;
-        }
-
-        .sidebar-menu {
-            list-style: none;
-            padding: 10px 0;
-        }
-
-        .sidebar-menu li {
-            margin-bottom: 5px;
-        }
-
-        .sidebar-menu a {
-            display: flex;
-            align-items: center;
-            padding: 12px 20px;
-            color: rgba(255, 255, 255, 0.9);
-            text-decoration: none;
-            transition: all 0.3s;
-            border-left: 4px solid transparent;
-        }
-
-        .sidebar-menu a:hover, .sidebar-menu a.active {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border-left: 4px solid var(--accent);
-        }
-
-        .sidebar-menu i {
-            margin-right: 12px;
-            font-size: 1.1rem;
-            width: 24px;
-            text-align: center;
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: var(--sidebar-width);
-            padding: 20px;
-            padding-top: calc(var(--header-height) + 20px);
-            min-height: 100vh;
-        }
-
-        /* Header */
-        .header {
-            position: fixed;
-            top: 0;
-            left: var(--sidebar-width);
-            right: 0;
-            height: var(--header-height);
-            background: var(--primary);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            z-index: 900;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-        }
-
-        .search-bar {
-            width: 300px;
-            position: relative;
-        }
-
-        .search-bar input {
-            width: 100%;
-            padding: 10px 15px;
-            border-radius: 25px;
-            border: 1px solid #334155;
-            padding-left: 40px;
-            background: #1e293b;
-            color: #e2e8f0;
-        }
-
-        .search-bar i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
-        }
-
-        .user-actions {
-            display: flex;
-            align-items: center;
-        }
-
-        .notification-bell {
-            position: relative;
-            margin-right: 20px;
-            cursor: pointer;
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--danger);
-            color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 0.7rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--accent);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            margin-right: 10px;
-        }
-
-        /* Dashboard Cards */
-        .dashboard-header {
-            margin-bottom: 25px;
-        }
-
-        .dashboard-header h1 {
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 5px;
-        }
-
-        .breadcrumb {
-            background: transparent;
-            padding: 0;
-            margin-bottom: 0;
-            color: #94a3b8;
-        }
-
-        .breadcrumb-item.active {
-            color: var(--accent);
-        }
-
-        .card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            margin-bottom: 24px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            background: #1e293b;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        }
-
-        .card-header {
-            background: #1e293b;
-            border-bottom: 1px solid #334155;
-            padding: 15px 20px;
-            border-radius: 12px 12px 0 0 !important;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            color: #e2e8f0;
-        }
-
-        .card-header i {
-            color: var(--accent);
-            margin-right: 8px;
-        }
-
-        .card-body {
-            padding: 20px;
-            color: #cbd5e1;
-        }
-
-        /* Index Cards */
-        .index-card {
-            text-align: center;
-            padding: 15px;
-            background: #1e293b;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            transition: all 0.3s ease;
-        }
-
-        .index-card:hover {
-            background: #2d3748;
-        }
-
-        .index-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin: 10px 0;
-            color: #e2e8f0;
-        }
-
-        .index-change {
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .positive {
-            color: var(--success);
-        }
-
-        .negative {
-            color: var(--danger);
-        }
-
-        /* Tabs */
-        .nav-tabs {
-            border-bottom: 1px solid #334155;
-        }
-
-        .nav-tabs .nav-link {
-            border: none;
-            color: #64748b;
-            font-weight: 500;
-            padding: 10px 15px;
-        }
-
-        .nav-tabs .nav-link.active {
-            color: var(--accent);
-            border-bottom: 3px solid var(--accent);
-            background: transparent;
-        }
-
-        /* Tables */
-        .data-table {
-            width: 100%;
-            color: #cbd5e1;
-        }
-
-        .data-table th {
-            background: #1e293b;
-            font-weight: 600;
-            padding: 12px 15px;
-            color: #e2e8f0;
-            border-top: 1px solid #334155;
-        }
-
-        .data-table td {
-            padding: 12px 15px;
-            border-top: 1px solid #334155;
-        }
-
-        .data-table tr:hover {
-            background: #2d3748;
-        }
-
-        /* Charts */
-        .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
-        }
-
-        /* Buttons */
-        .btn-primary {
-            background: var(--accent);
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #2563eb;
-        }
-
-        .btn-outline-primary {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        .btn-outline-primary:hover {
-            background: var(--accent);
-            color: white;
-        }
-
-        /* Custom Toggle */
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #475569;
-            transition: .4s;
-            border-radius: 24px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: var(--accent);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
-
-        /* Footer */
-        .footer {
-            background: var(--primary);
-            padding: 20px;
-            margin-left: var(--sidebar-width);
-            text-align: center;
-            border-top: 1px solid #334155;
-            color: #64748b;
-        }
-
-        /* Page Content */
-        .page-content {
-            display: none;
-        }
-
-        .page-content.active {
-            display: block;
-            animation: fadeIn 0.5s;
-        }
-
-        /* Chatbot */
-        .chatbot-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-
-        .chatbot-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: var(--accent);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .chatbot-window {
-            position: absolute;
-            bottom: 70px;
-            right: 0;
-            width: 350px;
-            height: 450px;
-            background: #1e293b;
-            border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-            border: 1px solid #334155;
-        }
-
-        .chatbot-header {
-            padding: 15px;
-            background: var(--primary);
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .chatbot-messages {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .message {
-            max-width: 80%;
-            padding: 10px 15px;
-            margin-bottom: 10px;
-            border-radius: 18px;
-            line-height: 1.4;
-        }
-
-        .bot-message {
-            background: #334155;
-            color: #e2e8f0;
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-        }
-
-        .user-message {
-            background: var(--accent);
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-        }
-
-        .chatbot-input {
-            display: flex;
-            padding: 10px;
-            border-top: 1px solid #334155;
-            background: #1e293b;
-        }
-
-        .chatbot-input input {
-            flex: 1;
-            padding: 10px 15px;
-            border: 1px solid #334155;
-            border-radius: 20px;
-            background: #0f172a;
-            color: #e2e8f0;
-            outline: none;
-        }
-
-        .chatbot-input button {
-            margin-left: 10px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 20px;
-            padding: 10px 15px;
-            cursor: pointer;
-        }
-
-        /* Responsive */
-        @media (max-width: 992px) {
-            .sidebar {
-                width: 70px;
-                overflow: visible;
-            }
-            
-            .sidebar .sidebar-header h3,
-            .sidebar .menu-text {
-                display: none;
-            }
-            
-            .sidebar .sidebar-menu a {
-                justify-content: center;
-                padding: 15px;
-            }
-            
-            .sidebar .sidebar-menu i {
-                margin-right: 0;
-                font-size: 1.3rem;
-            }
-            
-            .main-content, .header, .footer {
-                margin-left: 70px;
-            }
-            
-            .search-bar {
-                width: 200px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                left: -70px;
-            }
-            
-            .main-content, .header, .footer {
-                margin-left: 0;
-            }
-            
-            .header {
-                left: 0;
-            }
-            
-            .menu-toggle {
-                display: block !important;
-            }
-        }
-
-        .menu-toggle {
-            display: none;
-            background: var(--accent);
-            color: white;
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            cursor: pointer;
-            margin-right: 15px;
-        }
-
-        /* Custom animations */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--accent);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #2563eb;
-        }
-    </style>
-</head>
-<body>
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h3>MarketMentor</h3>
-        </div>
-        <ul class="sidebar-menu">
-            <li><a href="#" class="active" data-page="home"><i class="fas fa-home"></i> <span class="menu-text">Home</span></a></li>
-            <li><a href="#" data-page="company"><i class="fas fa-building"></i> <span class="menu-text">Company Overview</span></a></li>
-            <li><a href="#" data-page="movers"><i class="fas fa-chart-line"></i> <span class="menu-text">Market Movers</span></a></li>
-            <li><a href="#" data-page="fnO"><i class="fas fa-exchange-alt"></i> <span class="menu-text">F&O</span></a></li>
-            <li><a href="#" data-page="global"><i class="fas fa-globe"></i> <span class="menu-text">Global Markets</span></a></li>
-            <li><a href="#" data-page="mutual"><i class="fas fa-chart-pie"></i> <span class="menu-text">Mutual Funds</span></a></li>
-            <li><a href="#" data-page="sip"><i class="fas fa-calculator"></i> <span class="menu-text">SIP Calculator</span></a></li>
-            <li><a href="#" data-page="ipo"><i class="fas fa-file-invoice-dollar"></i> <span class="menu-text">IPO Tracker</span></a></li>
-            <li><a href="#" data-page="predictions"><i class="fas fa-crystal-ball"></i> <span class="menu-text">Predictions</span></a></li>
-            <li><a href="#" data-page="nav"><i class="fas fa-money-bill-wave"></i> <span class="menu-text">NAV Viewer</span></a></li>
-            <li><a href="#" data-page="sectors"><i class="fas fa-industry"></i> <span class="menu-text">Sectors</span></a></li>
-            <li><a href="#" data-page="news"><i class="fas fa-newspaper"></i> <span class="menu-text">News</span></a></li>
-            <li><a href="#" data-page="learning"><i class="fas fa-graduation-cap"></i> <span class="menu-text">Learning</span></a></li>
-            <li><a href="#" data-page="volume"><i class="fas fa-wave-square"></i> <span class="menu-text">Volume Spike</span></a></li>
-            <li><a href="#" data-page="screener"><i class="fas fa-filter"></i> <span class="menu-text">Stock Screener</span></a></li>
-            <li><a href="#" data-page="buysell"><i class="fas fa-hand-holding-usd"></i> <span class="menu-text">Buy/Sell Predictor</span></a></li>
-            <li><a href="#" data-page="sentiment"><i class="fas fa-smile"></i> <span class="menu-text">News Sentiment</span></a></li>
-        </ul>
-    </div>
-
-    <!-- Header -->
-    <div class="header">
-        <div class="d-flex align-items-center">
-            <button class="menu-toggle"><i class="fas fa-bars"></i></button>
-            <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Search stocks, indices, news...">
-            </div>
-        </div>
-        <div class="user-actions">
-            <div class="notification-bell">
-                <i class="fas fa-bell"></i>
-                <span class="notification-badge">3</span>
-            </div>
-            <div class="user-profile">
-                <div class="user-avatar">AB</div>
-                <div class="user-info d-none d-md-block">
-                    <div class="user-name">Ashwik Bire</div>
-                    <div class="user-role" style="color: #94a3b8;">Investor</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <!-- Home Page -->
-        <div id="home-page" class="page-content active">
-            <div class="dashboard-header">
-                <h1>Market Overview</h1>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="#">Home</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
-                    </ol>
-                </nav>
-            </div>
-
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <span><i class="fas fa-chart-bar"></i> Major Indices Performance</span>
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="timeRangeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    1D
-                                </button>
-                                <ul class="dropdown-menu" aria-labelledby="timeRangeDropdown">
-                                    <li><a class="dropdown-item" href="#">1D</a></li>
-                                    <li><a class="dropdown-item" href="#">1W</a></li>
-                                    <li><a class="dropdown-item" href="#">1M</a></li>
-                                    <li><a class="dropdown-item" href="#">3M</a></li>
-                                    <li><a class="dropdown-item" href="#">1Y</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="row" id="indices-container">
-                                <!-- Indices will be populated here by JavaScript -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header">
-                            <span><i class="fas fa-chart-line"></i> Portfolio Performance</span>
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-container">
-                                <canvas id="portfolioChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <span><i class="fas fa-list"></i> Watchlist</span>
-                            <button class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> Add</button>
-                        </div>
-                        <div class="card-body">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Symbol</th>
-                                        <th>Price</th>
-                                        <th>Change</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="watchlist-container">
-                                    <!-- Watchlist will be populated here by JavaScript -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <span><i class="fas fa-newspaper"></i> Market News</span>
-                            <a href="#" class="btn btn-sm btn-outline-primary">View All</a>
-                        </div>
-                        <div class="card-body">
-                            <div id="news-container">
-                                <!-- News will be populated here by JavaScript -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <span><i class="fas fa-industry"></i> Top Sectors</span>
-                        </div>
-                        <div class="card-body">
-                            <canvas id="sectorsChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Other Pages (initially hidden) -->
-        <div id="company-page" class="page-content">
-            <div class="dashboard-header">
-                <h1>Company Overview</h1>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="#">Home</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Company Overview</li>
-                    </ol>
-                </nav>
-            </div>
-            <div class="card">
-                <div class="card-header">
-                    <span><i class="fas fa-building"></i> Company Search</span>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="search-bar">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="companySearch" placeholder="Search for a company...">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <button class="btn btn-primary" id="searchCompanyBtn">Search</button>
-                        </div>
-                    </div>
-                    <div id="company-details">
-                        <p class="text-center">Search for a company to view details</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="sip-page" class="page-content">
-            <div class="dashboard-header">
-                <h1>SIP Calculator</h1>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="#">Home</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">SIP Calculator</li>
-                    </ol>
-                </nav>
-            </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <span><i class="fas fa-calculator"></i> SIP Input</span>
-                        </div>
-                        <div class="card-body">
-                            <form id="sipForm">
-                                <div class="mb-3">
-                                    <label for="monthlyInvestment" class="form-label">Monthly Investment (₹)</label>
-                                    <input type="number" class="form-control" id="monthlyInvestment" value="5000" min="500" step="500">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="investmentPeriod" class="form-label">Investment Period (Years)</label>
-                                    <input type="number" class="form-control" id="investmentPeriod" value="10" min="1" max="30">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="expectedReturn" class="form-label">Expected Annual Return (%)</label>
-                                    <input type="number" class="form-control" id="expectedReturn" value="12" min="1" max="30" step="0.1">
-                                </div>
-                                <button type="button" class="btn btn-primary" id="calculateSip">Calculate</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <span><i class="fas fa-chart-pie"></i> SIP Results</span>
-                        </div>
-                        <div class="card-body">
-                            <div id="sipResults">
-                                <p class="text-center">Enter values and click Calculate to see results</p>
-                            </div>
-                            <div class="chart-container">
-                                <canvas id="sipChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Add other page content here -->
-        <div id="news-page" class="page-content">
-            <div class="dashboard-header">
-                <h1>Financial News</h1>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="#">Home</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">News</li>
-                    </ol>
-                </nav>
-            </div>
-            <div class="card">
-                <div class="card-header">
-                    <span><i class="fas fa-newspaper"></i> Latest Market News</span>
-                </div>
-                <div class="card-body">
-                    <div id="news-list">
-                        <!-- News articles will be populated here by JavaScript -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Add more pages for other menu items -->
-    </div>
-
-    <!-- Footer -->
-    <div class="footer">
-        <p>© 2023 MarketMentor. All rights reserved. | Data provided by financial APIs</p>
-    </div>
-
-    <!-- Chatbot -->
-    <div class="chatbot-container">
-        <div class="chatbot-btn" id="chatbotToggle">
-            <i class="fas fa-comment-dots"></i>
-        </div>
-        <div class="chatbot-window" id="chatbotWindow">
-            <div class="chatbot-header">
-                <span>MarketMentor Assistant</span>
-                <i class="fas fa-times" id="closeChatbot"></i>
-            </div>
-            <div class="chatbot-messages" id="chatbotMessages">
-                <div class="message bot-message">
-                    Hello! I'm your MarketMentor assistant. How can I help you today?
-                </div>
-            </div>
-            <div class="chatbot-input">
-                <input type="text" id="chatbotInput" placeholder="Type your message...">
-                <button id="sendMessage"><i class="fas fa-paper-plane"></i></button>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Page Navigation
-        document.querySelectorAll('.sidebar-menu a').forEach(item => {
-            item.addEventListener('click', function(e) {
-                e.preventDefault();
-                const pageId = this.getAttribute('data-page');
-                
-                // Update active menu item
-                document.querySelectorAll('.sidebar-menu a').forEach(link => {
-                    link.classList.remove('active');
-                });
-                this.classList.add('active');
-                
-                // Show the corresponding page
-                document.querySelectorAll('.page-content').forEach(page => {
-                    page.classList.remove('active');
-                });
-                document.getElementById(`${pageId}-page`).classList.add('active');
-            });
-        });
-
-        // Toggle sidebar on mobile
-        document.querySelector('.menu-toggle').addEventListener('click', function() {
-            document.querySelector('.sidebar').classList.toggle('show');
-        });
-
-        // Chatbot functionality
-        document.getElementById('chatbotToggle').addEventListener('click', function() {
-            document.getElementById('chatbotWindow').style.display = 'flex';
-        });
-
-        document.getElementById('closeChatbot').addEventListener('click', function() {
-            document.getElementById('chatbotWindow').style.display = 'none';
-        });
-
-        document.getElementById('sendMessage').addEventListener('click', function() {
-            const input = document.getElementById('chatbotInput');
-            const message = input.value.trim();
-            
-            if (message) {
-                // Add user message
-                const userMessageElement = document.createElement('div');
-                userMessageElement.classList.add('message', 'user-message');
-                userMessageElement.textContent = message;
-                document.getElementById('chatbotMessages').appendChild(userMessageElement);
-                
-                // Clear input
-                input.value = '';
-                
-                // Scroll to bottom
-                document.getElementById('chatbotMessages').scrollTop = document.getElementById('chatbotMessages').scrollHeight;
-                
-                // Simulate bot response
-                setTimeout(() => {
-                    const botResponse = generateBotResponse(message);
-                    const botMessageElement = document.createElement('div');
-                    botMessageElement.classList.add('message', 'bot-message');
-                    botMessageElement.textContent = botResponse;
-                    document.getElementById('chatbotMessages').appendChild(botMessageElement);
-                    
-                    // Scroll to bottom
-                    document.getElementById('chatbotMessages').scrollTop = document.getElementById('chatbotMessages').scrollHeight;
-                }, 1000);
-            }
-        });
-
-        // Allow sending message with Enter key
-        document.getElementById('chatbotInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('sendMessage').click();
-            }
-        });
-
-        // Generate bot response based on user input
-        function generateBotResponse(message) {
-            const lowerMessage = message.toLowerCase();
-            
-            if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
-                return "Hello! How can I assist you with your investment journey today?";
-            } else if (lowerMessage.includes('stock') || lowerMessage.includes('share')) {
-                return "I can help you with stock information. Which company are you interested in?";
-            } else if (lowerMessage.includes('sip') || lowerMessage.includes('investment')) {
-                return "Systematic Investment Plans (SIPs) are a great way to invest in mutual funds regularly. You can use our SIP calculator to estimate returns.";
-            } else if (lowerMessage.includes('market') || lowerMessage.includes('nifty') || lowerMessage.includes('sensex')) {
-                return "Currently, the market is showing mixed signals. For detailed analysis, check out the Market Overview section.";
-            } else if (lowerMessage.includes('thank')) {
-                return "You're welcome! Feel free to ask if you have more questions.";
-            } else {
-                return "I'm still learning about financial markets. Could you please rephrase your question or ask about stocks, SIP, or market trends?";
-            }
-        }
-
-        // Sample data for indices (in a real app, this would come from an API)
-        const indicesData = [
-            { name: 'NIFTY 50', value: 19632.55, change: 124.65, changePercent: 0.64 },
-            { name: 'SENSEX', value: 65958.21, change: 382.93, changePercent: 0.58 },
-            { name: 'NIFTY BANK', value: 44872.90, change: -132.45, changePercent: -0.29 },
-            { name: 'NIFTY IT', value: 34125.65, change: 523.12, changePercent: 1.56 }
-        ];
-
-        // Populate indices
-        const indicesContainer = document.getElementById('indices-container');
-        indicesData.forEach(index => {
-            const col = document.createElement('div');
-            col.className = 'col-md-3 col-sm-6';
-            
-            const isPositive = index.change >= 0;
-            const changeClass = isPositive ? 'positive' : 'negative';
-            const changeIcon = isPositive ? '▲' : '▼';
-            
-            col.innerHTML = `
-                <div class="index-card">
-                    <h5>${index.name}</h5>
-                    <div class="index-value">${index.value.toLocaleString()}</div>
-                    <div class="index-change ${changeClass}">
-                        ${changeIcon} ${index.change.toLocaleString()} (${index.changePercent}%)
-                    </div>
-                </div>
-            `;
-            
-            indicesContainer.appendChild(col);
-        });
-
-        // Sample watchlist data
-        const watchlistData = [
-            { symbol: 'RELIANCE', price: 2587.45, change: 1.2 },
-            { symbol: 'HDFC', price: 1642.30, change: -0.8 },
-            { symbol: 'INFY', price: 1485.60, change: 2.1 },
-            { symbol: 'TCS', price: 3325.75, change: 0.7 },
-            { symbol: 'HUL', price: 2436.90, change: -0.5 }
-        ];
-
-        // Populate watchlist
-        const watchlistContainer = document.getElementById('watchlist-container');
-        watchlistData.forEach(stock => {
-            const row = document.createElement('tr');
-            const isPositive = stock.change >= 0;
-            const changeClass = isPositive ? 'positive' : 'negative';
-            const changeIcon = isPositive ? '▲' : '▼';
-            
-            row.innerHTML = `
-                <td>${stock.symbol}</td>
-                <td>₹${stock.price.toLocaleString()}</td>
-                <td class="${changeClass}">${changeIcon} ${Math.abs(stock.change)}%</td>
-            `;
-            
-            watchlistContainer.appendChild(row);
-        });
-
-        // Sample news data
-        const newsData = [
-            { title: 'RBI Keeps Repo Rate Unchanged at 6.5%', source: 'Economic Times', time: '2 hours ago' },
-            { title: 'Infosys Reports Better-Than-Expected Q2 Results', source: 'Business Standard', time: '4 hours ago' },
-            { title: 'Government Plans New Policy to Boost Manufacturing', source: 'MoneyControl', time: '6 hours ago' }
-        ];
-
-        // Populate news
-        const newsContainer = document.getElementById('news-container');
-        newsData.forEach(news => {
-            const newsItem = document.createElement('div');
-            newsItem.className = 'mb-3';
-            newsItem.innerHTML = `
-                <h6>${news.title}</h6>
-                <div class="d-flex justify-content-between text-muted">
-                    <span>${news.source}</span>
-                    <span>${news.time}</span>
-                </div>
-                <hr>
-            `;
-            newsContainer.appendChild(newsItem);
-        });
-
-        // Initialize charts
-        // Portfolio chart
-        const portfolioCtx = document.getElementById('portfolioChart').getContext('2d');
-        const portfolioChart = new Chart(portfolioCtx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
-                datasets: [{
-                    label: 'Portfolio Value (₹)',
-                    data: [500000, 520000, 510000, 535000, 545000, 560000, 580000, 575000, 590000, 610000],
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    fill: true,
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#cbd5e1'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
-                        },
-                        ticks: {
-                            color: '#cbd5e1'
-                        }
-                    }
-                }
-            }
-        });
-
-        // Sectors chart
-        const sectorsCtx = document.getElementById('sectorsChart').getContext('2d');
-        const sectorsChart = new Chart(sectorsCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['IT', 'Finance', 'Healthcare', 'Auto', 'FMCG', 'Energy'],
-                datasets: [{
-                    data: [25, 22, 18, 15, 12, 8],
-                    backgroundColor: [
-                        '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            color: '#cbd5e1'
-                        }
-                    }
-                }
-            }
-        });
-
-        // SIP Calculator functionality
-        document.getElementById('calculateSip').addEventListener('click', function() {
-            const monthlyInvestment = parseFloat(document.getElementById('monthlyInvestment').value);
-            const investmentPeriod = parseInt(document.getElementById('investmentPeriod').value);
-            const expectedReturn = parseFloat(document.getElementById('expectedReturn').value);
-            
-            // Calculate SIP
-            const monthlyRate = expectedReturn / 100 / 12;
-            const months = investmentPeriod * 12;
-            const futureValue = monthlyInvestment * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
-            const totalInvestment = monthlyInvestment * months;
-            const totalGains = futureValue - totalInvestment;
-            
-            // Display results
-            document.getElementById('sipResults').innerHTML = `
-                <div class="row text-center">
-                    <div class="col-md-4 mb-3">
-                        <div class="fw-bold">Invested Amount</div>
-                        <div class="fs-4">₹${totalInvestment.toLocaleString()}</div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="fw-bold">Est. Returns</div>
-                        <div class="fs-4 text-success">₹${totalGains.toLocaleString()}</div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="fw-bold">Total Value</div>
-                        <div class="fs-4 text-primary">₹${futureValue.toLocaleString()}</div>
-                    </div>
-                </div>
-            `;
-            
-            // Update SIP chart
-            updateSipChart(totalInvestment, totalGains);
-        });
-
-        function updateSipChart(invested, returns) {
-            const sipCtx = document.getElementById('sipChart').getContext('2d');
-            
-            if (window.sipChartInstance) {
-                window.sipChartInstance.destroy();
-            }
-            
-            window.sipChartInstance = new Chart(sipCtx, {
-                type: 'pie',
-                data: {
-                    labels: ['Amount Invested', 'Estimated Returns'],
-                    datasets: [{
-                        data: [invested, returns],
-                        backgroundColor: ['#3b82f6', '#10b981']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: '#cbd5e1'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // Load news using News API
-        function loadNews() {
-            const apiKey = '0b08be107dca45d3be30ca7e06544408';
-            const url = `https://newsapi.org/v2/top-headlines?category=business&language=en&apiKey=${apiKey}`;
-            
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    const newsList = document.getElementById('news-list');
-                    newsList.innerHTML = '';
-                    
-                    if (data.articles && data.articles.length > 0) {
-                        data.articles.slice(0, 10).forEach(article => {
-                            const newsItem = document.createElement('div');
-                            newsItem.className = 'mb-4';
-                            newsItem.innerHTML = `
-                                <h5><a href="${article.url}" target="_blank" style="color: #3b82f6; text-decoration: none;">${article.title}</a></h5>
-                                <p>${article.description || ''}</p>
-                                <div class="d-flex justify-content-between text-muted">
-                                    <span>${article.source.name}</span>
-                                    <span>${new Date(article.publishedAt).toLocaleDateString()}</span>
-                                </div>
-                                <hr>
-                            `;
-                            newsList.appendChild(newsItem);
-                        });
-                    } else {
-                        newsList.innerHTML = '<p class="text-center">No news available at the moment.</p>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching news:', error);
-                    document.getElementById('news-list').innerHTML = '<p class="text-center">Failed to load news. Please try again later.</p>';
-                });
-        }
-
-        // Load news when news page is accessed
-        document.querySelector('[data-page="news"]').addEventListener('click', loadNews);
-
-        // Company search functionality
-        document.getElementById('searchCompanyBtn').addEventListener('click', function() {
-            const companyName = document.getElementById('companySearch').value.trim();
-            
-            if (companyName) {
-                // In a real app, this would fetch data from an API
-                // For demo purposes, we'll use mock data
-                const companyDetails = document.getElementById('company-details');
-                companyDetails.innerHTML = `
-                    <div class="text-center">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p>Loading company data...</p>
-                    </div>
-                `;
-                
-                setTimeout(() => {
-                    companyDetails.innerHTML = `
-                        <div class="company-header mb-4">
-                            <h3>${companyName.toUpperCase()} Company Limited</h3>
-                            <p>NSE: ${companyName.substring(0, 4).toUpperCase()} | BSE: 543210</p>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Current Price</h5>
-                                        <h2 class="text-primary">₹${(Math.random() * 5000 + 100).toFixed(2)}</h2>
-                                        <p class="${Math.random() > 0.5 ? 'text-success' : 'text-danger'}">
-                                            ${Math.random() > 0.5 ? '▲' : '▼'} ${(Math.random() * 10).toFixed(2)}%
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Key Metrics</h5>
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <p>Market Cap</p>
-                                                <p>P/E Ratio</p>
-                                                <p>Dividend Yield</p>
-                                            </div>
-                                            <div class="col-6">
-                                                <p>₹${(Math.random() * 100000).toFixed(2)} Cr</p>
-                                                <p>${(Math.random() * 50 + 10).toFixed(2)}</p>
-                                                <p>${(Math.random() * 5).toFixed(2)}%</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">About Company</h5>
-                                <p>${companyName} is a leading company in its sector with a strong market presence and consistent financial performance. The company has shown resilience in challenging market conditions and continues to innovate in its product offerings.</p>
-                                <h5 class="card-title mt-4">Recent Performance</h5>
-                                <canvas id="companyChart" height="150"></canvas>
-                            </div>
-                        </div>
-                    `;
-                    
-                    // Initialize company chart
-                    const companyCtx = document.getElementById('companyChart').getContext('2d');
-                    new Chart(companyCtx, {
-                        type: 'line',
-                        data: {
-                            labels: ['Q1', 'Q2', 'Q3', 'Q4'],
-                            datasets: [{
-                                label: 'Revenue (₹ Cr)',
-                                data: [
-                                    Math.random() * 1000 + 500,
-                                    Math.random() * 1000 + 600,
-                                    Math.random() * 1000 + 700,
-                                    Math.random() * 1000 + 800
-                                ],
-                                borderColor: '#3b82f6',
-                                tension: 0.3
-                            }]
-                        },
-                        options: {
-                            scales: {
-                                y: {
-                                    grid: {
-                                        color: 'rgba(255, 255, 255, 0.1)'
-                                    },
-                                    ticks: {
-                                        color: '#cbd5e1'
-                                    }
-                                },
-                                x: {
-                                    grid: {
-                                        color: 'rgba(255, 255, 255, 0.1)'
-                                    },
-                                    ticks: {
-                                        color: '#cbd5e1'
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }, 1500);
-            }
-        });
-    </script>
-</body>
-</html>
+import streamlit as st
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt  # Make sure this line is included at the top
+import seaborn as sns
+import yfinance as yf  # Ensure that yfinance is imported for stock data
+import requests
+from plotly import graph_objects as go
+from streamlit_option_menu import option_menu  # Import the option_menu
+from textblob import TextBlob
+from xgboost import XGBRegressor
+from datetime import timedelta
+import yfinance as yf
+import pandas as pd
+import plotly.graph_objects as go
+import streamlit as st
+import numpy as np
+import pandas as pd
+import yfinance as yf
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, LSTM
+from sklearn.model_selection import train_test_split
+import plotly.graph_objects as go
+import streamlit as st
+
+# News API Key
+NEWS_API_KEY = "0b08be107dca45d3be30ca7e06544408"
+
+# Set page config
+st.set_page_config(page_title="MarketMentor", layout="wide")
+
+# Sidebar menu
+with st.sidebar:
+    selected = option_menu(
+        "MarketMentor",
+        ["Home","Company Overview", "Market Movers", "F&O", "Global Markets", "Mutual Funds", "SIP Calculator","IPO Tracker","Predictions for Mutual Funds & IPOs","Mutual Fund NAV Viewer","Sectors", "News", "Learning", "Volume Spike", "Stock Screener", "Predictions", "Buy/Sell Predictor", "News Sentiment"],
+        icons=['house', 'graph-up', 'globe', 'bank', 'boxes', 'newspaper', 'building', 'book', 'activity', 'search'],
+        menu_icon="cast",
+        default_index=0
+    )
+
+# Home - Market Overview
+if selected == "Home":
+    st.title("\U0001F3E0 Home - Market Overview")
+    indices = {
+        "^NSEI": "Nifty 50",
+        "^BSESN": "Sensex",
+        "^DJI": "Dow Jones",
+        "^IXIC": "NASDAQ",
+        "^GSPC": "S&P 500",
+    }
+    st.subheader("Major Indices Performance")
+    cols = st.columns(len(indices))
+    for idx, (symbol, name) in enumerate(indices.items()):
+        data = yf.Ticker(symbol).history(period="1d")
+        last_close = round(data['Close'].iloc[-1], 2)
+        change = round(data['Close'].iloc[-1] - data['Open'].iloc[-1], 2)
+        percent_change = round((change / data['Open'].iloc[-1]) * 100, 2)
+        cols[idx].metric(label=name, value=f"{last_close}", delta=f"{percent_change}%")
+
+
+# Market Movers - Top Gainers & Losers
+# Market Movers - Active Stocks, Top Gainers & Losers
+elif selected == "Market Movers":
+    st.title("📈 Market Movers - Active Stocks, Top Gainers & Losers")
+
+    # Active Stocks (Example: Nifty 50 stocks)
+    tickers_list = 'RELIANCE.NS TCS.NS INFY.NS HDFCBANK.NS ICICIBANK.NS'
+    nifty = yf.Tickers(tickers_list)
+
+    # Fetching recent closing prices
+    data = {ticker: nifty.tickers[ticker].history(period="1d")['Close'].iloc[-1] for ticker in nifty.tickers}
+
+    # Sorting stocks for gainers and losers
+    gainers = sorted(data.items(), key=lambda x: x[1], reverse=True)
+    losers = sorted(data.items(), key=lambda x: x[1])
+
+    # Displaying Active Stocks
+    st.subheader("📊 Active Stocks (Recent Close Prices)")
+    active_stocks = pd.DataFrame(data.items(), columns=["Stock", "Price"])
+    st.dataframe(active_stocks)
+
+    # Top Gainers
+    st.subheader("🚀 Top Gainers")
+    top_gainers = pd.DataFrame(gainers, columns=['Stock', 'Price'])
+    st.dataframe(top_gainers)
+
+    # Top Losers
+    st.subheader("📉 Top Losers")
+    top_losers = pd.DataFrame(losers, columns=['Stock', 'Price'])
+    st.dataframe(top_losers)
+
+# Global Markets - Major Indices
+elif selected == "Global Markets":
+    st.title("\U0001F30E Global Markets Status")
+    global_indices = {
+        "^DJI": "Dow Jones",
+        "^IXIC": "NASDAQ",
+        "^GSPC": "S&P 500",
+        "^FTSE": "FTSE 100",
+        "^N225": "Nikkei 225",
+        "^HSI": "Hang Seng",
+    }
+    st.subheader("Major Global Indices")
+    cols = st.columns(3)
+    for idx, (symbol, name) in enumerate(global_indices.items()):
+        data = yf.Ticker(symbol).history(period="1d")
+        last_close = round(data['Close'].iloc[-1], 2)
+        change = round(data['Close'].iloc[-1] - data['Open'].iloc[-1], 2)
+        percent_change = round((change / data['Open'].iloc[-1]) * 100, 2)
+        cols[idx % 3].metric(label=name, value=f"{last_close}", delta=f"{percent_change}%")
+
+# Mutual Funds - Insights
+elif selected == "Mutual Funds":
+    st.title("\U0001F3E6 Mutual Funds Insights")
+    mf_data = {
+        "Axis Bluechip Fund": "15% Returns",
+        "Mirae Asset Large Cap Fund": "13.2% Returns",
+        "Parag Parikh Flexi Cap Fund": "17.5% Returns",
+        "UTI Nifty Index Fund": "12% Returns",
+    }
+    st.dataframe(pd.DataFrame(mf_data.items(), columns=['Mutual Fund', '1Y Return']))
+    st.info("Live Mutual Fund API integration coming soon!")
+
+# Sectors - Sector Performance
+elif selected == "Sectors":
+    st.title("\U0001F4CA Sector Wise Performance")
+    sector_performance = {
+        "Banking": "+1.8%",
+        "IT": "-0.5%",
+        "Energy": "+2.1%",
+        "FMCG": "+0.9%",
+        "Pharma": "-1.2%",
+        "Auto": "+1.0%",
+    }
+    st.dataframe(pd.DataFrame(sector_performance.items(), columns=['Sector', 'Performance']))
+
+# News - Latest Financial News
+elif selected == "News":
+    st.title("📰 Latest Financial News")
+    news_query = st.text_input("Search Financial News:", "stock market")
+
+    if news_query:
+        url = f"https://newsapi.org/v2/everything?q={news_query}&apiKey={NEWS_API_KEY}&language=en&sortBy=publishedAt&pageSize=10"
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            articles = response.json().get("articles", [])
+            if articles:
+                for article in articles:
+                    st.markdown("----")
+                    st.subheader(article["title"])
+                    st.write(f"*{article['source']['name']} - {article['publishedAt'].split('T')[0]}*")
+                    st.write(article.get("description", "No description available."))
+                    st.markdown(f"[🔗 Read More]({article['url']})")
+            else:
+                st.warning("No articles found.")
+        else:
+            st.error("Unable to fetch news articles. Please check API or query.")
+
+
+# Learning - Stock Market Resources
+elif selected == "Learning":
+    st.title("📘 Learn the Stock Market")
+
+    st.markdown("""
+    Welcome to the **Learning Hub** of the Smart Stock Market Dashboard by [Ashwik Bire](https://www.linkedin.com/in/ashwik-bire-b2a000186/)!  
+    This section is crafted to help **beginners, enthusiasts, and investors** understand how the stock market works — with a strong foundation in both **technical and fundamental analysis**, along with insights from **AI and machine learning**.
+
+    ### 🎯 Purpose:
+    - To **educate** users with curated stock market knowledge.
+    - To **simplify complex concepts** like indicators, price action, technical patterns, and financial ratios.
+    - To share **AI-powered learning resources** that explain how stock prediction models work.
+
+    ### 🧠 What You’ll Learn:
+    - 📈 Basics of Stock Market, Trading, and Investing  
+    - 🧾 Financial Statements and Ratio Analysis  
+    - 🧮 Technical Analysis (Indicators, Patterns, Volume)  
+    - 🤖 AI/ML in the Stock Market  
+    - 🛠 Tools & Resources for Smarter Investing
+
+    ### 🔗 Connect with Ashwik Bire:
+    [![LinkedIn](https://img.shields.io/badge/Connect%20with%20me-LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/ashwik-bire-b2a000186/)
+
+    Stay tuned! We’re continuously updating this section with **videos, articles, and interactive tutorials**.
+    """)
+
+
+# ----------------------- Volume Spike Detector ------------------------
+# --------------------------- Volume Spike Detector --------------------------- #
+elif selected == "Volume Spike":
+    st.title("📈 Volume Spike Detector")
+    st.markdown("This tool detects unusual volume surges in a stock based on a 10-day rolling average.")
+
+    ticker = st.text_input("🔎 Enter Stock Ticker (e.g., TCS.NS, INFY.NS):", "TCS.NS")
+    days = st.slider("🗓️ Select Days of Historical Data:", 30, 365, 90)
+
+    if ticker:
+        try:
+            # Download historical stock data
+            data = yf.download(ticker, period=f"{days}d")
+
+            if data.empty:
+                st.warning("⚠️ No data found. Please check the ticker symbol.")
+            else:
+                # Compute rolling average & spike detection
+                data["Avg_Volume"] = data["Volume"].rolling(window=10).mean()
+                data["Spike"] = data["Volume"] > (1.5 * data["Avg_Volume"])
+                data.dropna(inplace=True)
+
+                # --- Chart Section ---
+                st.subheader("📊 Volume Trend with Spike Detection")
+                fig = go.Figure()
+
+                # Volume line
+                fig.add_trace(go.Scatter(
+                    x=data.index, y=data["Volume"],
+                    mode='lines', name='Daily Volume',
+                    line=dict(color='royalblue')
+                ))
+
+                # 10-Day Avg Volume line
+                fig.add_trace(go.Scatter(
+                    x=data.index, y=data["Avg_Volume"],
+                    mode='lines', name='10-Day Avg Volume',
+                    line=dict(color='orange')
+                ))
+
+                # Volume spikes
+                spikes = data[data["Spike"]]
+                fig.add_trace(go.Scatter(
+                    x=spikes.index, y=spikes["Volume"],
+                    mode='markers', name='Spikes',
+                    marker=dict(size=10, color='red', symbol='star')
+                ))
+
+                fig.update_layout(
+                    title=f"🔍 Volume Spike Detection for {ticker.upper()}",
+                    xaxis_title="Date",
+                    yaxis_title="Volume",
+                    legend_title="Legend",
+                    template="plotly_dark",
+                    height=500
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
+
+                # --- Spike Events Table ---
+                st.subheader("📌 Detected Volume Spike Events")
+                st.dataframe(
+                    spikes[["Volume", "Avg_Volume"]]
+                    .rename(columns={"Volume": "Actual Volume", "Avg_Volume": "10-Day Avg"})
+                    .style.format("{:,.0f}"),
+                    use_container_width=True
+                )
+
+        except Exception as e:
+            st.error(f"❌ Error occurred: {e}")
+
+# News Sentiment - Sentiment Analysis of News
+elif selected == "News Sentiment":
+    st.title("\U0001F50D News Sentiment Analysis")
+    ticker = st.text_input("Enter Stock Ticker to analyze news sentiment:", "AAPL")
+
+    if ticker:
+        st.info(f"Fetching and analyzing recent news sentiment for {ticker.upper()}...")
+        url = f"https://newsapi.org/v2/everything?q={ticker}&apiKey={NEWS_API_KEY}&language=en&pageSize=10"
+        response = requests.get(url)
+        if response.status_code == 200:
+            articles = response.json().get("articles", [])
+            sentiments = []
+            for article in articles:
+                title = article["title"]
+                description = article.get("description", "")
+                text = f"{title}. {description}"
+                blob = TextBlob(text)
+                polarity = blob.sentiment.polarity
+                sentiments.append(polarity)
+                st.write(f"📰 **{title}**")
+                st.write(f"🧠 Sentiment Score: {round(polarity, 3)}")
+                st.markdown("---")
+
+            if sentiments:
+                avg_sentiment = round(np.mean(sentiments), 3)
+                st.success(f"📊 **Average Sentiment Score** for {ticker.upper()}: {avg_sentiment}")
+                if avg_sentiment > 0.2:
+                    st.markdown("**📈 Overall Sentiment: Positive**")
+                elif avg_sentiment < -0.2:
+                    st.markdown("**📉 Overall Sentiment: Negative**")
+                else:
+                    st.markdown("**➖ Overall Sentiment: Neutral**")
+        else:
+            st.error("Failed to fetch news articles.")
+
+
+
+#------------------predictions page---------------------------------#
+# Predictions - Stock Price Prediction
+elif selected == "Predictions":
+    st.title("📈 Stock Price Predictions")
+
+    ticker = st.text_input("Enter Company Ticker (e.g., RELIANCE.NS)", "RELIANCE.NS")
+
+    if ticker:
+        try:
+            # Fetch stock data from Yahoo Finance
+            stock = yf.Ticker(ticker)
+            hist = stock.history(period="1y")  # 1 year of data
+
+            if hist.empty:
+                st.warning("No data available for this ticker.")
+            else:
+                # Show the most recent data
+                st.subheader(f"Recent Stock Data for {ticker}")
+                st.write(hist.tail())
+
+                # Plot the stock's historical closing price
+                st.subheader("📊 Stock Price History")
+                st.line_chart(hist["Close"])
+
+                # Calculate a simple moving average (SMA) for predictions
+                sma50 = hist["Close"].rolling(window=50).mean()
+                sma200 = hist["Close"].rolling(window=200).mean()
+
+                st.subheader("📉 Moving Averages")
+                st.line_chart(pd.DataFrame({
+                    "50-Day SMA": sma50,
+                    "200-Day SMA": sma200
+                }))
+
+                # Determine Buy/Sell signal based on SMA
+                st.subheader("🔍 Buy/Sell Signal")
+                current_price = hist["Close"].iloc[-1]
+                if sma50.iloc[-1] > sma200.iloc[-1]:
+                    st.success(
+                        f"📈 Signal: **BUY** - 50-day SMA is above 200-day SMA (Current Price: ₹{current_price:.2f})")
+                elif sma50.iloc[-1] < sma200.iloc[-1]:
+                    st.error(
+                        f"📉 Signal: **SELL** - 50-day SMA is below 200-day SMA (Current Price: ₹{current_price:.2f})")
+                else:
+                    st.warning(f"⏸️ Signal: **HOLD** - No clear trend (Current Price: ₹{current_price:.2f})")
+
+                # Show price data vs moving averages
+                st.subheader("📈 Price vs. Moving Averages")
+                st.line_chart(hist[["Close"]].join(pd.DataFrame({
+                    "50-Day SMA": sma50,
+                    "200-Day SMA": sma200
+                })))
+
+                # Optional: Machine learning-based predictions can be added here.
+                # For example, using a regression model or an LSTM for stock price prediction.
+
+        except Exception as e:
+            st.error(f"Error retrieving data: {e}")
+
+#----------------------Buy/Sell Predictor-------------#
+
+# Buy/Sell Predictor - Predict Buy or Sell Signal
+elif selected == "Buy/Sell Predictor":
+    st.title("💹 Buy/Sell Predictor")
+
+    # Input: Ticker symbol
+    ticker = st.text_input("Enter Company Ticker (e.g., RELIANCE.NS)", "RELIANCE.NS")
+
+    if ticker:
+        try:
+            # Fetch stock data from Yahoo Finance
+            stock = yf.Ticker(ticker)
+            hist = stock.history(period="1y")  # Fetch 1 year of data
+
+            if hist.empty:
+                st.warning("No data available for this ticker.")
+            else:
+                # Show the most recent data
+                st.subheader(f"Recent Stock Data for {ticker}")
+                st.write(hist.tail())
+
+                # Plot the stock's historical closing price
+                st.subheader("📊 Stock Price History")
+                st.line_chart(hist["Close"])
+
+                # Calculate Simple Moving Averages (SMA)
+                sma50 = hist["Close"].rolling(window=50).mean()
+                sma200 = hist["Close"].rolling(window=200).mean()
+
+                st.subheader("📉 Moving Averages")
+                st.line_chart(pd.DataFrame({
+                    "50-Day SMA": sma50,
+                    "200-Day SMA": sma200
+                }))
+
+                # Calculate Relative Strength Index (RSI) for additional signal
+                delta = hist["Close"].diff()
+                gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+                loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+                rs = gain / loss
+                rsi = 100 - (100 / (1 + rs))
+
+                st.subheader("📈 RSI (Relative Strength Index)")
+                st.line_chart(rsi)
+
+                # Calculate Buy/Sell signal
+                current_price = hist["Close"].iloc[-1]
+                signal = ""
+
+                # Simple Buy/Sell logic based on Moving Averages and RSI
+                if sma50.iloc[-1] > sma200.iloc[-1] and rsi.iloc[-1] < 30:
+                    signal = "Buy"
+                    st.success(f"📈 Signal: **BUY** (Current Price: ₹{current_price:.2f}) - 50-day SMA is above 200-day SMA and RSI is below 30.")
+                elif sma50.iloc[-1] < sma200.iloc[-1] and rsi.iloc[-1] > 70:
+                    signal = "Sell"
+                    st.error(f"📉 Signal: **SELL** (Current Price: ₹{current_price:.2f}) - 50-day SMA is below 200-day SMA and RSI is above 70.")
+                else:
+                    signal = "Hold"
+                    st.warning(f"⏸️ Signal: **HOLD** (Current Price: ₹{current_price:.2f}) - No clear trend.")
+
+                # Show price data vs moving averages and RSI
+                st.subheader("📊 Price vs. Indicators")
+                st.line_chart(hist[["Close"]].join(pd.DataFrame({
+                    "50-Day SMA": sma50,
+                    "200-Day SMA": sma200,
+                    "RSI": rsi
+                })))
+
+        except Exception as e:
+            st.error(f"Error retrieving data: {e}")
+
+# Stock Screener - Default 15 companies, or user input for custom tickers
+elif selected == "Stock Screener":
+    st.title("📊 Stock Screener")
+
+    # Predefined list of 15 companies (Nifty 50 or a custom list of top companies)
+    default_companies = [
+        'RELIANCE.NS', 'TCS.NS', 'INFY.NS', 'HDFCBANK.NS', 'ICICIBANK.NS', 'SBIN.NS', 'HINDUNILVR.NS',
+        'BAJAJFINSV.NS', 'HDFC.NS', 'KOTAKBANK.NS', 'BHARTIARTL.NS', 'ITC.NS', 'AXISBANK.NS', 'MARUTI.NS', 'LT.NS'
+    ]
+
+    # Ask user whether they want to use the default list or input custom tickers
+    choice = st.radio("Choose an option:", ("Use Default List", "Input Custom Tickers"))
+
+    if choice == "Use Default List":
+        # Display the stock data for the default 15 companies
+        st.subheader("Showing 15 Default Companies")
+        data = {}
+
+        for ticker in default_companies:
+            stock_data = yf.Ticker(ticker).history(period="1d")['Close']
+            if not stock_data.empty:
+                data[ticker] = stock_data.iloc[-1]
+            else:
+                data[ticker] = "No Data"
+
+        # Display the data as a dataframe
+        st.dataframe(pd.DataFrame(data.items(), columns=["Stock", "Price"]))
+
+    elif choice == "Input Custom Tickers":
+        # Input box for user to enter their own tickers
+        tickers_input = st.text_area("Enter stock tickers (separated by space or comma):", "")
+        if tickers_input:
+            tickers_list = [ticker.strip() for ticker in tickers_input.split() if ticker.strip()]
+            if len(tickers_list) > 0:
+                st.subheader("Showing Custom Tickers")
+                data = {}
+
+                for ticker in tickers_list:
+                    stock_data = yf.Ticker(ticker).history(period="1d")['Close']
+                    if not stock_data.empty:
+                        data[ticker] = stock_data.iloc[-1]
+                    else:
+                        data[ticker] = "No Data"
+
+                # Display the custom tickers data
+                st.dataframe(pd.DataFrame(data.items(), columns=["Stock", "Price"]))
+            else:
+                st.warning("Please enter valid stock tickers.")
+
+#----------------Mutual Fund----------------#
+
+elif selected == "Mutual Funds":
+    st.title("💼 Mutual Funds Overview")
+
+    import requests
+
+    scheme_code = "118550"
+    url = f"https://api.mfapi.in/mf/{scheme_code}"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        scheme_name = data['meta']['scheme_name']
+        nav_data = data['data']
+        nav_df = pd.DataFrame(nav_data)
+        nav_df['nav'] = nav_df['nav'].astype(float)
+        nav_df['date'] = pd.to_datetime(nav_df['date'], format='%d-%m-%Y')
+        nav_df = nav_df.sort_values('date')
+
+        st.subheader(f"{scheme_name}")
+        st.write(f"Latest NAV: ₹{nav_df.iloc[-1]['nav']} as of {nav_df.iloc[-1]['date'].date()}")
+        st.line_chart(nav_df.set_index('date')['nav'])
+    else:
+        st.error("Failed to fetch mutual fund data.")
+
+
+        #----------------------SIP Calculator--------------------------------#
+
+elif selected == "SIP Calculator":
+    st.title("📈 SIP Calculator")
+
+    monthly_investment = st.number_input("Monthly Investment (₹)", value=5000)
+    years = st.slider("Investment Duration (Years)", 1, 30, 10)
+    expected_return = st.slider("Expected Annual Return (%)", 1, 25, 12)
+
+    months = years * 12
+    monthly_rate = expected_return / 12 / 100
+
+    future_value = monthly_investment * (((1 + monthly_rate)**months - 1) * (1 + monthly_rate)) / monthly_rate
+    invested = monthly_investment * months
+    gain = future_value - invested
+
+    st.success(f"📊 Future Value: ₹{future_value:,.2f}")
+    st.info(f"💰 Invested: ₹{invested:,.2f}")
+    st.warning(f"📈 Estimated Gains: ₹{gain:,.2f}")
+
+#--------------------------IP0 Tracker------------------------------------------#
+
+elif selected == "IPO Tracker":
+    st.title("🆕 IPO Tracker")
+
+    ipo_data = pd.DataFrame({
+        "Company": ["ABC Tech", "SmartFin Ltd", "GreenPower", "NetPay Corp"],
+        "Issue Price (₹)": [100, 240, 150, 280],
+        "Current Price (₹)": [145, 190, 170, 260],
+        "Gain/Loss (%)": [45, -20.8, 13.3, -7.1],
+        "Sentiment": ["Bullish", "Bearish", "Neutral", "Bearish"]
+    })
+
+    st.dataframe(ipo_data)
+    st.bar_chart(ipo_data.set_index("Company")["Gain/Loss (%)"])
+
+#------------------------------Predictions for Mutual Funds & IPOs------------------------------------#
+elif selected == "Predictions for Mutual Funds & IPOs":
+    st.title("🔮 Predictions for Mutual Funds & IPOs")
+
+    st.subheader("📊 Mutual Fund NAV Forecast (Simulated)")
+    import numpy as np
+    dates = pd.date_range(start=pd.to_datetime("2023-01-01"), periods=12, freq='M')
+    navs = np.linspace(100, 160, 12) + np.random.normal(0, 2, 12)
+
+    nav_forecast = pd.DataFrame({'Month': dates, 'Predicted NAV': navs})
+    nav_forecast.set_index("Month", inplace=True)
+    st.line_chart(nav_forecast)
+
+    st.subheader("🚀 IPO Price Movement Prediction (Simulated)")
+    ipo_prediction = pd.DataFrame({
+        "IPO": ["ABC Tech", "SmartFin Ltd", "GreenPower"],
+        "Predicted Return (%)": [20.5, -5.2, 12.7]
+    })
+    st.dataframe(ipo_prediction)
+
+
+#---------------------------------------------------Mutual Fund Nav Viewver code-------------------------------------#
+# 📈 Mutual Funds - Live NAV
+elif selected == "Mutual Fund NAV Viewer":
+    st.title("📈 Mutual Fund NAV Viewer")
+
+    # Default scheme code for Axis Bluechip Fund
+    scheme_code = st.text_input("Enter Mutual Fund Scheme Code (e.g. 118550)", "118550")
+
+    if scheme_code:
+        try:
+            api_url = f"https://api.mfapi.in/mf/{scheme_code}"
+            response = requests.get(api_url)
+
+            if response.status_code == 200:
+                nav_data = response.json()
+                st.subheader(f"🔷 {nav_data['meta']['scheme_name']}")
+
+                # Prepare NAV DataFrame
+                nav_df = pd.DataFrame(nav_data['data'])
+                nav_df['nav'] = nav_df['nav'].astype(float)
+                nav_df['date'] = pd.to_datetime(nav_df['date'])
+                nav_df = nav_df.sort_values(by='date', ascending=False)
+
+                # Show latest NAV
+                st.metric(label="📊 Latest NAV", value=f"₹{nav_df.iloc[0]['nav']}", delta=None)
+
+                # Line Chart for NAV
+                st.subheader("📉 NAV Trend (Last 30 Days)")
+                st.line_chart(nav_df.set_index('date')['nav'].head(30).sort_index())
+
+                # Show Data Table
+                with st.expander("🔍 View All NAVs"):
+                    st.dataframe(nav_df[['date', 'nav']].rename(columns={'date': 'Date', 'nav': 'NAV'}))
+
+            else:
+                st.error("⚠️ Failed to fetch mutual fund data. Please check the scheme code.")
+        except Exception as e:
+            st.error(f"❌ Error: {e}")
+
+
+# 📊 F&O Overview Page
+import streamlit as st
+import pandas as pd
+import plotly.graph_objects as go
+
+def fo_page():
+    st.title("📑 F&O Stocks - Live Overview")
+
+    # Simulated F&O Data
+    fo_data = {
+        "Symbol": ["RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK"],
+        "LTP": [2820.5, 3480.7, 1463.2, 1640.0, 1103.5],
+        "Volume": [1250000, 850000, 650000, 920000, 870000],
+        "Market Cap": [19e12, 13e12, 8e12, 10e12, 9e12],
+        "Sector": ["Energy", "IT", "IT", "Banking", "Banking"]
+    }
+
+    df = pd.DataFrame(fo_data)
+
+    # Sidebar filters
+    st.sidebar.header("🔍 Filters")
+    sectors = st.sidebar.multiselect("Select Sector", df["Sector"].unique(), default=df["Sector"].unique())
+    min_market_cap = st.sidebar.slider("Minimum Market Cap (₹ Cr)", 0, int(df["Market Cap"].max() // 1e7), 1000)
+
+    filtered_df = df[
+        (df["Sector"].isin(sectors)) &
+        (df["Market Cap"] >= min_market_cap * 1e7)
+    ]
+
+    st.subheader("📊 Filtered F&O Stocks")
+    st.dataframe(filtered_df)
+
+    # LTP Trend Chart (Simulated)
+    st.subheader("📈 RELIANCE LTP - Candlestick Chart (Simulated)")
+    hist_data = pd.DataFrame({
+        "Date": pd.date_range(start="2023-04-01", periods=5, freq='D'),
+        "Open": [2800, 2825, 2810, 2830, 2820],
+        "High": [2830, 2850, 2825, 2840, 2835],
+        "Low": [2780, 2805, 2795, 2810, 2800],
+        "Close": [2820, 2815, 2805, 2825, 2810]
+    })
+
+    fig = go.Figure(data=[go.Candlestick(
+        x=hist_data['Date'],
+        open=hist_data['Open'],
+        high=hist_data['High'],
+        low=hist_data['Low'],
+        close=hist_data['Close']
+    )])
+    fig.update_layout(title="📈 RELIANCE - Candlestick Chart", xaxis_title="Date", yaxis_title="Price")
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Option Chain Placeholder
+    st.subheader("🧾 Option Chain (Coming Soon)")
+    st.info("Real-time Option Chain data using NSE API will be integrated in the next update 🔄")
+    # Multi-Line LTP Trend Chart (Simulated)
+    st.subheader("📊 LTP Trend - F&O Stocks (Simulated)")
+
+    trend_data = pd.DataFrame({
+        "Date": pd.date_range(start="2023-04-01", periods=5, freq='D'),
+        "RELIANCE": [2800, 2815, 2825, 2830, 2820],
+        "TCS": [3450, 3465, 3475, 3480, 3485],
+        "INFY": [1440, 1450, 1460, 1465, 1463],
+        "HDFCBANK": [1620, 1630, 1635, 1640, 1645],
+        "ICICIBANK": [1080, 1090, 1100, 1105, 1103]
+    })
+
+    fig = go.Figure()
+    for symbol in ["RELIANCE", "TCS", "INFY", "HDFCBANK", "ICICIBANK"]:
+        fig.add_trace(go.Scatter(
+            x=trend_data["Date"],
+            y=trend_data[symbol],
+            mode='lines+markers',
+            name=symbol
+        ))
+
+    fig.update_layout(
+        title="📈 F&O Stocks - LTP Trend (5-Day Simulated)",
+        xaxis_title="Date",
+        yaxis_title="LTP (₹)",
+        legend_title="Stock Symbol",
+        template="plotly_white"
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
+if selected == "F&O":
+    fo_page()
+
+# ----------------------- Overview Page ----------------------------
+
+import streamlit as st
+import yfinance as yf
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# ---------------------------- CACHE TICKER DATA -------------------------
+@st.cache_resource
+def load_data(ticker):
+    stock = yf.Ticker(ticker)
+    hist = stock.history(period="2y")
+    return stock, hist
+
+# ---------------------------- COMPANY OVERVIEW PAGE -------------------------
+
+# Sidebar Navigation
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to", ["Company Overview"])
+
+# ---------------------------- Overview Page -------------------------
+import streamlit as st
+import yfinance as yf
+import plotly.graph_objects as go
+
+# Cached Data Loader
+@st.cache_resource
+def load_data(ticker):
+    stock = yf.Ticker(ticker)
+    hist = stock.history(period="6mo")
+    return stock, hist
+
+# 📊 Overview Page
+import streamlit as st
+import plotly.graph_objects as go
+
+# 📊 Overview Page
+if page == "Company Overview":
+    st.markdown("## Company Overview")
+    st.markdown("Enter a valid stock ticker below to see live updates and historical trends.")
+
+    ticker = st.text_input("🔎 Enter Stock Ticker (e.g., AAPL, TCS.NS)", "AAPL")
+
+    if ticker:
+        stock, hist = load_data(ticker)
+        info = stock.info
+
+        # Live metrics
+        st.markdown("### 📌 Key Market Metrics")
+        with st.container():
+            col1, col2, col3 = st.columns(3)
+            col1.metric("💰 Current Price", f"${info.get('regularMarketPrice', 'N/A')}")
+            col2.metric("📈 Day High", f"${info.get('dayHigh', 'N/A')}")
+            col3.metric("📉 Day Low", f"${info.get('dayLow', 'N/A')}")
+
+        st.markdown("---")
+
+        # Interactive price chart
+        st.markdown("### 📈 Price Trend")
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name="Close Price", line=dict(color='deepskyblue')))
+        fig.update_layout(
+            title=f"{ticker.upper()} Historical Price Chart",
+            xaxis_title="Date",
+            yaxis_title="Price (USD)",
+            template="plotly_white",
+            hovermode="x unified",
+            height=400,
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+        st.markdown("---")
+
+        # Organized info display
+        st.markdown("### 🏢 Company Snapshot")
+        with st.expander("📘 General Information", expanded=True):
+            st.markdown(f"**Name:** {info.get('longName', 'N/A')}")
+            st.markdown(f"**Sector:** {info.get('sector', 'N/A')}")
+            st.markdown(f"**Industry:** {info.get('industry', 'N/A')}")
+            st.markdown(f"**Website:** [{info.get('website', 'N/A')}]({info.get('website', '#')})")
+            st.markdown(
+                f"**Headquarters:** {info.get('address1', '')}, {info.get('city', '')}, {info.get('state', '')}, {info.get('country', '')}")
+            st.markdown(f"**Employees:** {info.get('fullTimeEmployees', 'N/A')}")
+
+        with st.expander("📄 Business Description"):
+            st.write(info.get("longBusinessSummary", "No summary available."))
+
+        with st.expander("💼 Officers"):
+            officers = info.get("companyOfficers", [])
+            if officers:
+                for officer in officers:
+                    st.markdown(
+                        f"- **{officer.get('name', 'N/A')}** — {officer.get('title', 'N/A')}, Age {officer.get('age', 'N/A')}")
+            else:
+                st.write("Officer data not available.")
+
+        st.markdown("---")
+        with st.expander("🧠 Full JSON Info (For Developers)"):
+            st.json(info)
+
+if selected == "Company Overview":
+    fo_page()
