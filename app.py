@@ -39,7 +39,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Apply custom CSS for dark theme with red accents
+# Apply custom CSS for dark theme with red accents and mobile responsiveness
 st.markdown("""
 <style>
     .main {
@@ -155,6 +155,122 @@ st.markdown("""
     .feature-card h3 {
         color: #FF4B4B;
         margin-top: 0;
+    }
+    
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .stSidebar {
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
+        }
+        
+        .stSidebar .stButton>button {
+            padding: 0.4rem 0.8rem;
+            font-size: 14px;
+        }
+        
+        .stSidebar .stSelectbox>div>div>select {
+            font-size: 14px;
+        }
+        
+        .stSidebar .stTextInput>div>div>input {
+            font-size: 14px;
+        }
+        
+        .css-1d391kg {
+            padding: 1rem 0.5rem;
+        }
+        
+        .stTabs [data-baseweb="tab"] {
+            height: 40px;
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+        
+        .stock-card {
+            padding: 10px;
+        }
+        
+        .feature-card {
+            padding: 15px;
+        }
+        
+        /* Mobile navigation menu */
+        .mobile-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .mobile-nav-item {
+            flex: 1 0 calc(33.333% - 8px);
+            background-color: #262730;
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .mobile-nav-item:hover, .mobile-nav-item.active {
+            background-color: #FF4B4B;
+            color: #0E1117;
+        }
+        
+        /* Hide desktop sidebar on mobile */
+        @media (max-width: 768px) {
+            section[data-testid="stSidebar"] {
+                display: none;
+            }
+            
+            .main > div {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+        
+        /* Show mobile navigation on mobile */
+        .mobile-nav-container {
+            display: block;
+        }
+        
+        /* Hide desktop sidebar content on mobile */
+        .sidebar-content {
+            display: none;
+        }
+    }
+    
+    /* Desktop styles */
+    @media (min-width: 769px) {
+        .mobile-nav-container {
+            display: none;
+        }
+        
+        .sidebar-content {
+            display: block;
+        }
+    }
+    
+    /* Mobile header */
+    .mobile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background-color: #0E1117;
+        border-bottom: 1px solid #262730;
+        margin-bottom: 1rem;
+    }
+    
+    .mobile-menu-button {
+        background: none;
+        border: none;
+        color: #FF4B4B;
+        font-size: 24px;
+        cursor: pointer;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -327,8 +443,83 @@ def prepare_lstm_data(data, time_step=60):
     X = np.reshape(X, (X.shape[0], X.shape[1], 1))
     return X, y, scaler
 
-# Sidebar menu
+# Mobile navigation
+def mobile_navigation():
+    st.markdown("""
+    <div class="mobile-header">
+        <div style="display: flex; align-items: center;">
+            <img src="https://img.icons8.com/fluency/48/stock-share.png" width="32" style="margin-right: 10px;">
+            <h2 style="margin: 0; color: #FF4B4B;">MarketMentor</h2>
+        </div>
+        <button class="mobile-menu-button" onclick="document.querySelector('.mobile-nav-container').style.display = 
+            document.querySelector('.mobile-nav-container').style.display === 'none' ? 'block' : 'none'">☰</button>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="mobile-nav-container" style="display: none;">
+        <div class="mobile-nav">
+            <div class="mobile-nav-item" onclick="window.location.href='#home'">Home</div>
+            <div class="mobile-nav-item" onclick="window.location.href='#company'">Company</div>
+            <div class="mobile-nav-item" onclick="window.location.href='#movers'">Movers</div>
+            <div class="mobile-nav-item" onclick="window.location.href='#global'">Global</div>
+            <div class="mobile-nav-item" onclick="window.location.href='#funds'">Funds</div>
+            <div class="mobile-nav-item" onclick="window.location.href='#sectors'">Sectors</div>
+            <div class="mobile-nav-item" onclick="window.location.href='#news'">News</div>
+            <div class="mobile-nav-item" onclick="window.location.href='#learning'">Learning</div>
+            <div class="mobile-nav-item" onclick="window.location.href='#volume'">Volume</div>
+            <div class="mobile-nav-item" onclick="window.location.href='#sentiment'">Sentiment</div>
+            <div class="mobile-nav-item" onclick="window.location.href='#predictions'">Predictions</div>
+            <div class="mobile-nav-item" onclick="window.location.href='#buysell'">Buy/Sell</div>
+            <div class="mobile-nav-item" onclick="window.location.href='#screener'">Screener</div>
+            <div class="mobile-nav-item" onclick="window.location.href='#fno'">F&O</div>
+            <div class="mobile-nav-item" onclick="window.location.href='#sip'">SIP</div>
+            <div class="mobile-nav-item" onclick="window.location.href='#ipo'">IPO</div>
+            <div class="mobile-nav-item" onclick="window.location.href='#watchlist'">Watchlist</div>
+            <div class="mobile-nav-item" onclick="window.location.href='#options'">Options</div>
+        </div>
+        
+        <div style="padding: 1rem; background-color: #262730; border-radius: 8px; margin-bottom: 1rem;">
+            <h4 style="margin-top: 0; color: #FF4B4B;">Quick Stock Lookup</h4>
+            <input type="text" placeholder="Enter Symbol" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #4A4A4A; background-color: #0E1117; color: white; margin-bottom: 10px;">
+            <button style="width: 100%; padding: 8px; background-color: #FF4B4B; color: white; border: none; border-radius: 4px; cursor: pointer;">Get Quote</button>
+        </div>
+        
+        <div style="padding: 1rem; background-color: #262730; border-radius: 8px; margin-bottom: 1rem;">
+            <h4 style="margin-top: 0; color: #FF4B4B;">Market Status</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div style="background-color: #0E1117; padding: 10px; border-radius: 6px;">
+                    <div>S&P 500</div>
+                    <div style="font-weight: bold;">4,567.25</div>
+                    <div style="color: #00C853;">+0.78%</div>
+                </div>
+                <div style="background-color: #0E1117; padding: 10px; border-radius: 6px;">
+                    <div>NASDAQ</div>
+                    <div style="font-weight: bold;">14,346.00</div>
+                    <div style="color: #00C853;">+1.23%</div>
+                </div>
+                <div style="background-color: #0E1117; padding: 10px; border-radius: 6px;">
+                    <div>DOW</div>
+                    <div style="font-weight: bold;">35,443.82</div>
+                    <div style="color: #FF4B4B;">-0.15%</div>
+                </div>
+                <div style="background-color: #0E1117; padding: 10px; border-radius: 6px;">
+                    <div>RUSSELL</div>
+                    <div style="font-weight: bold;">1,925.42</div>
+                    <div style="color: #00C853;">+0.42%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Initialize session state for navigation
+if 'selected' not in st.session_state:
+    st.session_state.selected = "Home"
+
+# Sidebar menu for desktop
 with st.sidebar:
+    st.markdown('<div class="sidebar-content">', unsafe_allow_html=True)
     st.image("https://img.icons8.com/fluency/96/stock-share.png", width=80)
     st.title("MarketMentor")
     
@@ -344,19 +535,21 @@ with st.sidebar:
         default_index=0,
         styles={
             "container": {"padding": "0!important", "background-color": "#262730"},
-            "icon": {"color": "#FF4B4B", "font-size": "18px"},
+            "icon": {"color": #FF4B4B", "font-size": "18px"},
             "nav-link": {"font-size": "16px", "text-align": "left", "margin": "0px", "color": "#FAFAFA"},
             "nav-link-selected": {"background-color": "#FF4B4B", "color": "#0E1117"},
         }
     )
+    
+    st.session_state.selected = selected
     
     st.markdown("---")
     st.subheader("Quick Stock Lookup")
     quick_ticker = st.text_input("Enter Symbol", value="AAPL").upper()
     
     if st.button("Get Quote"):
-        selected = "Company Overview"
         st.session_state.selected_ticker = quick_ticker
+        st.session_state.selected = "Company Overview"
     
     st.markdown("---")
     st.subheader("Market Status")
@@ -386,9 +579,16 @@ with st.sidebar:
         <p>Data provided by Yahoo Finance</p>
     </div>
     """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# Mobile navigation
+mobile_navigation()
 
 # Load company data
 company_data = load_company_data()
+
+# Update selected from session state
+selected = st.session_state.selected
 
 # Home - Market Overview
 if selected == "Home":
