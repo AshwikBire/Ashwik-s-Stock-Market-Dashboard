@@ -1464,7 +1464,7 @@ elif selected == "Settings":
     st.write("**Version:** 2.1.0")
     st.write("**Last Updated:** October 15, 2023")
     st.write("**Developer:** Ashwik Bire")
-    st.write("**Contact:** support@marketmentor.com")
+    st.write("**Contact:** ashwikbire@gmail.com")
     
     st.write("---")
     st.write("MarketMentor provides financial information and educational content for informational purposes only. "
