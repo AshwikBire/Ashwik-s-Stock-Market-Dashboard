@@ -1463,7 +1463,7 @@ elif selected == "Settings":
     st.subheader("About MarketMentor")
     st.write("**Version:** 2.1.0")
     st.write("**Last Updated:** October 15, 2023")
-    st.write("**Developer:** MarketMentor Team")
+    st.write("**Developer:** Ashwik Bire")
     st.write("**Contact:** support@marketmentor.com")
     
     st.write("---")
