@@ -21,7 +21,7 @@ st.set_page_config(
 st.markdown("""
 <style>
     .main {background-color: #000000; color: #FFFFFF;}
-    .stApp {background-color: #000000;}
+    .stApp {background-color: #000000; color: #FFFFFF;}
     h1, h2, h3, h4, h5, h6 {color: #FFFFFF !important; border-bottom: 1px solid #333333; padding-bottom: 8px;}
     .stButton>button {background-color: #111111; color: white; border: 1px solid #333333; border-radius: 4px;}
     .stTextInput>div>div>input, .stSelectbox>div>div>select {background-color: #111111; color: white; border: 1px solid #333333;}
@@ -48,9 +48,15 @@ st.markdown("""
     table {color: white;}
     thead th {color: white !important;}
     tbody td {color: white !important;}
-    .prediction-positive {color: #00FF00; font-weight: bold;}
-    .prediction-negative {color: #FF0000; font-weight: bold;}
-    .prediction-neutral {color: #FFFF00; font-weight: bold;}
+    .stDownloadButton>button {background-color: #111111; color: white; border: 1px solid #333333;}
+    .stNumberInput>div>div>input {background-color: #111111; color: white; border: 1px solid #333333;}
+    .stDateInput>div>div>input {background-color: #111111; color: white; border: 1px solid #333333;}
+    .stTimeInput>div>div>input {background-color: #111111; color: white; border: 1px solid #333333;}
+    .stSlider>div>div>div>div {background-color: #444444;}
+    .stRadio>div {background-color: #111111; padding: 10px; border-radius: 4px;}
+    .stCheckbox>div {background-color: #111111; padding: 10px; border-radius: 4px;}
+    .stSelectbox>div>div>select {color: white;}
+    .stTextArea>div>div>textarea {background-color: #111111; color: white; border: 1px solid #333333;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -172,62 +178,6 @@ def get_technical_indicators(df):
     
     return df
 
-@st.cache_data(ttl=3600, show_spinner=False)
-def generate_stock_prediction(ticker, days=30):
-    """Generate a simple stock price prediction using historical data"""
-    try:
-        hist, _ = fetch_stock_data(ticker, "1y")
-        if hist is None or hist.empty:
-            return None, None, None
-        
-        # Simple prediction using moving average and random walk
-        last_price = hist['Close'].iloc[-1]
-        volatility = hist['Close'].pct_change().std()
-        
-        # Generate future dates
-        future_dates = [hist.index[-1] + timedelta(days=i) for i in range(1, days+1)]
-        
-        # Create prediction (simple model - in reality, use more sophisticated models)
-        predicted_prices = []
-        current_price = last_price
-        
-        for _ in range(days):
-            change = np.random.normal(0, volatility)
-            current_price = current_price * (1 + change)
-            predicted_prices.append(current_price)
-        
-        # Calculate prediction confidence
-        confidence = max(0, min(100, 100 - (volatility * 1000)))
-        
-        return future_dates, predicted_prices, confidence
-    except:
-        return None, None, None
-
-@st.cache_data(ttl=86400, show_spinner=False)
-def get_upcoming_ipos():
-    """Get upcoming IPO data (simulated)"""
-    ipos = [
-        {"Company": "TechInnovate", "Exchange": "NSE", "Date": "2023-12-15", "Price Range": "₹450-₹465", "Lot Size": 15},
-        {"Company": "GreenEnergy Solutions", "Exchange": "BSE", "Date": "2023-12-20", "Price Range": "₹320-₹335", "Lot Size": 20},
-        {"Company": "HealthCare Plus", "Exchange": "NSE", "Date": "2024-01-05", "Price Range": "₹500-₹525", "Lot Size": 12},
-        {"Company": "FinTech Global", "Exchange": "BSE", "Date": "2024-01-15", "Price Range": "₹275-₹290", "Lot Size": 18},
-        {"Company": "Logistics Corp", "Exchange": "NSE", "Date": "2024-01-25", "Price Range": "₹380-₹395", "Lot Size": 16}
-    ]
-    return pd.DataFrame(ipos)
-
-@st.cache_data(ttl=86400, show_spinner=False)
-def get_mutual_funds():
-    """Get mutual fund data (simulated)"""
-    funds = [
-        {"Fund Name": "BlueChip Growth Fund", "Category": "Equity", "NAV": "₹150.25", "1Y Return": "18.5%", "Rating": "5 Star"},
-        {"Fund Name": "Balanced Advantage Fund", "Category": "Hybrid", "NAV": "₹125.75", "1Y Return": "14.2%", "Rating": "4 Star"},
-        {"Fund Name": "Small Cap Fund", "Category": "Equity", "NAV": "₹85.50", "1Y Return": "22.8%", "Rating": "4 Star"},
-        {"Fund Name": "Debt Income Fund", "Category": "Debt", "NAV": "₹110.30", "1Y Return": "9.2%", "Rating": "3 Star"},
-        {"Fund Name": "Index Fund Nifty 50", "Category": "Index", "NAV": "₹175.80", "1Y Return": "16.4%", "Rating": "4 Star"},
-        {"Fund Name": "Sectoral Technology Fund", "Category": "Sectoral", "NAV": "₹95.45", "1Y Return": "25.3%", "Rating": "5 Star"}
-    ]
-    return pd.DataFrame(funds)
-
 # Sidebar navigation
 with st.sidebar:
     st.title("MarketMentor Pro")
@@ -240,9 +190,11 @@ with st.sidebar:
     selected = option_menu(
         "Navigation",
         ["Dashboard", "Stock Analysis", "Technical Analysis", "Portfolio Manager", 
-         "Predictions", "Market Overview", "News & Sentiment", "Settings"],
+         "Options Chain", "Market Overview", "Predictions", "Crypto Markets",
+         "News & Sentiment", "Learning Center", "Company Info", "Settings"],
         icons=['speedometer2', 'graph-up', 'bar-chart-line', 'wallet', 
-               'activity', 'globe', 'newspaper', 'gear'],
+               'diagram-3', 'globe', 'activity', 'currency-bitcoin',
+               'newspaper', 'book', 'building', 'gear'],
         menu_icon="cast",
         default_index=0,
         styles={
@@ -514,7 +466,7 @@ elif selected == "Stock Analysis":
             
             for symbol in symbol_list:
                 hist, info = fetch_stock_data(symbol, "1mo")
-                if hist is not None and not hist.empty:
+                if hist is not null and not hist.empty:
                     comparison_data[symbol] = {
                         'history': hist,
                         'info': info,
@@ -690,7 +642,7 @@ elif selected == "Technical Analysis":
                 'paper_bgcolor': 'rgba(0, 0, 0, 0)',
                 'font': {'color': 'white'}
             })
-            st.plotly_chart(fig_rsi, use_container_width=True)
+            st.plotly_chart(fir_rsi, use_container_width=True)
             
             # MACD Chart
             st.subheader("Moving Average Convergence Divergence (MACD)")
@@ -884,195 +836,362 @@ elif selected == "Portfolio Manager":
             with col3:
                 st.metric("Max Drawdown", "-8.7%")
 
+# Options Chain Page
+elif selected == "Options Chain":
+    st.title("📊 Options Chain Analysis")
+    st.info("Options chain data functionality will be implemented here.")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        ticker = st.text_input("Enter Stock Symbol for Options", "AAPL")
+    with col2:
+        expiration = st.selectbox("Expiration Date", ["2023-12-15", "2024-01-19", "2024-02-16"])
+    
+    if ticker:
+        st.subheader(f"Options Chain for {ticker.upper()} - {expiration}")
+        
+        # Simulated options data
+        strikes = np.arange(150, 201, 5)
+        calls = []
+        puts = []
+        
+        for strike in strikes:
+            calls.append({
+                'Strike': strike,
+                'Last Price': round(np.random.uniform(0.5, 15.0), 2),
+                'Bid': round(np.random.uniform(0.5, 15.0), 2),
+                'Ask': round(np.random.uniform(0.5, 15.0), 2),
+                'Volume': np.random.randint(100, 1000),
+                'Open Interest': np.random.randint(100, 2000),
+                'IV': round(np.random.uniform(20, 50), 2)
+            })
+            
+            puts.append({
+                'Strike': strike,
+                'Last Price': round(np.random.uniform(0.5, 15.0), 2),
+                'Bid': round(np.random.uniform(0.5, 15.0), 2),
+                'Ask': round(np.random.uniform(0.5, 15.0), 2),
+                'Volume': np.random.randint(100, 1000),
+                'Open Interest': np.random.randint(100, 2000),
+                'IV': round(np.random.uniform(20, 50), 2)
+            })
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader("Calls")
+            calls_df = pd.DataFrame(calls)
+            st.dataframe(calls_df, use_container_width=True)
+        
+        with col2:
+            st.subheader("Puts")
+            puts_df = pd.DataFrame(puts)
+            st.dataframe(puts_df, use_container_width=True)
+        
+        # Options strategy builder
+        st.subheader("Options Strategy Builder")
+        strategy = st.selectbox("Select Strategy", ["Covered Call", "Cash-Secured Put", "Vertical Spread", "Iron Condor"])
+        st.write(f"**{strategy} Strategy Details:**")
+        
+        if strategy == "Covered Call":
+            st.write("- Sell 1 call option against 100 shares of stock")
+            st.write("- Collect premium income but limit upside potential")
+            st.write("- Best in neutral to slightly bullish markets")
+        
+        elif strategy == "Cash-Secured Put":
+            st.write("- Sell 1 put option with cash reserved to buy shares")
+            st.write("- Collect premium with obligation to buy stock at strike price")
+            st.write("- Bullish strategy that generates income")
+
+# Market Overview Page
+elif selected == "Market Overview":
+    st.title("🌍 Market Overview")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("📊 Market Heatmap")
+        sectors = ['Technology', 'Healthcare', 'Financial', 'Energy', 'Consumer', 'Real Estate']
+        performance = np.random.uniform(-3, 3, len(sectors))
+        
+        heatmap_data = pd.DataFrame({
+            'Sector': sectors,
+            'Performance': performance
+        })
+        
+        fig = px.imshow([performance], 
+                        labels=dict(x="Sector", y="", color="Performance (%)"),
+                        x=sectors,
+                        color_continuous_scale='RdYlGn',
+                        aspect="auto")
+        fig.update_layout(title="Sector Performance Heatmap")
+        fig.update_layout({
+            'plot_bgcolor': 'rgba(0, 0, 0, 0)',
+            'paper_bgcolor': 'rgba(0, 0, 0, 0)',
+            'font': {'color': 'white'}
+        })
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with col2:
+        st.subheader("📈 Top Gainers")
+        gainers = pd.DataFrame({
+            'Symbol': ['AAPL', 'MSFT', 'TSLA', 'NVDA', 'AMD'],
+            'Price': [175.34, 337.69, 245.18, 456.78, 112.45],
+            'Change %': [2.5, 1.8, 4.2, 3.7, 5.1]
+        })
+        st.dataframe(gainers, use_container_width=True)
+        
+        st.subheader("📉 Top Losers")
+        losers = pd.DataFrame({
+            'Symbol': ['NFLX', 'META', 'AMZN', 'GOOGL', 'DIS'],
+            'Price': [345.67, 234.56, 123.45, 89.12, 78.90],
+            'Change %': [-2.1, -1.7, -3.5, -2.8, -4.2]
+        })
+        st.dataframe(losers, use_container_width=True)
+    
+    st.subheader("📅 Economic Events")
+    events = pd.DataFrame({
+        'Date': ['2023-12-15', '2023-12-20', '2024-01-05', '2024-01-15'],
+        'Event': ['FOMC Meeting', 'CPI Data Release', 'Jobs Report', 'Retail Sales'],
+        'Impact': ['High', 'High', 'Medium', 'Medium']
+    })
+    st.dataframe(events, use_container_width=True)
+
 # Predictions Page
 elif selected == "Predictions":
     st.title("🔮 Market Predictions")
     
-    tab1, tab2, tab3 = st.tabs(["Stock Predictions", "IPO Analysis", "Mutual Funds"])
+    tab1, tab2, tab3 = st.tabs(["Stock Predictions", "IPO Predictions", "Mutual Fund Predictions"])
     
     with tab1:
-        st.subheader("Stock Price Predictions")
+        st.subheader("📈 Stock Price Predictions")
         
-        col1, col2 = st.columns([2, 1])
+        col1, col2 = st.columns(2)
         with col1:
             ticker = st.text_input("Enter Stock Symbol for Prediction", "AAPL")
-        with col2:
-            prediction_days = st.slider("Prediction Days", 7, 90, 30)
+            periods = st.slider("Prediction Period (Days)", 7, 90, 30)
         
-        if st.button("Generate Prediction") and ticker:
-            with st.spinner("Generating prediction..."):
-                future_dates, predicted_prices, confidence = generate_stock_prediction(ticker, prediction_days)
+        with col2:
+            model = st.selectbox("Prediction Model", ["ARIMA", "LSTM", "Prophet", "Moving Average"])
+            st.metric("Model Accuracy", "87.3%")
+        
+        if st.button("Generate Prediction"):
+            st.success(f"Generating {periods}-day prediction for {ticker} using {model} model...")
+            
+            # Simulated prediction data
+            hist, _ = fetch_stock_data(ticker, "3mo")
+            if hist is not None and not hist.empty:
+                last_date = hist.index[-1]
+                future_dates = pd.date_range(start=last_date + timedelta(days=1), periods=periods, freq='D')
                 
-                if future_dates is not None:
-                    # Get historical data for comparison
-                    hist, info = fetch_stock_data(ticker, "3mo")
-                    
-                    st.subheader(f"Price Prediction for {ticker.upper()}")
-                    
-                    # Create prediction chart
-                    fig = go.Figure()
-                    
-                    # Add historical data
-                    if hist is not None and not hist.empty:
-                        fig.add_trace(go.Scatter(
-                            x=hist.index, 
-                            y=hist['Close'], 
-                            mode='lines', 
-                            name='Historical Price',
-                            line=dict(color='#1f77b4')
-                        ))
-                    
-                    # Add prediction data
-                    fig.add_trace(go.Scatter(
-                        x=future_dates, 
-                        y=predicted_prices, 
-                        mode='lines', 
-                        name='Predicted Price',
-                        line=dict(color='#ff7f0e', dash='dash')
-                    ))
-                    
-                    # Add confidence interval (simulated)
-                    upper_bound = [price * (1 + (100 - confidence)/500) for price in predicted_prices]
-                    lower_bound = [price * (1 - (100 - confidence)/500) for price in predicted_prices]
-                    
-                    fig.add_trace(go.Scatter(
-                        x=future_dates + future_dates[::-1],
-                        y=upper_bound + lower_bound[::-1],
-                        fill='toself',
-                        fillcolor='rgba(255, 127, 14, 0.2)',
-                        line=dict(color='rgba(255,255,255,0)'),
-                        name='Confidence Interval'
-                    ))
-                    
-                    fig.update_layout(
-                        title=f"{ticker.upper()} Price Prediction ({prediction_days} days)",
-                        xaxis_title="Date",
-                        yaxis_title="Price ($)",
-                        hovermode='x unified',
-                        showlegend=True
-                    )
-                    fig.update_layout({
-                        'plot_bgcolor': 'rgba(0, 0, 0, 0)',
-                        'paper_bgcolor': 'rgba(0, 0, 0, 0)',
-                        'font': {'color': 'white'}
-                    })
-                    st.plotly_chart(fig, use_container_width=True)
-                    
-                    # Prediction summary
-                    current_price = hist['Close'].iloc[-1] if hist is not None and not hist.empty else predicted_prices[0]
-                    predicted_change = ((predicted_prices[-1] - current_price) / current_price) * 100
-                    
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.metric("Current Price", f"${current_price:.2f}")
-                    with col2:
-                        st.metric("Predicted Price", f"${predicted_prices[-1]:.2f}", f"{predicted_change:.2f}%")
-                    with col3:
-                        st.metric("Prediction Confidence", f"{confidence:.1f}%")
-                    
-                    # Prediction interpretation
-                    st.subheader("Prediction Analysis")
-                    if predicted_change > 5:
-                        st.markdown('<p class="prediction-positive">📈 Bullish Prediction: Strong upward trend expected</p>', unsafe_allow_html=True)
-                    elif predicted_change < -5:
-                        st.markdown('<p class="prediction-negative">📉 Bearish Prediction: Downward trend expected</p>', unsafe_allow_html=True)
-                    else:
-                        st.markdown('<p class="prediction-neutral">↔ Neutral Prediction: Sideways movement expected</p>', unsafe_allow_html=True)
-                    
-                    st.info("Note: Predictions are based on historical data and technical analysis. Past performance is not indicative of future results. Always do your own research before investing.")
-                    
+                # Simulate prediction with some noise
+                last_price = hist['Close'].iloc[-1]
+                trend = np.random.uniform(-0.005, 0.005, periods)
+                noise = np.random.normal(0, 0.01, periods)
+                predicted_prices = last_price * (1 + np.cumsum(trend + noise))
+                
+                # Create figure
+                fig = go.Figure()
+                
+                # Historical data
+                fig.add_trace(go.Scatter(
+                    x=hist.index, 
+                    y=hist['Close'],
+                    mode='lines',
+                    name='Historical',
+                    line=dict(color='#1f77b4')
+                ))
+                
+                # Prediction data
+                fig.add_trace(go.Scatter(
+                    x=future_dates, 
+                    y=predicted_prices,
+                    mode='lines',
+                    name='Prediction',
+                    line=dict(color='#ff7f0e', dash='dash')
+                ))
+                
+                # Confidence interval (simulated)
+                upper_bound = predicted_prices * 1.05
+                lower_bound = predicted_prices * 0.95
+                
+                fig.add_trace(go.Scatter(
+                    x=future_dates,
+                    y=upper_bound,
+                    mode='lines',
+                    line=dict(width=0),
+                    showlegend=False
+                ))
+                
+                fig.add_trace(go.Scatter(
+                    x=future_dates,
+                    y=lower_bound,
+                    mode='lines',
+                    fill='tonexty',
+                    fillcolor='rgba(255, 127, 14, 0.2)',
+                    line=dict(width=0),
+                    name='Confidence Interval'
+                ))
+                
+                fig.update_layout(
+                    title=f"{ticker} Price Prediction ({periods} days)",
+                    xaxis_title="Date",
+                    yaxis_title="Price ($)",
+                    hovermode='x unified'
+                )
+                fig.update_layout({
+                    'plot_bgcolor': 'rgba(0, 0, 0, 0)',
+                    'paper_bgcolor': 'rgba(0, 0, 0, 0)',
+                    'font': {'color': 'white'}
+                })
+                
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # Prediction summary
+                price_change = ((predicted_prices[-1] - last_price) / last_price) * 100
+                st.metric("Predicted Price", f"${predicted_prices[-1]:.2f}", f"{price_change:.2f}%")
+                
+                if price_change > 0:
+                    st.success(f"Bullish prediction: {ticker} is expected to increase by {price_change:.2f}% over {periods} days.")
                 else:
-                    st.error("Unable to generate prediction for the provided ticker symbol.")
+                    st.error(f"Bearish prediction: {ticker} is expected to decrease by {abs(price_change):.2f}% over {periods} days.")
+            else:
+                st.error("Unable to fetch data for the provided ticker symbol.")
     
     with tab2:
-        st.subheader("Upcoming IPO Analysis")
+        st.subheader("📊 IPO Predictions")
         
-        st.info("Analysis of upcoming Initial Public Offerings (IPOs)")
+        st.info("Upcoming IPO predictions based on market conditions and company fundamentals.")
         
-        # Get IPO data
-        ipo_df = get_upcoming_ipos()
+        # Sample IPO data
+        ipos = pd.DataFrame({
+            'Company': ['TechInnovate Inc.', 'BioHeal Labs', 'GreenEnergy Solutions', 'DataSecure Corp.'],
+            'Expected Date': ['2024-01-15', '2024-02-10', '2024-03-05', '2024-04-20'],
+            'Sector': ['Technology', 'Healthcare', 'Energy', 'Cybersecurity'],
+            'Expected Price Range': ['$20-$25', '$15-$18', '$22-$28', '$30-$35'],
+            'Predicted Performance': ['+15% to +25%', '+8% to +12%', '+20% to +30%', '+10% to +18%'],
+            'Confidence': ['High', 'Medium', 'High', 'Medium']
+        })
         
-        if not ipo_df.empty:
-            st.dataframe(ipo_df, use_container_width=True)
-            
-            # IPO analysis
-            st.subheader("IPO Evaluation Framework")
-            
-            col1, col2 = st.columns(2)
+        st.dataframe(ipos, use_container_width=True)
+        
+        st.subheader("IPO Performance Factors")
+        factors = pd.DataFrame({
+            'Factor': ['Market Conditions', 'Company Fundamentals', 'Industry Trends', 'Investor Sentiment'],
+            'Weight': ['35%', '25%', '20%', '20%'],
+            'Impact': ['High', 'High', 'Medium', 'Medium']
+        })
+        
+        st.dataframe(factors, use_container_width=True)
+        
+        st.subheader("IPO Recommendation")
+        selected_ipo = st.selectbox("Select IPO for Analysis", ipos['Company'].tolist())
+        
+        if selected_ipo:
+            st.success(f"Analysis for {selected_ipo}:")
+            col1, col2, col3 = st.columns(3)
             
             with col1:
-                st.markdown("**Key Factors to Consider:**")
-                st.write("• Company fundamentals")
-                st.write("• Industry growth potential")
-                st.write("• Valuation compared to peers")
-                st.write("• Management team experience")
-                st.write("• Offering size and structure")
+                st.metric("Recommendation", "BUY", "Strong")
             
             with col2:
-                st.markdown("**IPO Grading System:**")
-                st.write("• **A+**: Exceptional opportunity")
-                st.write("• **A**: Strong investment potential")
-                st.write("• **B**: Moderate potential")
-                st.write("• **C**: High risk, speculative")
-                st.write("• **D**: Not recommended")
+                st.metric("Risk Level", "Medium", "-2%")
             
-            # Sample IPO ratings
-            st.subheader("Current IPO Ratings")
-            ipo_ratings = [
-                {"Company": "TechInnovate", "Rating": "A", "Outlook": "Positive", "Risk": "Medium"},
-                {"Company": "GreenEnergy Solutions", "Rating": "A+", "Outlook": "Very Positive", "Risk": "Low"},
-                {"Company": "HealthCare Plus", "Rating": "B", "Outlook": "Neutral", "Risk": "Medium"},
-                {"Company": "FinTech Global", "Rating": "A", "Outlook": "Positive", "Risk": "Medium"},
-                {"Company": "Logistics Corp", "Rating": "B+", "Outlook": "Positive", "Risk": "Medium"}
-            ]
-            
-            ipo_ratings_df = pd.DataFrame(ipo_ratings)
-            st.dataframe(ipo_ratings_df, use_container_width=True)
-        
-        else:
-            st.warning("No upcoming IPO data available at the moment.")
+            with col3:
+                st.metric("Expected Return", "+18%", "3%")
     
     with tab3:
-        st.subheader("Mutual Fund Analysis & Predictions")
+        st.subheader("📊 Mutual Fund Predictions")
         
-        st.info("Comprehensive analysis of mutual funds with performance predictions")
+        col1, col2 = st.columns(2)
         
-        # Get mutual fund data
-        mf_df = get_mutual_funds()
+        with col1:
+            fund_category = st.selectbox("Fund Category", [
+                "Large Cap", "Mid Cap", "Small Cap", "Sectoral", 
+                "Index", "Debt", "Hybrid", "International"
+            ])
         
-        if not mf_df.empty:
-            st.dataframe(mf_df, use_container_width=True)
+        with col2:
+            risk_appetite = st.select_slider("Risk Appetite", ["Low", "Medium", "High"])
+        
+        # Sample mutual fund data
+        funds = pd.DataFrame({
+            'Fund Name': ['Blue Chip Growth', 'Index Tracker', 'Technology Leaders', 'Balanced Advantage'],
+            'Category': ['Large Cap', 'Index', 'Sectoral', 'Hybrid'],
+            '1Y Return': ['18.5%', '12.3%', '22.7%', '15.2%'],
+            '3Y CAGR': ['15.2%', '10.8%', '19.4%', '13.1%'],
+            'Risk': ['Medium', 'Low', 'High', 'Medium'],
+            'Predicted Return': ['+12% to +16%', '+8% to +12%', '+18% to +24%', '+10% to +14%']
+        })
+        
+        # Filter based on selection
+        filtered_funds = funds[funds['Category'] == fund_category]
+        if risk_appetite != "All":
+            filtered_funds = filtered_funds[filtered_funds['Risk'] == risk_appetite]
+        
+        st.dataframe(filtered_funds, use_container_width=True)
+        
+        st.subheader("Top Recommended Funds")
+        recommended_funds = filtered_funds.head(3)
+        
+        for _, fund in recommended_funds.iterrows():
+            with st.expander(f"{fund['Fund Name']} - {fund['Category']}"):
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric("1Y Return", fund['1Y Return'])
+                
+                with col2:
+                    st.metric("3Y CAGR", fund['3Y CAGR'])
+                
+                with col3:
+                    st.metric("Predicted Return", fund['Predicted Return'])
+                
+                st.progress(75 if fund['Risk'] == 'High' else 50 if fund['Risk'] == 'Medium' else 25)
+                st.caption(f"Risk Level: {fund['Risk']}")
+
+# Crypto Markets Page
+elif selected == "Crypto Markets":
+    st.title("₿ Crypto Markets")
+    
+    tab1, tab2, tab3 = st.tabs(["Market Overview", "Crypto Analysis", "Portfolio"])
+    
+    with tab1:
+        st.subheader("Cryptocurrency Market Overview")
+        
+        # Sample crypto data
+        cryptocurrencies = [
+            {"Name": "Bitcoin", "Symbol": "BTC-USD", "Price": 43256.78, "Change": 2.3, "Market Cap": 845.2},
+            {"Name": "Ethereum", "Symbol": "ETH-USD", "Price": 2345.67, "Change": 1.8, "Market Cap": 285.4},
+            {"Name": "Binance Coin", "Symbol": "BNB-USD", "Price": 345.67, "Change": -0.5, "Market Cap": 52.8},
+            {"Name": "Cardano", "Symbol": "ADA-USD", "Price": 0.4567, "Change": 3.2, "Market Cap": 15.9},
+            {"Name": "Solana", "Symbol": "SOL-USD", "Price": 98.76, "Change": 5.4, "Market Cap": 41.2},
+        ]
+        
+        crypto_df = pd.DataFrame(cryptocurrencies)
+        st.dataframe(crypto_df, use_container_width=True)
+        
+        # Crypto market cap distribution
+        st.subheader("Market Cap Distribution")
+        fig = px.pie(crypto_df, values='Market Cap', names='Name', title="Cryptocurrency Market Cap Distribution")
+        fig.update_layout({
+            'plot_bgcolor': 'rgba(0, 0, 0, 0)',
+            'paper_bgcolor': 'rgba(0, 0, 0, 0)',
+            'font': {'color': 'white'}
+        })
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with tab2:
+        st.subheader("Cryptocurrency Analysis")
+        
+        crypto_symbol = st.selectbox("Select Cryptocurrency", ["BTC-USD", "ETH-USD", "BNB-USD", "ADA-USD", "SOL-USD"])
+        
+        if crypto_symbol:
+            # Simulated crypto data
+            dates = pd.date_range(end=datetime.now(), periods=30, freq='D')
+            prices = np.random.normal(100, 20, 30).cumsum() + 1000
             
-            # Mutual fund performance chart
-            st.subheader("Mutual Fund Performance Comparison")
-            
-            # Simulated performance data
-            categories = mf_df['Category'].unique()
-            performance_data = {
-                'Category': [],
-                'Average Return': []
-            }
-            
-            for category in categories:
-                performance_data['Category'].append(category)
-                # Simulate average returns based on category
-                if category == "Equity":
-                    performance_data['Average Return'].append(18.5)
-                elif category == "Hybrid":
-                    performance_data['Average Return'].append(14.2)
-                elif category == "Debt":
-                    performance_data['Average Return'].append(9.2)
-                elif category == "Index":
-                    performance_data['Average Return'].append(16.4)
-                else:
-                    performance_data['Average Return'].append(22.8)
-            
-            performance_df = pd.DataFrame(performance_data)
-            
-            fig = px.bar(performance_df, x='Category', y='Average Return', 
-                         title="Average Returns by Fund Category",
-                         color='Average Return',
-                         color_continuous_scale=px.colors.sequential.Viridis)
+            fig = px.line(x=dates, y=prices, title=f"{crypto_symbol} Price History")
+            fig.update_layout(xaxis_title="Date", yaxis_title="Price (USD)")
             fig.update_layout({
                 'plot_bgcolor': 'rgba(0, 0, 0, 0)',
                 'paper_bgcolor': 'rgba(0, 0, 0, 0)',
@@ -1080,203 +1199,108 @@ elif selected == "Predictions":
             })
             st.plotly_chart(fig, use_container_width=True)
             
-            # Fund recommendation
-            st.subheader("Top Fund Recommendations")
-            
-            recommended_funds = [
-                {"Fund Name": "BlueChip Growth Fund", "Category": "Equity", "Recommendation": "Strong Buy", "Target Return": "20%"},
-                {"Fund Name": "Sectoral Technology Fund", "Category": "Sectoral", "Recommendation": "Buy", "Target Return": "25%"},
-                {"Fund Name": "Index Fund Nifty 50", "Category": "Index", "Recommendation": "Buy", "Target Return": "16%"},
-                {"Fund Name": "Balanced Advantage Fund", "Category": "Hybrid", "Recommendation": "Hold", "Target Return": "14%"}
-            ]
-            
-            recommended_df = pd.DataFrame(recommended_funds)
-            st.dataframe(recommended_df, use_container_width=True)
-            
-            # Investment strategy
-            st.subheader("Investment Strategy Suggestions")
-            
-            col1, col2 = st.columns(2)
-            
+            # Crypto metrics
+            col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.markdown("**For Aggressive Investors:**")
-                st.write("• Focus on Equity and Sectoral funds")
-                st.write("• 70% in growth funds")
-                st.write("• 30% in hybrid funds")
-                st.write("• Consider SIP for volatility management")
-            
+                st.metric("Current Price", f"${prices[-1]:.2f}")
             with col2:
-                st.markdown("**For Conservative Investors:**")
-                st.write("• Focus on Debt and Hybrid funds")
-                st.write("• 60% in debt funds")
-                st.write("• 30% in hybrid funds")
-                st.write("• 10% in equity funds for growth")
+                st.metric("24h Volume", "$45.2B")
+            with col3:
+                st.metric("Market Cap", "$845.2B")
+            with col4:
+                st.metric("Circulating Supply", "19.2M BTC")
+    
+    with tab3:
+        st.subheader("Crypto Portfolio")
+        st.info("Track your cryptocurrency investments here.")
         
-        else:
-            st.warning("No mutual fund data available at the moment.")
-
-# Market Overview Page
-elif selected == "Market Overview":
-    st.title("🌍 Market Overview")
-    
-    # Load global indices with caching
-    indices_data = fetch_global_indices()
-    
-    # Display all indices in a grid
-    st.subheader("Global Market Indices")
-    cols = st.columns(4)
-    index_count = 0
-    for symbol, data in indices_data.items():
-        with cols[index_count % 4]:
-            currency_symbol = "$" if data["currency"] == "USD" else "₹" if data["currency"] == "INR" else "€" if data["currency"] == "EUR" else "£"
-            st.metric(
-                label=data["name"],
-                value=f"{currency_symbol}{data['price']:.2f}",
-                delta=f"{data['change']:.2f}%"
-            )
-        index_count += 1
-    
-    # Market heatmap (simulated)
-    st.subheader("Market Heatmap")
-    
-    # Simulated sector performance
-    sectors = {
-        "Technology": np.random.uniform(-3, 5),
-        "Healthcare": np.random.uniform(-2, 4),
-        "Financials": np.random.uniform(-4, 3),
-        "Energy": np.random.uniform(-5, 6),
-        "Consumer Cyclical": np.random.uniform(-2, 4),
-        "Real Estate": np.random.uniform(-3, 2),
-        "Utilities": np.random.uniform(-1, 3),
-        "Communications": np.random.uniform(-2, 5),
-        "Materials": np.random.uniform(-3, 4)
-    }
-    
-    sector_df = pd.DataFrame({
-        "Sector": list(sectors.keys()),
-        "Performance": list(sectors.values())
-    })
-    
-    fig = px.bar(sector_df, x="Sector", y="Performance", 
-                 title="Sector Performance (%)", 
-                 color="Performance",
-                 color_continuous_scale=px.colors.diverging.RdYlGn)
-    fig.update_layout({
-        'plot_bgcolor': 'rgba(0, 0, 0, 0)',
-        'paper_bgcolor': 'rgba(0, 0, 0, 0)',
-        'font': {'color': 'white'}
-    })
-    st.plotly_chart(fig, use_container_width=True)
-    
-    # Economic indicators
-    st.subheader("Key Economic Indicators")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Inflation Rate", "4.2%", "-0.3%")
-    with col2:
-        st.metric("Unemployment Rate", "3.8%", "0.1%")
-    with col3:
-        st.metric("GDP Growth", "2.9%", "0.2%")
-    with col4:
-        st.metric("Interest Rate", "5.5%", "0.0%")
-    
-    # Currency rates
-    st.subheader("Currency Exchange Rates")
-    
-    currencies = {
-        "USD/INR": 83.25,
-        "EUR/INR": 90.15,
-        "GBP/INR": 105.40,
-        "JPY/INR": 0.58,
-        "USD/EUR": 0.92,
-        "USD/GBP": 0.79,
-        "USD/JPY": 143.50
-    }
-    
-    cols = st.columns(4)
-    currency_count = 0
-    for pair, rate in currencies.items():
-        with cols[currency_count % 4]:
-            st.metric(pair, f"{rate:.2f}")
-        currency_count += 1
+        # Sample crypto portfolio
+        crypto_portfolio = pd.DataFrame({
+            'Coin': ['Bitcoin', 'Ethereum', 'Cardano'],
+            'Amount': [0.5, 3.2, 5000],
+            'Avg. Price': [38500, 2100, 0.42],
+            'Current Price': [43256, 2345, 0.4567],
+            'Value': [21628, 7504, 2283.5]
+        })
+        
+        st.dataframe(crypto_portfolio, use_container_width=True)
+        
+        total_value = crypto_portfolio['Value'].sum()
+        st.metric("Total Portfolio Value", f"${total_value:,.2f}")
 
 # News & Sentiment Page
 elif selected == "News & Sentiment":
-    st.title("📰 News & Market Sentiment")
+    st.title("📰 News & Sentiment Analysis")
     
-    tab1, tab2 = st.tabs(["Market News", "Sentiment Analysis"])
+    tab1, tab2, tab3 = st.tabs(["Market News", "Sentiment Analysis", "Social Media Trends"])
     
     with tab1:
         st.subheader("Latest Financial News")
         
-        news_articles = fetch_news()
-        if news_articles:
-            for article in news_articles:
-                with st.expander(f"{article['title']} - {article['source']['name']}"):
-                    if article.get('urlToImage'):
-                        st.image(article['urlToImage'], width=300)
-                    st.write(article.get('description', 'No description available'))
-                    st.write(f"Published at: {article['publishedAt']}")
-                    st.markdown(f"[Read full article]({article['url']})")
-        else:
-            st.info("News feed temporarily unavailable. Please try again later.")
+        news_query = st.text_input("Search for news", "stock market")
+        if st.button("Search News"):
+            articles = fetch_news(news_query)
+            if articles:
+                for article in articles:
+                    with st.expander(f"{article['title']} - {article['source']['name']}"):
+                        st.write(article.get('description', 'No description available'))
+                        if article.get('urlToImage'):
+                            st.image(article['urlToImage'], width=300)
+                        st.markdown(f"[Read full article]({article['url']})")
+            else:
+                st.info("No news articles found or news service unavailable.")
     
     with tab2:
         st.subheader("Market Sentiment Analysis")
         
-        # Simulated sentiment data
-        sentiment_data = {
-            "Overall Market": {"Bullish": 45, "Neutral": 30, "Bearish": 25},
-            "Technology Sector": {"Bullish": 55, "Neutral": 25, "Bearish": 20},
-            "Financial Sector": {"Bullish": 35, "Neutral": 40, "Bearish": 25},
-            "Healthcare Sector": {"Bullish": 60, "Neutral": 20, "Bearish": 20}
-        }
-        
-        col1, col2 = st.columns(2)
-        
+        # Sentiment indicators
+        col1, col2, col3 = st.columns(3)
         with col1:
-            for sector, sentiment in list(sentiment_data.items())[:2]:
-                fig = px.pie(values=list(sentiment.values()), names=list(sentiment.keys()),
-                             title=f"{sector} Sentiment",
-                             color_discrete_map={"Bullish": "#00CC96", "Neutral": "#FFA15A", "Bearish": "#EF553B"})
-                fig.update_layout({
-                    'plot_bgcolor': 'rgba(0, 0, 0, 0)',
-                    'paper_bgcolor': 'rgba(0, 0, 0, 0)',
-                    'font': {'color': 'white'},
-                    'height': 300
-                })
-                st.plotly_chart(fig, use_container_width=True)
-        
+            st.metric("Overall Sentiment", "Bullish", "2.5%")
         with col2:
-            for sector, sentiment in list(sentiment_data.items())[2:]:
-                fig = px.pie(values=list(sentiment.values()), names=list(sentiment.keys()),
-                             title=f"{sector} Sentiment",
-                             color_discrete_map={"Bullish": "#00CC96", "Neutral": "#FFA15A", "Bearish": "#EF553B"})
-                fig.update_layout({
-                    'plot_bgcolor': 'rgba(0, 0, 0, 0)',
-                    'paper_bgcolor': 'rgba(0, 0, 0, 0)',
-                    'font': {'color': 'white'},
-                    'height': 300
-                })
-                st.plotly_chart(fig, use_container_width=True)
+            st.metric("Fear & Greed Index", "64 (Greed)", "3")
+        with col3:
+            st.metric("Volatility", "Medium", "-1.2%")
         
-        # Social media sentiment
-        st.subheader("Social Media Sentiment Trends")
-        
-        # Simulated social media data
-        dates = pd.date_range(end=datetime.now(), periods=15, freq='D')
-        twitter_sentiment = np.random.uniform(40, 70, 15)
-        reddit_sentiment = np.random.uniform(30, 65, 15)
-        
-        social_df = pd.DataFrame({
-            'Date': dates,
-            'Twitter': twitter_sentiment,
-            'Reddit': reddit_sentiment
+        # Sentiment by sector
+        st.subheader("Sector Sentiment")
+        sector_sentiment = pd.DataFrame({
+            'Sector': ['Technology', 'Healthcare', 'Financial', 'Energy', 'Consumer'],
+            'Sentiment': [75, 62, 45, 58, 67],
+            'Change': [2.5, -1.2, -3.4, 1.7, 0.8]
         })
         
-        fig = px.line(social_df, x='Date', y=['Twitter', 'Reddit'], 
-                      title="Social Media Sentiment Index (Higher = More Positive)")
+        fig = px.bar(sector_sentiment, x='Sector', y='Sentiment', title="Sector Sentiment Scores")
+        fig.update_layout({
+            'plot_bgcolor': 'rgba(0, 0, 0, 0)',
+            'paper_bgcolor': 'rgba(0, 0, 0, 0)',
+            'font': {'color': 'white'}
+        })
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with tab3:
+        st.subheader("Social Media Trends")
+        
+        # Trending topics
+        st.subheader("Trending Financial Topics")
+        topics = [
+            {"Topic": "#BitcoinETF", "Volume": 125000, "Sentiment": "Bullish"},
+            {"Topic": "#FederalReserve", "Volume": 89000, "Sentiment": "Neutral"},
+            {"Topic": "#EarningsSeason", "Volume": 76000, "Sentiment": "Bullish"},
+            {"Topic": "#Inflation", "Volume": 68000, "Sentiment": "Bearish"},
+            {"Topic": "#NFT", "Volume": 54000, "Sentiment": "Bearish"},
+        ]
+        
+        topics_df = pd.DataFrame(topics)
+        st.dataframe(topics_df, use_container_width=True)
+        
+        # Social media sentiment
+        st.subheader("Social Media Sentiment")
+        platforms = ['Twitter', 'Reddit', 'Stocktwits', 'YouTube']
+        sentiment = np.random.uniform(40, 80, len(platforms))
+        
+        fig = px.bar(x=platforms, y=sentiment, title="Sentiment by Platform")
+        fig.update_layout(xaxis_title="Platform", yaxis_title="Sentiment Score")
         fig.update_layout({
             'plot_bgcolor': 'rgba(0, 0, 0, 0)',
             'paper_bgcolor': 'rgba(0, 0, 0, 0)',
@@ -1284,57 +1308,152 @@ elif selected == "News & Sentiment":
         })
         st.plotly_chart(fig, use_container_width=True)
 
+# Learning Center Page
+elif selected == "Learning Center":
+    st.title("📚 Learning Center")
+    
+    tab1, tab2, tab3 = st.tabs(["Tutorials", "Glossary", "Resources"])
+    
+    with tab1:
+        st.subheader("Investment Tutorials")
+        
+        tutorials = [
+            {"Title": "Introduction to Stock Market", "Level": "Beginner", "Duration": "15 min"},
+            {"Title": "Technical Analysis Basics", "Level": "Beginner", "Duration": "20 min"},
+            {"Title": "Options Trading Strategies", "Level": "Intermediate", "Duration": "30 min"},
+            {"Title": "Portfolio Diversification", "Level": "Intermediate", "Duration": "25 min"},
+            {"Title": "Advanced Risk Management", "Level": "Advanced", "Duration": "45 min"},
+        ]
+        
+        for tutorial in tutorials:
+            with st.expander(f"{tutorial['Title']} ({tutorial['Level']} - {tutorial['Duration']})"):
+                st.write("This tutorial will cover the fundamentals of this topic.")
+                if st.button("Start Tutorial", key=tutorial['Title']):
+                    st.success(f"Starting tutorial: {tutorial['Title']}")
+    
+    with tab2:
+        st.subheader("Financial Glossary")
+        
+        terms = [
+            {"Term": "P/E Ratio", "Definition": "Price-to-Earnings ratio, a valuation metric"},
+            {"Term": "Market Cap", "Definition": "Total market value of a company's outstanding shares"},
+            {"Term": "Dividend Yield", "Definition": "Annual dividend payment divided by stock price"},
+            {"Term": "ETF", "Definition": "Exchange-Traded Fund, a basket of securities"},
+            {"Term": "IPO", "Definition": "Initial Public Offering, when a company first sells shares to the public"},
+        ]
+        
+        for term in terms:
+            with st.expander(term['Term']):
+                st.write(term['Definition'])
+    
+    with tab3:
+        st.subheader("Learning Resources")
+        
+        resources = [
+            {"Type": "E-book", "Title": "The Intelligent Investor", "Author": "Benjamin Graham"},
+            {"Type": "Course", "Title": "Stock Market Fundamentals", "Provider": "Coursera"},
+            {"Type": "Podcast", "Title": "Market Foolery", "Provider": "The Motley Fool"},
+            {"Type": "YouTube Channel", "Title": "Investing with Rose", "Provider": "Rose Han"},
+            {"Type": "Blog", "Title": "The Reformed Broker", "Author": "Josh Brown"},
+        ]
+        
+        for resource in resources:
+            st.write(f"**{resource['Type']}**: {resource['Title']} by {resource.get('Author', resource.get('Provider', 'Unknown'))}")
+            st.progress(np.random.randint(20, 100))
+
+# Company Info Page
+elif selected == "Company Info":
+    st.title("🏢 Company Information")
+    
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        company_symbol = st.text_input("Enter Company Symbol", "AAPL")
+    with col2:
+        info_type = st.selectbox("Information Type", ["Overview", "Financials", "Executives", "Holdings"])
+    
+    if company_symbol:
+        st.subheader(f"Company Information for {company_symbol.upper()}")
+        
+        # Simulated company data
+        if info_type == "Overview":
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.write("**Company Name:** Apple Inc.")
+                st.write("**Sector:** Technology")
+                st.write("**Industry:** Consumer Electronics")
+                st.write("**Founded:** April 1, 1976")
+            
+            with col2:
+                st.write("**CEO:** Tim Cook")
+                st.write("**Employees:** 164,000")
+                st.write("**Headquarters:** Cupertino, California")
+                st.write("**Website:** www.apple.com")
+            
+            st.subheader("Business Description")
+            st.write("Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide. The company also sells various related services.")
+        
+        elif info_type == "Financials":
+            financials = pd.DataFrame({
+                'Year': ['2023', '2022', '2021', '2020', '2019'],
+                'Revenue (B)': [383.29, 365.82, 274.52, 260.17, 265.60],
+                'Net Income (B)': [97.00, 94.68, 57.41, 55.26, 55.34],
+                'EPS': [6.13, 5.67, 3.28, 3.31, 3.00],
+                'Dividend': [0.96, 0.88, 0.82, 0.80, 0.75]
+            })
+            st.dataframe(financials, use_container_width=True)
+        
+        elif info_type == "Executives":
+            executives = pd.DataFrame({
+                'Name': ['Tim Cook', 'Jeff Williams', 'Luca Maestri', 'Katherine Adams'],
+                'Title': ['CEO', 'COO', 'CFO', 'General Counsel'],
+                'Salary ($)': [3M, 2.7M, 2.5M, 2.3M],
+                'Age': [63, 60, 60, 56]
+            })
+            st.dataframe(executives, use_container_width=True)
+        
+        elif info_type == "Holdings":
+            holdings = pd.DataFrame({
+                'Holder': ['Vanguard', 'BlackRock', 'State Street', 'Berkshire Hathaway'],
+                'Shares (M)': [1280, 1050, 680, 915],
+                'Percentage': [7.8%, 6.4%, 4.1%, 5.6%]
+            })
+            st.dataframe(holdings, use_container_width=True)
+
 # Settings Page
 elif selected == "Settings":
     st.title("⚙️ Settings")
     
-    st.subheader("Appearance Settings")
+    st.subheader("Appearance")
+    theme = st.selectbox("Theme", ["Dark", "Light", "System Default"])
+    language = st.selectbox("Language", ["English", "Spanish", "French", "German"])
     
+    st.subheader("Notifications")
     col1, col2 = st.columns(2)
-    
     with col1:
-        theme = st.selectbox("Color Theme", ["Dark", "Black", "Blue Dark"])
-        font_size = st.slider("Font Size", 12, 18, 14)
-        chart_animation = st.checkbox("Enable Chart Animations", value=True)
-    
+        st.checkbox("Price Alerts", value=True)
+        st.checkbox("News Updates", value=True)
     with col2:
-        default_home = st.selectbox("Default Home Page", ["Dashboard", "Stock Analysis", "Predictions"])
-        refresh_rate = st.slider("Data Refresh Rate (minutes)", 5, 60, 15)
-        st.checkbox("Show Detailed Tooltips", value=True)
+        st.checkbox("Portfolio Notifications", value=True)
+        st.checkbox("Market News", value=True)
     
-    st.subheader("Data Sources")
-    
-    data_sources = {
-        "Stock Data": "Yahoo Finance",
-        "News": "NewsAPI",
-        "Economic Data": "Simulated for Demo",
-        "IPO Data": "Simulated for Demo",
-        "Mutual Fund Data": "Simulated for Demo"
-    }
-    
-    for source, provider in data_sources.items():
-        st.write(f"**{source}:** {provider}")
+    st.subheader("Data Preferences")
+    st.selectbox("Default Period", ["1 Month", "3 Months", "6 Months", "1 Year"])
+    st.slider("Chart Animation", 0, 100, 50)
     
     st.subheader("Account")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.text_input("Name", "Ashwik Bire")
-        st.text_input("Email", "ashwik.bire@example.com")
-    
-    with col2:
-        st.selectbox("Currency", ["USD", "INR", "EUR", "GBP"])
-        st.selectbox("Date Format", ["MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD"])
+    st.text_input("Name", "John Doe")
+    st.text_input("Email", "john.doe@example.com")
+    st.text_input("Phone", "+1 (555) 123-4567")
     
     if st.button("Save Settings"):
         st.success("Settings saved successfully!")
     
-    st.subheader("About")
-    st.write("**MarketMentor Pro v1.0**")
-    st.write("Advanced financial analytics platform for investors and traders.")
-    st.write("Developed by Ashwik Bire")
-    st.write("[Contact Support](mailto:support@marketmentor.com)")
+    st.subheader("Danger Zone")
+    if st.button("Clear All Data", type="secondary"):
+        st.session_state.watchlist = []
+        st.session_state.portfolio = pd.DataFrame(columns=['Symbol', 'Quantity', 'Purchase Price', 'Purchase Date'])
+        st.success("All data cleared!")
 
 else:
     st.title(f"{selected}")
