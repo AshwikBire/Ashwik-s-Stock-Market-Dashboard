@@ -32,7 +32,7 @@ st.markdown("""
     .stTabs {background-color: #000000;}
     div[data-baseweb="tab-list"] {background-color: #0D0D0D; gap: 2px;}
     div[data-baseweb="tab"] {background-color: #1A1A1A; color: white; padding: 10px 20px; border-radius: 4px 4px 0 0;}
-    div[data-baseweb="tab"]:hover {background-color: #0080FF;}
+    div[data-baseweb="tab"]:hover {background-color: #FF0000;}
     div[data-baseweb="tab"][aria-selected="true"] {background-color: #FF0000;}
     .stProgress > div > div > div {background-color: #FF0000;}
     .css-1d391kg {background-color: #0D0D0D;}
