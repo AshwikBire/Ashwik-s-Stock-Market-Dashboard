@@ -81,7 +81,7 @@ def fetch_global_indices():
         "CL=F": {"name": "Crude Oil", "currency": "USD"},
         "NG=F": {"name": "Natural Gas", "currency": "USD"},
         "BTC-USD": {"name": "Bitcoin", "currency": "USD"},
-        "ETH-USD": {"name": "Ethereum", "currency": "USD"}
+        "ETH-USD": {"name": "Ehereum", "currency": "USD"}
     }
     
     results = {}
@@ -155,7 +155,7 @@ with st.sidebar:
             "container": {"background-color": "#13274F"},
             "icon": {"color": "#4A90E2", "font-size": "16px"}, 
             "nav-link": {"color": "#E0E0E0", "font-size": "14px", "text-align": "left"},
-            "nav-link-selected": {"background-color": #4A90E2"},
+            "nav-link-selected": {"background-color": "#4A90E2"},
         }
     )
     
