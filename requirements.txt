@@ -11,7 +11,7 @@ textblob
 xgboost
 scikit-learn
 tensorflow
-ta
+talib
 fpdf2
 fredapi
 investpy
