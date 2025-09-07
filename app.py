@@ -23,7 +23,7 @@ st.markdown("""
     .main {background-color: #000000; color: #E0E0E0;}
     .stApp {background-color: #000000;}
     .stSidebar {background-color: #0D0D0D;}
-    h1, h2, h3, h4, h5, h6 {color: #00BFFF !important; border-bottom: 1px solid #1A1A1A; padding-bottom: 8px;}
+    h1, h2, h3, h4, h5, h6 {color: #FFFFFF !important; border-bottom: 1px solid #1A1A1A; padding-bottom: 8px;}
     .stButton>button {background-color: #1A1A1A; color: white; border: 1px solid #00BFFF; border-radius: 4px;}
     .stTextInput>div>div>input, .stSelectbox>div>div>select {background-color: #1A1A1A; color: white; border: 1px solid #00BFFF;}
     .stMetric {background-color: #0D0D0D; border-radius: 5px; padding: 10px; border-left: 3px solid #00BFFF;}
