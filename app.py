@@ -140,7 +140,7 @@ with st.sidebar:
         default_index=0,
         styles={
             "container": {"background-color": "#13274F"},
-            "icon": {"color": #4A90E2", "font-size": "16px"}, 
+            "icon": {"color": "#4A90E2", "font-size": "16px"}, 
             "nav-link": {"color": "#E0E0E0", "font-size": "14px", "text-align": "left"},
             "nav-link-selected": {"background-color": "#4A90E2"},
         }
@@ -908,7 +908,7 @@ elif selected == "Crypto Markets":
     
     # Simulated crypto data
     crypto_data = pd.DataFrame({
-        'Cryptocurrency': ['Bitcoin', 'Ethereum', 'Binance Coin', 'Cardano', 'Solana', 'XRP', 'Dogecoin', 'Polkadot'],
+        'Cryptocurrency': ['Bitcoin', 'Ehereum', 'Binance Coin', 'Cardano', 'Solana', 'XRP', 'Dogecoin', 'Polkadot'],
         'Symbol': ['BTC', 'ETH', 'BNB', 'ADA', 'SOL', 'XRP', 'DOGE', 'DOT'],
         'Price': [25800, 1650, 215, 0.25, 32.50, 0.52, 0.06, 4.20],
         '24h Change': [-1.2, 2.5, -0.8, 3.2, -2.1, 1.5, -3.2, 0.8],
@@ -1247,24 +1247,8 @@ elif selected == "Learning Center":
         with col1:
             st.write("**📺 Beginner Investing Videos:**")
             st.write("- [Investing for Beginners: How to Get Started](https://www.youtube.com/watch?v=Wf2eY3Lc2sI)")
-            st.write("- [Stock Market Basics for Beginners](https://www.youtube.com/watch?v=3UF0ymVdYLA)")
-            st.write("- [How to Read Stock Charts](https://www.youtube.com/watch?v=GdlFhF6yjOo)")
-            st.write("- [Introduction to Fundamental Analysis](https://www.youtube.com/watch?v=8Uv5ZnF4Rqg)")
-            
-            st.write("**📺 Technical Analysis Videos:**")
-            st.write("- [Technical Analysis Masterclass](https://www.youtube.com/watch?v=1c43BKp4PPY)")
-            st.write("- [Candlestick Patterns Explained](https://www.youtube.com/watch?v=jXf24u7+4fs)")
-            st.write("- [RSI Indicator Deep Dive](https://www.youtube.com/watch?v=6c5exPYoz3U)")
-            st.write("- [Moving Averages Trading Strategies](https://www.youtube.com/watch?v=Q4vNfM1-rfI)")
-        
-        with col2:
-            st.write("**📺 Options Trading Videos:**")
-            st.write("- [Options Trading for Beginners](https://www.youtube.com/watch?v=8NgVg5C2yE4)")
-            st.write("- [Advanced Options Strategies](https://www.youtube.com/watch?v=ytZ2mESFzJ0)")
-            st.write("- [Iron Condor Strategy Guide](https://www.youtube.com/watch?v=UZ5NQc6sXGs)")
-            st.write("- [Risk Management in Options](https://www.youtube.com/watch?v=5T2gNxZqico)")
-            
-            st.write("**📺 Portfolio Management Videos:**")
+            st.write("- [Stock Market Basics for Beginners](https://www.youtube.com/watch
+			st.write("**📺 Portfolio Management Videos:**")
             st.write("- [Modern Portfolio Theory](https://www.youtube.com/watch?v=U9Xk0gQf7eI)")
             st.write("- [Asset Allocation Strategies](https://www.youtube.com/watch?v=ERDvLf3i9vU)")
             st.write("- [Rebalancing Your Portfolio](https://www.youtube.com/watch?v=3aT-ML5wlwg)")
@@ -1456,3 +1440,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 """, unsafe_allow_html=True)
+			
