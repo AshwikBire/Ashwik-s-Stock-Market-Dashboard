@@ -248,7 +248,7 @@ with st.sidebar:
     )
     
     # Watchlist section in sidebar
-    st.subheader("📋 Watchlist")
+    st.subheader("Watchlist")
     watchlist_symbol = st.text_input("Add symbol to watchlist", "AAPL")
     col1, col2 = st.columns(2)
     with col1:
@@ -273,13 +273,13 @@ with st.sidebar:
 
 # Dashboard Page
 if selected == "Dashboard":
-    st.title("📊 Market Dashboard")
+    st.title(" Market Dashboard")
     
     # Load global indices with caching
     indices_data = fetch_global_indices()
     
     # Display key indices
-    st.subheader("🌍 Global Markets")
+    st.subheader("Global Markets")
     cols = st.columns(6)
     index_count = 0
     for symbol, data in list(indices_data.items())[:6]:
@@ -307,7 +307,7 @@ if selected == "Dashboard":
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("📈 Sector Performance")
+        st.subheader("Sector Performance")
         sectors = {
             "Technology": "+2.3%", "Healthcare": "+1.5%", "Financials": "-0.8%",
             "Energy": "+3.2%", "Consumer Cyclical": "+0.7%", "Real Estate": "-1.2%",
@@ -323,7 +323,7 @@ if selected == "Dashboard":
         st.plotly_chart(fig, use_container_width=True)
     
     with col2:
-        st.subheader("📊 Market Sentiment")
+        st.subheader(" Market Sentiment")
         sentiment_data = {"Bullish": 45, "Neutral": 30, "Bearish": 25}
         fig = px.pie(values=list(sentiment_data.values()), names=list(sentiment_data.keys()),
                      title="Market Sentiment Distribution",
@@ -331,7 +331,7 @@ if selected == "Dashboard":
         st.plotly_chart(fig, use_container_width=True)
         
         # Market health indicators
-        st.subheader("📈 Market Health")
+        st.subheader("Market Health")
         health_data = {
             "Volatility Index (VIX)": "18.5",
             "Advance/Decline Ratio": "1.2:1",
@@ -342,7 +342,7 @@ if selected == "Dashboard":
             st.write(f"**{indicator}:** {value}")
     
     # Recent news with caching
-    st.subheader("📰 Market News")
+    st.subheader("Market News")
     news_articles = fetch_news()
     if news_articles:
         for article in news_articles[:3]:
@@ -353,7 +353,7 @@ if selected == "Dashboard":
         st.info("News feed temporarily unavailable.")
     
     # Quick actions
-    st.subheader("⚡ Quick Actions")
+    st.subheader("Quick Actions")
     action_cols = st.columns(4)
     with action_cols[0]:
         if st.button("Screen Stocks"):
@@ -370,7 +370,7 @@ if selected == "Dashboard":
 
 # Stock Analysis Page
 elif selected == "Stock Analysis":
-    st.title("📈 Stock Analysis")
+    st.title("Stock Analysis")
     
     tab1, tab2, tab3 = st.tabs(["Single Stock", "Compare Stocks", "Screener"])
     
@@ -539,7 +539,7 @@ elif selected == "Stock Analysis":
 
 # Technical Analysis Page
 elif selected == "Technical Analysis":
-    st.title("📊 Technical Analysis")
+    st.title("Technical Analysis")
     
     ticker = st.text_input("Enter Stock Symbol for Technical Analysis", "AAPL")
     if ticker:
@@ -656,7 +656,7 @@ elif selected == "Technical Analysis":
 
 # Portfolio Manager Page
 elif selected == "Portfolio Manager":
-    st.title("💰 Portfolio Manager")
+    st.title("Portfolio Manager")
     
     tab1, tab2, tab3 = st.tabs(["Current Portfolio", "Add Holding", "Performance Analysis"])
     
@@ -793,7 +793,7 @@ elif selected == "Portfolio Manager":
 
 # Options Chain Page
 elif selected == "Options Chain":
-    st.title("📋 Options Chain Analysis")
+    st.title("Options Chain Analysis")
     
     st.subheader("Options Data (Simulated)")
     options_data = pd.DataFrame({
@@ -886,13 +886,13 @@ elif selected == "Options Chain":
 
 # Market Overview Page
 elif selected == "Market Overview":
-    st.title("🌍 Global Market Overview")
+    st.title("Global Market Overview")
     
     # Load global indices with caching
     indices_data = fetch_global_indices()
     
     # Display key indices in a grid
-    st.subheader("🌍 Global Markets")
+    st.subheader("Global Markets")
     cols = st.columns(6)
     for idx, (symbol, data) in enumerate(indices_data.items()):
         if idx < 6:  # First row
@@ -927,7 +927,7 @@ elif selected == "Market Overview":
             )
     
     # Market heatmap
-    st.subheader("📊 Market Heatmap")
+    st.subheader(" Market Heatmap")
     
     # Simulated sector performance
     sectors = {
@@ -947,7 +947,7 @@ elif selected == "Market Overview":
     st.plotly_chart(fig, use_container_width=True)
     
     # Economic indicators
-    st.subheader("📈 Economic Indicators")
+    st.subheader("Economic Indicators")
     
     econ_data = {
         "Indicator": ["GDP Growth", "Unemployment Rate", "Inflation Rate", "Interest Rate", "Consumer Confidence"],
@@ -960,7 +960,7 @@ elif selected == "Market Overview":
     st.dataframe(econ_df, use_container_width=True)
     
     # Bond yields
-    st.subheader("📊 Bond Yields")
+    st.subheader("Bond Yields")
     
     bond_data = {
         "Maturity": ["1 Month", "3 Month", "6 Month", "1 Year", "2 Year", "5 Year", "10 Year", "30 Year"],
@@ -985,7 +985,7 @@ elif selected == "Market Overview":
 
 # Economic Calendar Page
 elif selected == "Economic Calendar":
-    st.title("📅 Economic Calendar")
+    st.title("Economic Calendar")
     
     # Date selector
     col1, col2 = st.columns(2)
@@ -1032,7 +1032,7 @@ elif selected == "Economic Calendar":
     st.dataframe(rates_data, use_container_width=True)
     
     # Economic data visualization
-    st.subheader("📊 Economic Data Trends")
+    st.subheader("Economic Data Trends")
     
     # Simulated inflation data
     dates = pd.date_range(start='2022-01-01', end='2023-09-01', freq='M')
@@ -1084,7 +1084,7 @@ elif selected == "Crypto Markets":
         st.write("- Increasing: Bitcoin leading market movements")
     
     # Crypto performance chart
-    st.subheader("📈 Top Cryptocurrencies Performance")
+    st.subheader(" Top Cryptocurrencies Performance")
     
     # Simulated crypto performance
     crypto_perf = pd.DataFrame({
@@ -1111,7 +1111,7 @@ elif selected == "Crypto Markets":
 
 # News & Sentiment Page
 elif selected == "News & Sentiment":
-    st.title("📰 News & Market Sentiment")
+    st.title("News & Market Sentiment")
     
     news_query = st.text_input("Search Financial News", "stock market")
     if news_query:
@@ -1168,7 +1168,7 @@ elif selected == "News & Sentiment":
 
 # Learning Center Page
 elif selected == "Learning Center":
-    st.title("📚 Learning Center")
+    st.title("Learning Center")
     
     learning_tabs = st.tabs(["Beginner Guides", "Technical Analysis", "Options Trading", "Portfolio Management", "Video Resources"])
     
@@ -1502,7 +1502,7 @@ elif selected == "Company Info":
 
 # Predictions Page
 elif selected == "Predictions":
-    st.title("🔮 Stock & Mutual Fund Predictions")
+    st.title("Stock & Mutual Fund Predictions")
     
     tab1, tab2 = st.tabs(["Stock Predictions", "Mutual Fund Analysis"])
     
