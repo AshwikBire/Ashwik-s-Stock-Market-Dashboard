@@ -1247,7 +1247,8 @@ elif selected == "Learning Center":
         with col1:
             st.write("**📺 Beginner Investing Videos:**")
             st.write("- [Investing for Beginners: How to Get Started](https://www.youtube.com/watch?v=Wf2eY3Lc2sI)")
-                        st.write("**📺 Portfolio Management Videos:**")
+            
+            st.write("**📺 Portfolio Management Videos:**")
             st.write("- [Modern Portfolio Theory](https://www.youtube.com/watch?v=U9Xk0gQf7eI)")
             st.write("- [Asset Allocation Strategies](https://www.youtube.com/watch?v=ERDvLf3i9vU)")
             st.write("- [Rebalancing Your Portfolio](https://www.youtube.com/watch?v=3aT-ML5wlwg)")
