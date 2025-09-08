@@ -34,7 +34,7 @@ st.markdown("""
     
     /* Headers */
     h1, h2, h3, h4, h5, h6 {
-        color: #FF0000 !important;
+        color: #FFFFFF !important;
         border-bottom: 1px solid #2A0A0A;
         padding-bottom: 8px;
         font-weight: 700;
