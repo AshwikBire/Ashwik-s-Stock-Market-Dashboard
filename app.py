@@ -1909,10 +1909,7 @@ elif selected == "Settings":
             st.session_state.portfolio = pd.DataFrame(columns=['Symbol', 'Quantity', 'Purchase Price', 'Purchase Date'])
             st.success("Settings reset to defaults!")
     
-    st.subheader("Account Information")
-    st.write("**Username:** trader123")
-    st.write("**Email:** user@example.com")
-    st.write("**Subscription:** Premium (expires Dec 31, 2023)")
+    
     
     if st.button("Upgrade Subscription"):
         st.info("Redirecting to subscription page...")
