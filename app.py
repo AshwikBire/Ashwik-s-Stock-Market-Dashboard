@@ -532,9 +532,8 @@ if selected == "Dashboard":
     with action_cols[3]:
         if st.button("Check News", key="check_news"):
             st.session_state.selected = "News & Sentiment"
-
-# Stock Analysis Page
-elif selected == "Stock Analysis":
+            
+            elif selected == "Stock Analysis":
     st.title("Stock Analysis")
     
     tab1, tab2, tab3 = st.tabs(["Single Stock", "Compare Stocks", "Screener"])
@@ -542,7 +541,7 @@ elif selected == "Stock Analysis":
     with tab1:
         col1, col2 = st.columns([2, 1])
         with col1:
-            ticker = st.text_input("🔍 Enter Stock Symbol", "AAPL")
+            ticker = st.text_input("🔍 Enter Stock Symbol", "RELIANCE.NS")  # Default to Indian stock
         with col2:
             analysis_type = st.selectbox("Analysis Type", ["Overview", "Financials", "Holdings", "Chart"])
         
@@ -550,6 +549,10 @@ elif selected == "Stock Analysis":
             hist, info = fetch_stock_data(ticker, "3mo")
             if hist is not None and info is not None:
                 st.subheader(f"{info.get('longName', 'N/A')} ({ticker.upper()})")
+                
+                # Check if it's an Indian stock (ends with .NS or .BO)
+                is_indian_stock = ticker.endswith(('.NS', '.BO'))
+                currency_symbol = '₹' if is_indian_stock else '$'
                 
                 # Key metrics
                 col1, col2, col3, col4 = st.columns(4)
@@ -559,29 +562,45 @@ elif selected == "Stock Analysis":
                 pe_ratio = info.get('trailingPE', 'N/A')
                 
                 with col1:
-                    st.metric("Current Price", f"${current_price:.2f}" if isinstance(current_price, float) else current_price)
+                    if isinstance(current_price, float):
+                        st.metric("Current Price", f"{currency_symbol}{current_price:.2f}")
+                    else:
+                        st.metric("Current Price", current_price)
                 with col2:
                     if isinstance(previous_close, float) and isinstance(current_price, float):
                         change = current_price - previous_close
                         change_percent = (change / previous_close) * 100
-                        st.metric("Previous Close", f"${previous_close:.2f}", f"{change:.2f} ({change_percent:.2f}%)")
+                        st.metric("Previous Close", f"{currency_symbol}{previous_close:.2f}", 
+                                 f"{change:.2f} ({change_percent:.2f}%)")
+                    else:
+                        st.metric("Previous Close", f"{currency_symbol}{previous_close}" if isinstance(previous_close, float) else previous_close)
                 with col3:
                     if isinstance(market_cap, (int, float)):
                         if market_cap >= 1e12:
-                            st.metric("Market Cap", f"${market_cap/1e12:.2f}T")
+                            st.metric("Market Cap", f"{currency_symbol}{market_cap/1e12:.2f}T")
+                        elif market_cap >= 1e7 and is_indian_stock:  # For Indian stocks, use Cr for Crore
+                            st.metric("Market Cap", f"{currency_symbol}{market_cap/1e7:.2f}Cr")
                         elif market_cap >= 1e9:
-                            st.metric("Market Cap", f"${market_cap/1e9:.2f}B")
+                            st.metric("Market Cap", f"{currency_symbol}{market_cap/1e9:.2f}B")
                         else:
-                            st.metric("Market Cap", f"${market_cap:,.2f}")
+                            st.metric("Market Cap", f"{currency_symbol}{market_cap:,.2f}")
                 with col4:
                     st.metric("P/E Ratio", f"{pe_ratio:.2f}" if isinstance(pe_ratio, float) else pe_ratio)
                 
                 # Additional metrics
                 col1, col2, col3, col4 = st.columns(4)
                 with col1:
-                    st.metric("52W High", f"${info.get('fiftyTwoWeekHigh', 'N/A')}")
+                    fifty_two_high = info.get('fiftyTwoWeekHigh', 'N/A')
+                    if isinstance(fifty_two_high, float):
+                        st.metric("52W High", f"{currency_symbol}{fifty_two_high:.2f}")
+                    else:
+                        st.metric("52W High", fifty_two_high)
                 with col2:
-                    st.metric("52W Low", f"${info.get('fiftyTwoWeekLow', 'N/A')}")
+                    fifty_two_low = info.get('fiftyTwoWeekLow', 'N/A')
+                    if isinstance(fifty_two_low, float):
+                        st.metric("52W Low", f"{currency_symbol}{fifty_two_low:.2f}")
+                    else:
+                        st.metric("52W Low", fifty_two_low)
                 with col3:
                     st.metric("Volume", f"{info.get('volume', 'N/A'):,}")
                 with col4:
@@ -594,31 +613,49 @@ elif selected == "Stock Analysis":
                     
                     if chart_type == "Line":
                         fig = px.line(hist, x=hist.index, y='Close', title=f"{ticker.upper()} Price History")
+                        fig.update_yaxes(tickprefix=currency_symbol)
                     else:
                         fig = go.Figure(data=[go.Candlestick(
                             x=hist.index, open=hist['Open'], high=hist['High'], 
                             low=hist['Low'], close=hist['Close']
                         )])
                         fig.update_layout(title=f"{ticker.upper()} Candlestick Chart")
+                        fig.update_yaxes(tickprefix=currency_symbol)
                     
                     st.plotly_chart(fig, use_container_width=True)
                 
                 # Financial statements (simulated)
                 if analysis_type == "Financials":
                     st.subheader("Financial Statements")
-                    financials = pd.DataFrame({
-                        'Year': ['2023', '2022', '2021', '2020', '2019'],
-                        'Revenue (B)': [383.29, 365.82, 274.52, 260.17, 265.60],
-                        'Net Income (B)': [97.00, 94.68, 57.41, 55.26, 55.34],
-                        'EPS': [6.13, 5.67, 3.28, 3.31, 3.00],
-                        'Dividend': [0.96, 0.88, 0.82, 0.80, 0.75]
-                    })
+                    # Use appropriate currency symbol for financial data
+                    if is_indian_stock:
+                        financials = pd.DataFrame({
+                            'Year': ['2023', '2022', '2021', '2020', '2019'],
+                            'Revenue (Cr)': [8452, 7623, 6125, 5432, 4897],
+                            'Net Income (Cr)': [1254, 1089, 876, 754, 623],
+                            'EPS': [18.5, 16.2, 13.1, 11.2, 9.3],
+                            'Dividend': [9.0, 8.5, 7.0, 6.5, 6.0]
+                        })
+                    else:
+                        financials = pd.DataFrame({
+                            'Year': ['2023', '2022', '2021', '2020', '2019'],
+                            'Revenue (B)': [383.29, 365.82, 274.52, 260.17, 265.60],
+                            'Net Income (B)': [97.00, 94.68, 57.41, 55.26, 55.34],
+                            'EPS': [6.13, 5.67, 3.28, 3.31, 3.00],
+                            'Dividend': [0.96, 0.88, 0.82, 0.80, 0.75]
+                        })
+                    
                     st.dataframe(financials, use_container_width=True)
                     
                     fig = go.Figure()
-                    fig.add_trace(go.Bar(x=financials['Year'], y=financials['Revenue (B)'], name='Revenue'))
-                    fig.add_trace(go.Bar(x=financials['Year'], y=financials['Net Income (B)'], name='Net Income'))
-                    fig.update_layout(title="Revenue vs Net Income (Billions $)", barmode='group')
+                    if is_indian_stock:
+                        fig.add_trace(go.Bar(x=financials['Year'], y=financials['Revenue (Cr)'], name='Revenue'))
+                        fig.add_trace(go.Bar(x=financials['Year'], y=financials['Net Income (Cr)'], name='Net Income'))
+                        fig.update_layout(title="Revenue vs Net Income (Crores ₹)", barmode='group')
+                    else:
+                        fig.add_trace(go.Bar(x=financials['Year'], y=financials['Revenue (B)'], name='Revenue'))
+                        fig.add_trace(go.Bar(x=financials['Year'], y=financials['Net Income (B)'], name='Net Income'))
+                        fig.update_layout(title="Revenue vs Net Income (Billions $)", barmode='group')
                     st.plotly_chart(fig, use_container_width=True)
                 
                 # Company info
@@ -636,7 +673,17 @@ elif selected == "Stock Analysis":
                         st.write(f"**Website:** {info.get('website', 'N/A')}")
                         st.write(f"**CEO:** {info.get('ceo', 'N/A')}")
                         st.write(f"**IPO Year:** {info.get('ipoYear', 'N/A')}")
-                        st.write(f"**Market Cap:** ${info.get('marketCap', 'N/A'):,}")
+                        if isinstance(market_cap, (int, float)):
+                            if market_cap >= 1e12:
+                                st.write(f"**Market Cap:** {currency_symbol}{market_cap/1e12:.2f}T")
+                            elif market_cap >= 1e7 and is_indian_stock:
+                                st.write(f"**Market Cap:** {currency_symbol}{market_cap/1e7:.2f}Cr")
+                            elif market_cap >= 1e9:
+                                st.write(f"**Market Cap:** {currency_symbol}{market_cap/1e9:.2f}B")
+                            else:
+                                st.write(f"**Market Cap:** {currency_symbol}{market_cap:,.2f}")
+                        else:
+                            st.write(f"**Market Cap:** {market_cap}")
                     
                     st.subheader("Business Summary")
                     st.write(info.get('longBusinessSummary', 'No summary available.'))
@@ -646,7 +693,7 @@ elif selected == "Stock Analysis":
     
     with tab2:
         st.subheader("Compare Stocks")
-        symbols = st.text_input("Enter symbols to compare (comma separated)", "AAPL, MSFT, GOOGL")
+        symbols = st.text_input("Enter symbols to compare (comma separated)", "RELIANCE.NS, TCS.NS, INFY.NS")  # Default to Indian stocks
         
         if symbols:
             symbol_list = [s.strip().upper() for s in symbols.split(',')]
@@ -655,10 +702,14 @@ elif selected == "Stock Analysis":
             for symbol in symbol_list:
                 hist, info = fetch_stock_data(symbol, "1mo")
                 if hist is not None and not hist.empty:
+                    # Check if it's an Indian stock
+                    is_indian = symbol.endswith(('.NS', '.BO'))
+                    currency_symbol = '₹' if is_indian else '$'
+                    
                     comparison_data[symbol] = {
-                        'Price': hist['Close'].iloc[-1],
-                        'Change': ((hist['Close'].iloc[-1] - hist['Close'].iloc[0]) / hist['Close'].iloc[0]) * 100,
-                        'Volume': info.get('averageVolume', 0)
+                        'Price': f"{currency_symbol}{hist['Close'].iloc[-1]:.2f}",
+                        'Change': f"{((hist['Close'].iloc[-1] - hist['Close'].iloc[0]) / hist['Close'].iloc[0]) * 100:.2f}%",
+                        'Volume': f"{info.get('averageVolume', 0):,}"
                     }
             
             if comparison_data:
@@ -684,23 +735,24 @@ elif selected == "Stock Analysis":
         # Basic screener options
         col1, col2 = st.columns(2)
         with col1:
-            min_market_cap = st.selectbox("Min Market Cap", ["Any", "> $1B", "> $10B", "> $100B"])
+            min_market_cap = st.selectbox("Min Market Cap", ["Any", "> ₹1Cr", "> ₹10Cr", "> ₹100Cr", "> ₹1000Cr"])
             min_price = st.number_input("Min Price", value=0.0)
         with col2:
-            sector = st.selectbox("Sector", ["Any", "Technology", "Healthcare", "Financial", "Energy"])
+            sector = st.selectbox("Sector", ["Any", "Technology", "Healthcare", "Financial", "Energy", "Banking", "IT"])
             max_pe = st.number_input("Max P/E Ratio", value=100.0)
         
         if st.button("Run Screen"):
             st.success(f"Found 25 stocks matching your criteria")
-            # Simulated results
+            # Simulated results with Indian stocks
             screened_stocks = pd.DataFrame({
-                'Symbol': ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META'],
-                'Price': [175.32, 328.79, 138.22, 145.18, 312.64],
+                'Symbol': ['RELIANCE.NS', 'TCS.NS', 'INFY.NS', 'HDFC.NS', 'ICICI.NS'],
+                'Price': [2750.32, 3287.79, 1382.22, 1451.18, 912.64],
                 'Change %': [2.3, 1.7, -0.8, 3.2, 0.5],
-                'Market Cap (B)': [2750, 2490, 1750, 1480, 890],
-                'P/E Ratio': [29.5, 32.1, 24.8, 58.3, 26.7]
+                'Market Cap (Cr)': [185000, 125000, 62500, 87500, 62500],
+                'P/E Ratio': [29.5, 32.1, 24.8, 18.3, 16.7]
             })
             st.dataframe(screened_stocks, use_container_width=True)
+
 
 # Technical Analysis Page
 elif selected == "Technical Analysis":
