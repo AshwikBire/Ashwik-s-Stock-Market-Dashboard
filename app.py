@@ -409,7 +409,7 @@ with st.sidebar:
     
     # Watchlist section in sidebar
     st.markdown("---")
-    st.subheader("📈 Watchlist")
+    st.subheader(" Watchlist")
     watchlist_symbol = st.text_input("Add symbol to watchlist", "AAPL", key="watchlist_input")
     col1, col2 = st.columns(2)
     with col1:
@@ -418,7 +418,7 @@ with st.sidebar:
                 st.session_state.watchlist.append(watchlist_symbol)
                 st.success(f"Added {watchlist_symbol} to watchlist")
     with col2:
-        if st.button("🗑️ Clear All", key="clear_watchlist"):
+        if st.button("Clear All", key="clear_watchlist"):
             st.session_state.watchlist = []
             st.success("Watchlist cleared")
     
@@ -437,13 +437,13 @@ with st.sidebar:
 
 # Dashboard Page
 if selected == "Dashboard":
-    st.title("📊 Market Dashboard")
+    st.title("Market Dashboard")
     
     # Load global indices with caching
     indices_data = fetch_global_indices()
     
     # Display key indices
-    st.subheader("🌍 Global Markets")
+    st.subheader("Global Markets")
     cols = st.columns(6)
     index_count = 0
     for symbol, data in list(indices_data.items())[:6]:
@@ -471,7 +471,7 @@ if selected == "Dashboard":
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("📈 Sector Performance")
+        st.subheader("Sector Performance")
         sectors = {
             "Technology": "+2.3%", "Healthcare": "+1.5%", "Financials": "-0.8%",
             "Energy": "+3.2%", "Consumer Cyclical": "+0.7%", "Real Estate": "-1.2%",
@@ -487,7 +487,7 @@ if selected == "Dashboard":
         st.plotly_chart(fig, use_container_width=True)
     
     with col2:
-        st.subheader("📊 Market Sentiment")
+        st.subheader("Market Sentiment")
         sentiment_data = {"Bullish": 45, "Neutral": 30, "Bearish": 25}
         fig = px.pie(values=list(sentiment_data.values()), names=list(sentiment_data.keys()),
                      title="Market Sentiment Distribution",
@@ -495,7 +495,7 @@ if selected == "Dashboard":
         st.plotly_chart(fig, use_container_width=True)
         
         # Market health indicators
-        st.subheader("❤️ Market Health")
+        st.subheader("Market Health")
         health_data = {
             "Volatility Index (VIX)": "18.5",
             "Advance/Decline Ratio": "1.2:1",
@@ -507,7 +507,7 @@ if selected == "Dashboard":
                        unsafe_allow_html=True)
     
     # Recent news with caching
-    st.subheader("📰 Market News")
+    st.subheader("Market News")
     news_articles = fetch_news()
     if news_articles:
         for article in news_articles[:3]:
@@ -518,24 +518,24 @@ if selected == "Dashboard":
         st.info("News feed temporarily unavailable.")
     
     # Quick actions
-    st.subheader("⚡ Quick Actions")
+    st.subheader("Quick Actions")
     action_cols = st.columns(4)
     with action_cols[0]:
         if st.button("🔍 Screen Stocks", key="screen_stocks"):
             st.session_state.selected = "Stock Analysis"
     with action_cols[1]:
-        if st.button("💼 Manage Portfolio", key="manage_portfolio"):
+        if st.button("Manage Portfolio", key="manage_portfolio"):
             st.session_state.selected = "Portfolio Manager"
     with action_cols[2]:
-        if st.button("📊 View Options", key="view_options"):
+        if st.button("View Options", key="view_options"):
             st.session_state.selected = "Options Chain"
     with action_cols[3]:
-        if st.button("📰 Check News", key="check_news"):
+        if st.button("Check News", key="check_news"):
             st.session_state.selected = "News & Sentiment"
 
 # Stock Analysis Page
 elif selected == "Stock Analysis":
-    st.title("📈 Stock Analysis")
+    st.title("Stock Analysis")
     
     tab1, tab2, tab3 = st.tabs(["Single Stock", "Compare Stocks", "Screener"])
     
@@ -704,7 +704,7 @@ elif selected == "Stock Analysis":
 
 # Technical Analysis Page
 elif selected == "Technical Analysis":
-    st.title("📊 Technical Analysis")
+    st.title("Technical Analysis")
     
     ticker = st.text_input("Enter Stock Symbol for Technical Analysis", "AAPL")
     if ticker:
@@ -821,7 +821,7 @@ elif selected == "Technical Analysis":
 
 # Portfolio Manager Page
 elif selected == "Portfolio Manager":
-    st.title("💼 Portfolio Manager")
+    st.title("Portfolio Manager")
     
     tab1, tab2, tab3 = st.tabs(["Current Portfolio", "Add Holding", "Performance Analysis"])
     
@@ -1051,7 +1051,7 @@ elif selected == "Options Chain":
 
 # Market Overview Page
 elif selected == "Market Overview":
-    st.title("🌍 Global Market Overview")
+    st.title("Global Market Overview")
     
     # Load global indices with caching
     indices_data = fetch_global_indices()
@@ -1186,7 +1186,7 @@ elif selected == "Economic Calendar":
     st.markdown("- <span style='color:green'>**Low**</span>: Minimal market impact expected", unsafe_allow_html=True)
     
     # Central bank watch
-    st.subheader("🏦 Central Bank Watch")
+    st.subheader("Central Bank Watch")
     rates_data = pd.DataFrame({
         'Central Bank': ['Federal Reserve', 'ECB', 'Bank of England', 'Bank of Japan', 'Reserve Bank of Australia'],
         'Current Rate': ['5.25%', '4.25%', '5.00%', '-0.10%', '4.35%'],
@@ -1264,7 +1264,7 @@ elif selected == "Crypto Markets":
     st.plotly_chart(fig, use_container_width=True)
     
     # Crypto news
-    st.subheader("📰 Crypto News")
+    st.subheader("Crypto News")
     crypto_news = fetch_news("cryptocurrency")
     if crypto_news:
         for article in crypto_news[:3]:
@@ -1276,7 +1276,7 @@ elif selected == "Crypto Markets":
 
 # News & Sentiment Page
 elif selected == "News & Sentiment":
-    st.title("📰 News & Market Sentiment")
+    st.title("News & Market Sentiment")
     
     news_query = st.text_input("Search Financial News", "stock market")
     if news_query:
@@ -1333,7 +1333,7 @@ elif selected == "News & Sentiment":
 
 # Learning Center Page
 elif selected == "Learning Center":
-    st.title("📚 Learning Center")
+    st.title("Learning Center")
     
     learning_tabs = st.tabs(["Beginner Guides", "Technical Analysis", "Options Trading", "Portfolio Management", "Video Resources"])
     
