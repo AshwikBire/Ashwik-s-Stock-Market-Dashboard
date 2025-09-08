@@ -17,16 +17,17 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Apply pure black theme with minimal CSS
+# Apply red and black theme with minimal CSS
 st.markdown("""
 <style>
     .main {background-color: #000000; color: #E0E0E0;}
     .stApp {background-color: #000000;}
     .stSidebar {background-color: #0D0D0D;}
     h1, h2, h3, h4, h5, h6 {color: #FFFFFF !important; border-bottom: 1px solid #1A1A1A; padding-bottom: 8px;}
-    .stButton>button {background-color: #1A1A1A; color: white; border: 1px solid #00BFFF; border-radius: 4px;}
-    .stTextInput>div>div>input, .stSelectbox>div>div>select {background-color: #1A1A1A; color: white; border: 1px solid #00BFFF;}
-    .stMetric {background-color: #0D0D0D; border-radius: 5px; padding: 10px; border-left: 3px solid #00BFFF;}
+    .stButton>button {background-color: #1A1A1A; color: white; border: 1px solid #FF0000; border-radius: 4px;}
+    .stButton>button:hover {background-color: #FF0000; color: white;}
+    .stTextInput>div>div>input, .stSelectbox>div>div>select {background-color: #1A1A1A; color: white; border: 1px solid #FF0000;}
+    .stMetric {background-color: #0D0D0D; border-radius: 5px; padding: 10px; border-left: 3px solid #FF0000;}
     .stDataFrame {background-color: #0D0D0D;}
     .streamlit-expanderHeader {background-color: #0D0D0D; border-radius: 4px; padding: 8px;}
     .stTabs {background-color: #000000;}
@@ -46,6 +47,242 @@ st.markdown("""
     .st-ay {background-color: #1A1A1A;}
     .st-az {background-color: #1A1A1A;}
     .st-b0 {background-color: #1A1A1A;}
+    .st-bx {background-color: #1A1A1A;}
+    .element-container {color: #FFFFFF;}
+    .st-bq {border-color: #FF0000;}
+    .st-eb {border-color: #FF0000;}
+    .st-dh {border-color: #FF0000;}
+    .st-df {border-color: #FF0000;}
+    .st-dc {border-color: #FF0000;}
+    .st-cz {border-color: #FF0000;}
+    .st-cx {border-color: #FF0000;}
+    .st-cv {border-color: #FF0000;}
+    .st-ct {border-color: #FF0000;}
+    .st-cr {border-color: #FF0000;}
+    .st-cp {border-color: #FF0000;}
+    .st-cn {border-color: #FF0000;}
+    .st-cl {border-color: #FF0000;}
+    .st-cj {border-color: #FF0000;}
+    .st-ch {border-color: #FF0000;}
+    .st-cf {border-color: #FF0000;}
+    .st-cd {border-color: #FF0000;}
+    .st-cb {border-color: #FF0000;}
+    .st-bz {border-color: #FF0000;}
+    .st-bx {border-color: #FF0000;}
+    .st-bv {border-color: #FF0000;}
+    .st-bt {border-color: #FF0000;}
+    .st-br {border-color: #FF0000;}
+    .st-bp {border-color: #FF0000;}
+    .st-bn {border-color: #FF0000;}
+    .st-bl {border-color: #FF0000;}
+    .st-bj {border-color: #FF0000;}
+    .st-bh {border-color: #FF0000;}
+    .st-bf {border-color: #FF0000;}
+    .st-bd {border-color: #FF0000;}
+    .st-bb {border-color: #FF0000;}
+    .st-b9 {border-color: #FF0000;}
+    .st-b7 {border-color: #FF0000;}
+    .st-b5 {border-color: #FF0000;}
+    .st-b3 {border-color: #FF0000;}
+    .st-b1 {border-color: #FF0000;}
+    .st-az {border-color: #FF0000;}
+    .st-ax {border-color: #FF0000;}
+    .st-av {border-color: #FF0000;}
+    .st-at {border-color: #FF0000;}
+    .st-ar {border-color: #FF0000;}
+    .st-ap {border-color: #FF0000;}
+    .st-an {border-color: #FF0000;}
+    .st-al {border-color: #FF0000;}
+    .st-aj {border-color: #FF0000;}
+    .st-ah {border-color: #FF0000;}
+    .st-af {border-color: #FF0000;}
+    .st-ad {border-color: #FF0000;}
+    .st-ab {border-color: #FF0000;}
+    .st-a9 {border-color: #FF0000;}
+    .st-a7 {border-color: #FF0000;}
+    .st-a5 {border-color: #FF0000;}
+    .st-a3 {border-color: #FF0000;}
+    .st-a1 {border-color: #FF0000;}
+    .st-9z {border-color: #FF0000;}
+    .st-9x {border-color: #FF0000;}
+    .st-9v {border-color: #FF0000;}
+    .st-9t {border-color: #FF0000;}
+    .st-9r {border-color: #FF0000;}
+    .st-9p {border-color: #FF0000;}
+    .st-9n {border-color: #FF0000;}
+    .st-9l {border-color: #FF0000;}
+    .st-9j {border-color: #FF0000;}
+    .st-9h {border-color: #FF0000;}
+    .st-9f {border-color: #FF0000;}
+    .st-9d {border-color: #FF0000;}
+    .st-9b {border-color: #FF0000;}
+    .st-99 {border-color: #FF0000;}
+    .st-97 {border-color: #FF0000;}
+    .st-95 {border-color: #FF0000;}
+    .st-93 {border-color: #FF0000;}
+    .st-91 {border-color: #FF0000;}
+    .st-8z {border-color: #FF0000;}
+    .st-8x {border-color: #FF0000;}
+    .st-8v {border-color: #FF0000;}
+    .st-8t {border-color: #FF0000;}
+    .st-8r {border-color: #FF0000;}
+    .st-8p {border-color: #FF0000;}
+    .st-8n {border-color: #FF0000;}
+    .st-8l {border-color: #FF0000;}
+    .st-8j {border-color: #FF0000;}
+    .st-8h {border-color: #FF0000;}
+    .st-8f {border-color: #FF0000;}
+    .st-8d {border-color: #FF0000;}
+    .st-8b {border-color: #FF0000;}
+    .st-89 {border-color: #FF0000;}
+    .st-87 {border-color: #FF0000;}
+    .st-85 {border-color: #FF0000;}
+    .st-83 {border-color: #FF0000;}
+    .st-81 {border-color: #FF0000;}
+    .st-7z {border-color: #FF0000;}
+    .st-7x {border-color: #FF0000;}
+    .st-7v {border-color: #FF0000;}
+    .st-7t {border-color: #FF0000;}
+    .st-7r {border-color: #FF0000;}
+    .st-7p {border-color: #FF0000;}
+    .st-7n {border-color: #FF0000;}
+    .st-7l {border-color: #FF0000;}
+    .st-7j {border-color: #FF0000;}
+    .st-7h {border-color: #FF0000;}
+    .st-7f {border-color: #FF0000;}
+    .st-7d {border-color: #FF0000;}
+    .st-7b {border-color: #FF0000;}
+    .st-79 {border-color: #FF0000;}
+    .st-77 {border-color: #FF0000;}
+    .st-75 {border-color: #FF0000;}
+    .st-73 {border-color: #FF0000;}
+    .st-71 {border-color: #FF0000;}
+    .st-6z {border-color: #FF0000;}
+    .st-6x {border-color: #FF0000;}
+    .st-6v {border-color: #FF0000;}
+    .st-6t {border-color: #FF0000;}
+    .st-6r {border-color: #FF0000;}
+    .st-6p {border-color: #FF0000;}
+    .st-6n {border-color: #FF0000;}
+    .st-6l {border-color: #FF0000;}
+    .st-6j {border-color: #FF0000;}
+    .st-6h {border-color: #FF0000;}
+    .st-6f {border-color: #FF0000;}
+    .st-6d {border-color: #FF0000;}
+    .st-6b {border-color: #FF0000;}
+    .st-69 {border-color: #FF0000;}
+    .st-67 {border-color: #FF0000;}
+    .st-65 {border-color: #FF0000;}
+    .st-63 {border-color: #FF0000;}
+    .st-61 {border-color: #FF0000;}
+    .st-5z {border-color: #FF0000;}
+    .st-5x {border-color: #FF0000;}
+    .st-5v {border-color: #FF0000;}
+    .st-5t {border-color: #FF0000;}
+    .st-5r {border-color: #FF0000;}
+    .st-5p {border-color: #FF0000;}
+    .st-5n {border-color: #FF0000;}
+    .st-5l {border-color: #FF0000;}
+    .st-5j {border-color: #FF0000;}
+    .st-5h {border-color: #FF0000;}
+    .st-5f {border-color: #FF0000;}
+    .st-5d {border-color: #FF0000;}
+    .st-5b {border-color: #FF0000;}
+    .st-59 {border-color: #FF0000;}
+    .st-57 {border-color: #FF0000;}
+    .st-55 {border-color: #FF0000;}
+    .st-53 {border-color: #FF0000;}
+    .st-51 {border-color: #FF0000;}
+    .st-4z {border-color: #FF0000;}
+    .st-4x {border-color: #FF0000;}
+    .st-4v {border-color: #FF0000;}
+    .st-4t {border-color: #FF0000;}
+    .st-4r {border-color: #FF0000;}
+    .st-4p {border-color: #FF0000;}
+    .st-4n {border-color: #FF0000;}
+    .st-4l {border-color: #FF0000;}
+    .st-4j {border-color: #FF0000;}
+    .st-4h {border-color: #FF0000;}
+    .st-4f {border-color: #FF0000;}
+    .st-4d {border-color: #FF0000;}
+    .st-4b {border-color: #FF0000;}
+    .st-49 {border-color: #FF0000;}
+    .st-47 {border-color: #FF0000;}
+    .st-45 {border-color: #FF0000;}
+    .st-43 {border-color: #FF0000;}
+    .st-41 {border-color: #FF0000;}
+    .st-3z {border-color: #FF0000;}
+    .st-3x {border-color: #FF0000;}
+    .st-3v {border-color: #FF0000;}
+    .st-3t {border-color: #FF0000;}
+    .st-3r {border-color: #FF0000;}
+    .st-3p {border-color: #FF0000;}
+    .st-3n {border-color: #FF0000;}
+    .st-3l {border-color: #FF0000;}
+    .st-3j {border-color: #FF0000;}
+    .st-3h {border-color: #FF0000;}
+    .st-3f {border-color: #FF0000;}
+    .st-3d {border-color: #FF0000;}
+    .st-3b {border-color: #FF0000;}
+    .st-39 {border-color: #FF0000;}
+    .st-37 {border-color: #FF0000;}
+    .st-35 {border-color: #FF0000;}
+    .st-33 {border-color: #FF0000;}
+    .st-31 {border-color: #FF0000;}
+    .st-2z {border-color: #FF0000;}
+    .st-2x {border-color: #FF0000;}
+    .st-2v {border-color: #FF0000;}
+    .st-2t {border-color: #FF0000;}
+    .st-2r {border-color: #FF0000;}
+    .st-2p {border-color: #FF0000;}
+    .st-2n {border-color: #FF0000;}
+    .st-2l {border-color: #FF0000;}
+    .st-2j {border-color: #FF0000;}
+    .st-2h {border-color: #FF0000;}
+    .st-2f {border-color: #FF0000;}
+    .st-2d {border-color: #FF0000;}
+    .st-2b {border-color: #FF0000;}
+    .st-29 {border-color: #FF0000;}
+    .st-27 {border-color: #FF0000;}
+    .st-25 {border-color: #FF0000;}
+    .st-23 {border-color: #FF0000;}
+    .st-21 {border-color: #FF0000;}
+    .st-1z {border-color: #FF0000;}
+    .st-1x {border-color: #FF0000;}
+    .st-1v {border-color: #FF0000;}
+    .st-1t {border-color: #FF0000;}
+    .st-1r {border-color: #FF0000;}
+    .st-1p {border-color: #FF0000;}
+    .st-1n {border-color: #FF0000;}
+    .st-1l {border-color: #FF0000;}
+    .st-1j {border-color: #FF0000;}
+    .st-1h {border-color: #FF0000;}
+    .st-1f {border-color: #FF0000;}
+    .st-1d {border-color: #FF0000;}
+    .st-1b {border-color: #FF0000;}
+    .st-19 {border-color: #FF0000;}
+    .st-17 {border-color: #FF0000;}
+    .st-15 {border-color: #FF0000;}
+    .st-13 {border-color: #FF0000;}
+    .st-11 {border-color: #FF0000;}
+    .st-0z {border-color: #FF0000;}
+    .st-0x {border-color: #FF0000;}
+    .st-0v {border-color: #FF0000;}
+    .st-0t {border-color: #FF0000;}
+    .st-0r {border-color: #FF0000;}
+    .st-0p {border-color: #FF0000;}
+    .st-0n {border-color: #FF0000;}
+    .st-0l {border-color: #FF0000;}
+    .st-0j {border-color: #FF0000;}
+    .st-0h {border-color: #FF0000;}
+    .st-0f {border-color: #FF0000;}
+    .st-0d {border-color: #FF0000;}
+    .st-0b {border-color: #FF0000;}
+    .st-09 {border-color: #FF0000;}
+    .st-07 {border-color: #FF0000;}
+    .st-05 {border-color: #FF0000;}
+    .st-03 {border-color: #FF0000;}
+    .st-01 {border-color: #FF0000;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -241,9 +478,9 @@ with st.sidebar:
         default_index=0,
         styles={
             "container": {"background-color": "#0D0D0D"},
-            "icon": {"color": "#00BFFF", "font-size": "16px"}, 
+            "icon": {"color": "#FF0000", "font-size": "16px"}, 
             "nav-link": {"color": "#E0E0E0", "font-size": "14px", "text-align": "left"},
-            "nav-link-selected": {"background-color": "#00BFFF"},
+            "nav-link-selected": {"background-color": "#FF0000"},
         }
     )
     
@@ -252,12 +489,12 @@ with st.sidebar:
     watchlist_symbol = st.text_input("Add symbol to watchlist", "AAPL")
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("Add") and watchlist_symbol:
+        if st.button("Add", key="add_watchlist") and watchlist_symbol:
             if watchlist_symbol not in st.session_state.watchlist:
                 st.session_state.watchlist.append(watchlist_symbol)
                 st.success(f"Added {watchlist_symbol} to watchlist")
     with col2:
-        if st.button("Clear All"):
+        if st.button("Clear All", key="clear_watchlist"):
             st.session_state.watchlist = []
             st.success("Watchlist cleared")
     
@@ -273,7 +510,7 @@ with st.sidebar:
 
 # Dashboard Page
 if selected == "Dashboard":
-    st.title(" Market Dashboard")
+    st.title("Market Dashboard")
     
     # Load global indices with caching
     indices_data = fetch_global_indices()
@@ -319,15 +556,15 @@ if selected == "Dashboard":
         })
         fig = px.bar(sector_df, x="Performance", y="Sector", orientation='h',
                      title="Sector Performance (%)", color="Performance",
-                     color_continuous_scale=px.colors.sequential.Blues_r)
+                     color_continuous_scale=px.colors.sequential.Reds_r)
         st.plotly_chart(fig, use_container_width=True)
     
     with col2:
-        st.subheader(" Market Sentiment")
+        st.subheader("Market Sentiment")
         sentiment_data = {"Bullish": 45, "Neutral": 30, "Bearish": 25}
         fig = px.pie(values=list(sentiment_data.values()), names=list(sentiment_data.keys()),
                      title="Market Sentiment Distribution",
-                     color_discrete_map={"Bullish": "#00CC96", "Neutral": "#FFA15A", "Bearish": "#EF553B"})
+                     color_discrete_map={"Bullish": "#FF0000", "Neutral": "#FFA15A", "Bearish": "#EF553B"})
         st.plotly_chart(fig, use_container_width=True)
         
         # Market health indicators
@@ -356,16 +593,16 @@ if selected == "Dashboard":
     st.subheader("Quick Actions")
     action_cols = st.columns(4)
     with action_cols[0]:
-        if st.button("Screen Stocks"):
+        if st.button("Screen Stocks", key="screen_stocks"):
             st.session_state.selected = "Stock Analysis"
     with action_cols[1]:
-        if st.button("Manage Portfolio"):
+        if st.button("Manage Portfolio", key="manage_portfolio"):
             st.session_state.selected = "Portfolio Manager"
     with action_cols[2]:
-        if st.button("View Options"):
+        if st.button("View Options", key="view_options"):
             st.session_state.selected = "Options Chain"
     with action_cols[3]:
-        if st.button("Check News"):
+        if st.button("Check News", key="check_news"):
             st.session_state.selected = "News & Sentiment"
 
 # Stock Analysis Page
@@ -525,7 +762,7 @@ elif selected == "Stock Analysis":
             sector = st.selectbox("Sector", ["Any", "Technology", "Healthcare", "Financial", "Energy"])
             max_pe = st.number_input("Max P/E Ratio", value=100.0)
         
-        if st.button("Run Screen"):
+        if st.button("Run Screen", key="run_screen"):
             st.success(f"Found 25 stocks matching your criteria")
             # Simulated results
             screened_stocks = pd.DataFrame({
@@ -539,7 +776,7 @@ elif selected == "Stock Analysis":
 
 # Technical Analysis Page
 elif selected == "Technical Analysis":
-    st.title("Technical Analysis")
+    st.title("📈 Technical Analysis")
     
     ticker = st.text_input("Enter Stock Symbol for Technical Analysis", "AAPL")
     if ticker:
@@ -553,7 +790,7 @@ elif selected == "Technical Analysis":
             
             if indicator == "Moving Averages":
                 fig = go.Figure()
-                fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name='Price', line=dict(color='#00BFFF')))
+                fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name='Price', line=dict(color='#FF0000')))
                 fig.add_trace(go.Scatter(x=hist.index, y=hist['SMA_20'], name='SMA 20', line=dict(color='#FFA15A')))
                 fig.add_trace(go.Scatter(x=hist.index, y=hist['SMA_50'], name='SMA 50', line=dict(color='#00CC96')))
                 fig.update_layout(title="Moving Averages")
@@ -568,7 +805,7 @@ elif selected == "Technical Analysis":
             
             elif indicator == "RSI":
                 fig = go.Figure()
-                fig.add_trace(go.Scatter(x=hist.index, y=hist['RSI'], name='RSI', line=dict(color='#00BFFF')))
+                fig.add_trace(go.Scatter(x=hist.index, y=hist['RSI'], name='RSI', line=dict(color='#FF0000')))
                 fig.add_hline(y=70, line_dash="dash", line_color="red", annotation_text="Overbought")
                 fig.add_hline(y=30, line_dash="dash", line_color="green", annotation_text="Oversold")
                 fig.update_layout(title="Relative Strength Index (RSI)")
@@ -583,7 +820,7 @@ elif selected == "Technical Analysis":
             
             elif indicator == "MACD":
                 fig = go.Figure()
-                fig.add_trace(go.Scatter(x=hist.index, y=hist['MACD'], name='MACD', line=dict(color='#00BFFF')))
+                fig.add_trace(go.Scatter(x=hist.index, y=hist['MACD'], name='MACD', line=dict(color='#FF0000')))
                 fig.add_trace(go.Scatter(x=hist.index, y=hist['MACD_Signal'], name='Signal', line=dict(color='#FFA15A')))
                 fig.add_trace(go.Bar(x=hist.index, y=hist['MACD_Hist'], name='Histogram', marker_color='#00CC96'))
                 fig.update_layout(title="MACD Indicator")
@@ -608,7 +845,7 @@ elif selected == "Technical Analysis":
                 fig.add_trace(go.Scatter(x=hist.index, y=hist['BB_Upper'], name='Upper Band', line=dict(color='#EF553B')))
                 fig.add_trace(go.Scatter(x=hist.index, y=hist['BB_Middle'], name='Middle Band', line=dict(color='#00CC96')))
                 fig.add_trace(go.Scatter(x=hist.index, y=hist['BB_Lower'], name='Lower Band', line=dict(color='#EF553B')))
-                fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name='Price', line=dict(color='#00BFFF')))
+                fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name='Price', line=dict(color='#FF0000')))
                 fig.update_layout(title="Bollinger Bands")
                 st.plotly_chart(fig, use_container_width=True)
                 
@@ -718,7 +955,7 @@ elif selected == "Portfolio Manager":
             purchase_price = st.number_input("Purchase Price", min_value=0.01, value=150.0)
             purchase_date = st.date_input("Purchase Date", value=datetime.now())
         
-        if st.button("Add to Portfolio"):
+        if st.button("Add to Portfolio", key="add_to_portfolio"):
             # Check if symbol already exists
             if symbol in st.session_state.portfolio['Symbol'].values:
                 st.warning(f"{symbol} already exists in portfolio. Updating quantity and average price.")
@@ -793,7 +1030,7 @@ elif selected == "Portfolio Manager":
 
 # Options Chain Page
 elif selected == "Options Chain":
-    st.title("Options Chain Analysis")
+    st.title("📊 Options Chain Analysis")
     
     st.subheader("Options Data (Simulated)")
     options_data = pd.DataFrame({
@@ -806,7 +1043,7 @@ elif selected == "Options Chain":
         'Put IV': [0.38, 0.35, 0.33, 0.31, 0.29, 0.27, 0.25]
     })
     
-    st.dataframe(options_data.style.background_gradient(cmap="Blues"), use_container_width=True)
+    st.dataframe(options_data.style.background_gradient(cmap="Reds"), use_container_width=True)
     
     fig = go.Figure()
     fig.add_trace(go.Bar(x=options_data['Strike'], y=options_data['Call OI'], name='Call OI'))
@@ -862,7 +1099,7 @@ elif selected == "Options Chain":
         st.write("- **Breakeven:** Multiple breakeven points based on strikes")
         st.write("- **Ideal for:** Low volatility environments")
     
-    if st.button("Analyze Strategy"):
+    if st.button("Analyze Strategy", key="analyze_strategy"):
         st.success(f"{strategy} strategy analyzed successfully!")
         
         # Simulated payoff diagram
@@ -927,7 +1164,7 @@ elif selected == "Market Overview":
             )
     
     # Market heatmap
-    st.subheader(" Market Heatmap")
+    st.subheader("Market Heatmap")
     
     # Simulated sector performance
     sectors = {
@@ -985,7 +1222,7 @@ elif selected == "Market Overview":
 
 # Economic Calendar Page
 elif selected == "Economic Calendar":
-    st.title("Economic Calendar")
+    st.title("📅 Economic Calendar")
     
     # Date selector
     col1, col2 = st.columns(2)
@@ -1021,7 +1258,7 @@ elif selected == "Economic Calendar":
     st.markdown("- <span style='color:green'>**Low**</span>: Minimal market impact expected", unsafe_allow_html=True)
     
     # Central bank watch
-    st.subheader("🏦 Central Bank Watch")
+    st.subheader("Central Bank Watch")
     rates_data = pd.DataFrame({
         'Central Bank': ['Federal Reserve', 'ECB', 'Bank of England', 'Bank of Japan', 'Reserve Bank of Australia'],
         'Current Rate': ['5.25%', '4.25%', '5.00%', '-0.10%', '4.35%'],
@@ -1088,7 +1325,7 @@ elif selected == "Crypto Markets":
     
     # Simulated crypto performance
     crypto_perf = pd.DataFrame({
-        'Crypto': ['Bitcoin', 'Ehereum', 'Binance Coin', 'Cardano', 'Solana'],
+        'Crypto': ['Bitcoin', 'Ethereum', 'Binance Coin', 'Cardano', 'Solana'],
         '7d Change': [2.1, 5.3, -1.2, 8.5, -3.2],
         '30d Change': [12.5, 18.2, 5.3, 25.8, -8.4],
         '90d Change': [35.2, 42.1, 18.5, 65.3, 12.7]
@@ -1099,7 +1336,7 @@ elif selected == "Crypto Markets":
     st.plotly_chart(fig, use_container_width=True)
     
     # Crypto news
-    st.subheader("📰 Crypto News")
+    st.subheader("Crypto News")
     crypto_news = fetch_news("cryptocurrency")
     if crypto_news:
         for article in crypto_news[:3]:
@@ -1168,7 +1405,7 @@ elif selected == "News & Sentiment":
 
 # Learning Center Page
 elif selected == "Learning Center":
-    st.title("Learning Center")
+    st.title("📚 Learning Center")
     
     learning_tabs = st.tabs(["Beginner Guides", "Technical Analysis", "Options Trading", "Portfolio Management", "Video Resources"])
     
@@ -1400,7 +1637,35 @@ elif selected == "Learning Center":
 
 # Company Info Page
 elif selected == "Company Info":
-    st.title("🏢 Company Information")
+    st.title("Company Information")
+    
+    ticker = st.text_input("Enter Company Symbol", "AAPL")
+    
+    if ticker:
+        hist, info = fetch_stock_data(ticker, "1y")
+        
+        if hist is not None and info is not None:
+            st.subheader(f"{info.get('longName', 'N/A')} ({ticker.upper()})")
+            
+            # Company overview
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.write(f"**Sector:** {info.get('sector', 'N/A')}")
+                st.write(f"**Industry:** {info.get('industry', 'N/A')}")
+                st.write(f"**Employees:** {info.get('fullTimeEmployees', 'N/A'):,}")
+            
+            with col2:
+                st.write(f"**CEO:** {info.get('ceo', 'N/A')}")
+                st.write(f"**Website:** {info.get('website', 'N/A')}")
+                st.write(f"**Country:** {info.get('country', 'N/A')}")
+                st.write(f"**IPO Year:** {info.get('ipoYear', 'N/A')}")
+            
+            with col3:
+                st.write(f"**Market Cap:** ${info.get('marketCap', 'N/A')
+				# Company Info Page
+elif selected == "Company Info":
+    st.title("Company Information")
     
     ticker = st.text_input("Enter Company Symbol", "AAPL")
     
@@ -1515,7 +1780,7 @@ elif selected == "Predictions":
         with col2:
             prediction_days = st.slider("Prediction Period (Days)", 7, 90, 30)
         
-        if st.button("Generate Prediction"):
+        if st.button("Generate Prediction", key="generate_prediction"):
             if ticker:
                 with st.spinner("Analyzing data and generating prediction..."):
                     prediction, trend, confidence = predict_stock_price(ticker, prediction_days)
@@ -1553,7 +1818,7 @@ elif selected == "Predictions":
                                     x=hist_long.index, 
                                     y=hist_long['Close'], 
                                     name='Historical Price',
-                                    line=dict(color='#00BFFF')
+                                    line=dict(color='#FF0000')
                                 ))
                                 fig.add_trace(go.Scatter(
                                     x=future_dates, 
@@ -1721,24 +1986,24 @@ elif selected == "Settings":
         notifications = st.checkbox("Enable Notifications", value=True)
         auto_refresh = st.checkbox("Auto Refresh Data", value=False)
     
-    if st.button("Save Preferences"):
+    if st.button("Save Preferences", key="save_preferences"):
         st.success("Preferences saved successfully!")
     
     st.subheader("Data Management")
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("Clear Cache"):
+        if st.button("Clear Cache", key="clear_cache"):
             st.session_state.cached_data = {}
             st.success("Cache cleared successfully!")
     
     with col2:
-        if st.button("Export Portfolio Data"):
+        if st.button("Export Portfolio Data", key="export_portfolio"):
             # In a real app, this would generate a CSV file for download
             st.success("Portfolio data exported successfully!")
     
     with col3:
-        if st.button("Reset to Default Settings"):
+        if st.button("Reset to Default Settings", key="reset_settings"):
             st.session_state.cached_data = {}
             st.session_state.watchlist = []
             st.session_state.portfolio = pd.DataFrame(columns=['Symbol', 'Quantity', 'Purchase Price', 'Purchase Date'])
@@ -1749,7 +2014,7 @@ elif selected == "Settings":
     st.write("**Email:** user@example.com")
     st.write("**Subscription:** Premium (expires Dec 31, 2023)")
     
-    if st.button("Upgrade Subscription"):
+    if st.button("Upgrade Subscription", key="upgrade_subscription"):
         st.info("Redirecting to subscription page...")
     
     st.subheader("About MarketMentor")
