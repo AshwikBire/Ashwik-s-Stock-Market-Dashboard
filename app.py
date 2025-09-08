@@ -1667,7 +1667,7 @@ elif selected == "Company Info":
 
 # Predictions Page
 elif selected == "Predictions":
-    st.title("🔮 Stock & Mutual Fund Predictions")
+    st.title("Stock & Mutual Fund Predictions")
     
     tab1, tab2 = st.tabs(["Stock Predictions", "Mutual Fund Analysis"])
     
@@ -1871,7 +1871,7 @@ elif selected == "Predictions":
 
 # Settings Page
 elif selected == "Settings":
-    st.title("⚙️ Settings")
+    st.title("Settings")
     
     st.subheader("App Preferences")
     col1, col2 = st.columns(2)
