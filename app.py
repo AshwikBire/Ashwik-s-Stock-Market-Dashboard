@@ -958,7 +958,7 @@ elif selected == "Portfolio Manager":
 
 # Options Chain Page
 elif selected == "Options Chain":
-    st.title("📊 Options Chain Analysis")
+    st.title("Options Chain Analysis")
     
     st.subheader("Options Data (Simulated)")
     options_data = pd.DataFrame({
@@ -1150,7 +1150,7 @@ elif selected == "Market Overview":
 
 # Economic Calendar Page
 elif selected == "Economic Calendar":
-    st.title("📅 Economic Calendar")
+    st.title("Economic Calendar")
     
     # Date selector
     col1, col2 = st.columns(2)
