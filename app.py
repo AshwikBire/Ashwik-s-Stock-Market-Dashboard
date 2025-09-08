@@ -23,19 +23,25 @@ st.markdown("""
     .main {background-color: #000000; color: #E0E0E0;}
     .stApp {background-color: #000000;}
     .stSidebar {background-color: #0D0D0D;}
-    h1, h2, h3, h4, h5, h6 {color: #FFFFFF !important; border-bottom: 1px solid #1A1A1A; padding-bottom: 8px;}
-    .stButton>button {background-color: #1A1A1A; color: white; border: 1px solid #FF0000; border-radius: 4px;}
-    .stTextInput>div>div>input, .stSelectbox>div>div>select {background-color: #1A1A1A; color: #FF0000; border: 1px solid #00BFFF;}
-    .stMetric {background-color: #0D0D0D; border-radius: 5px; padding: 10px; border-left: 3px solid #FF;}
+    h1, h2, h3, h4, h5, h6 {color: #FF4B4B !important; border-bottom: 1px solid #333333; padding-bottom: 8px;}
+    .stButton>button {background-color: #1A1A1A; color: #FF4B4B; border: 1px solid #FF4B4B; border-radius: 4px;}
+    .stButton>button:hover {background-color: #FF4B4B; color: #000000;}
+    .stTextInput>div>div>input, .stSelectbox>div>div>select {background-color: #1A1A1A; color: #FF4B4B; border: 1px solid #FF4B4B;}
+    .stMetric {background-color: #1A1A1A; border-radius: 5px; padding: 10px; border-left: 3px solid #FF4B4B;}
     .stDataFrame {background-color: #0D0D0D;}
-    .streamlit-expanderHeader {background-color: #0D0D0D; border-radius: 4px; padding: 8px;}
+    .streamlit-expanderHeader {background-color: #1A1A1A; color: #FF4B4B;}
     .stTabs {background-color: #000000;}
     div[data-baseweb="tab-list"] {background-color: #0D0D0D; gap: 2px;}
-    div[data-baseweb="tab"] {background-color: #1A1A1A; color: #FFFFFF; padding: 10px 20px; border-radius: 4px 4px 0 0 ;}
-    div[data-baseweb="tab"]:hover {background-color: #FF0000;}
-    div[data-baseweb="tab"][aria-selected="true"] {background-color: #FF0000;}
-    .stProgress > div > div > div {background-color: #FF0000;}
+    div[data-baseweb="tab"] {background-color: #1A1A1A; color: #FFFFFF; padding: 10px 20px; border-radius: 4px 4px 0 0;}
+    div[data-baseweb="tab"]:hover {background-color: #FF4B4B; color: #000000;}
+    div[data-baseweb="tab"][aria-selected="true"] {background-color: #FF4B4B; color: #000000;}
+    .stProgress > div > div > div {background-color: #FF4B4B;}
     .css-1d391kg {background-color: #0D0D0D;}
+    .stAlert {background-color: #1A1A1A; border-color: #FF4B4B;}
+    .st-bh, .st-bj, .st-ae, .st-bb, .st-at, .st-ax, .st-ay, .st-az, .st-b0 {background-color: #1A1A1A;}
+    .st-eb {background-color: #FF4B4B;}
+    .st-dh {color: #FF4B4B;}
+    blockquote {border-left: 4px solid #FF4B4B; padding-left: 1rem; color: #A0A0A0;}
     .stAlert {background-color: #0D0D0D;}
     .st-bh {background-color: #1A1A1A;}
     .st-bj {background-color: #1A1A1A;}
