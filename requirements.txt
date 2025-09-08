@@ -17,5 +17,5 @@ fredapi
 investpy
 mplfinance
 quantstats
-newsapi 
+NewsApiClient
 
