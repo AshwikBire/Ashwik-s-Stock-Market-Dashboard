@@ -1937,28 +1937,39 @@ with footer_col2:
     st.markdown("<div style='text-align: center;'><b>Disclaimer:</b><br>Not investment advice. Data may be delayed.</div>", unsafe_allow_html=True)
 with footer_col3:
     st.markdown("<div style='text-align: center;'>**© 2023 MarketMentor**<br>Version 2.1.0</div>", unsafe_allow_html=True)
-
 import streamlit as st
 
 # Your LinkedIn profile URL
 linkedin_url = "https://www.linkedin.com/in/ashwik-bire-b2a000186"
 
-# Footer content with icon and link
+# Footer HTML with improved style
 footer_html = f"""
-<div style="width:100%; text-align:center; padding:10px; background-color:#0D0D0D; border-top:1px solid #1A1A1A;">
-    <a href="{linkedin_url}" target="_blank" style="text-decoration:none;">
-        <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" width="30" style="vertical-align:middle; border-radius:50%; margin-right:8px;">
-        <span style="color:#0A66C2; font-size:16px; vertical-align:middle;">Connect on LinkedIn</span>
+<div style="
+    width: 100%; 
+    padding: 15px 0; 
+    background-color: #0D0D0D; 
+    border-top: 2px solid #FF0000; 
+    text-align: center; 
+    font-family: Arial, sans-serif;
+    display: flex; 
+    justify-content: center; 
+    align-items: center;">
+    <a href="{linkedin_url}" target="_blank" style="
+        text-decoration: none; 
+        display: flex; 
+        align-items: center;
+        transition: all 0.3s ease;">
+        <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" 
+             width="40" 
+             style="border-radius:50%; margin-right: 12px; transition: all 0.3s ease;">
+        <span style="color:#0A66C2; font-size: 18px; font-weight: 600;">Connect on LinkedIn</span>
     </a>
 </div>
 """
 
-# To display the footer
+# Display as footer
 st.markdown(footer_html, unsafe_allow_html=True)
 
-
-# Add custom JavaScript for performance
-st.markdown("""
 <script>
 // Performance optimization: Lazy load images
 document.addEventListener('DOMContentLoaded', function() {
