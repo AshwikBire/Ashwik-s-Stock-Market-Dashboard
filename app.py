@@ -24,14 +24,14 @@ st.markdown("""
     .stApp {background-color: #000000;}
     .stSidebar {background-color: #0D0D0D;}
     h1, h2, h3, h4, h5, h6 {color: #FFFFFF !important; border-bottom: 1px solid #1A1A1A; padding-bottom: 8px;}
-    .stButton>button {background-color: #1A1A1A; color: white; border: 1px solid #00BFFF; border-radius: 4px;}
-    .stTextInput>div>div>input, .stSelectbox>div>div>select {background-color: #1A1A1A; color: white; border: 1px solid #00BFFF;}
-    .stMetric {background-color: #0D0D0D; border-radius: 5px; padding: 10px; border-left: 3px solid #00BFFF;}
+    .stButton>button {background-color: #1A1A1A; color: white; border: 1px solid #FF0000; border-radius: 4px;}
+    .stTextInput>div>div>input, .stSelectbox>div>div>select {background-color: #1A1A1A; color: #FF0000; border: 1px solid #00BFFF;}
+    .stMetric {background-color: #0D0D0D; border-radius: 5px; padding: 10px; border-left: 3px solid #FF;}
     .stDataFrame {background-color: #0D0D0D;}
     .streamlit-expanderHeader {background-color: #0D0D0D; border-radius: 4px; padding: 8px;}
     .stTabs {background-color: #000000;}
     div[data-baseweb="tab-list"] {background-color: #0D0D0D; gap: 2px;}
-    div[data-baseweb="tab"] {background-color: #1A1A1A; color: white; padding: 10px 20px; border-radius: 4px 4px 0 0;}
+    div[data-baseweb="tab"] {background-color: #1A1A1A; color: #FFFFFF; padding: 10px 20px; border-radius: 4px 4px 0 0  border:1px solid #FF0000; }
     div[data-baseweb="tab"]:hover {background-color: #FF0000;}
     div[data-baseweb="tab"][aria-selected="true"] {background-color: #FF0000;}
     .stProgress > div > div > div {background-color: #FF0000;}
