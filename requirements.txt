@@ -21,4 +21,4 @@ streamlit
 newsapi-python
 pandas
 requests
-
+ta
