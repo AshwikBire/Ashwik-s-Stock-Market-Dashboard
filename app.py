@@ -31,7 +31,7 @@ st.markdown("""
     .streamlit-expanderHeader {background-color: #0D0D0D; border-radius: 4px; padding: 8px;}
     .stTabs {background-color: #000000;}
     div[data-baseweb="tab-list"] {background-color: #0D0D0D; gap: 2px;}
-    div[data-baseweb="tab"] {background-color: #1A1A1A; color: #FFFFFF; padding: 10px 20px; border-radius: 4px 4px 0 0  border:1px solid #FF0000; }
+    div[data-baseweb="tab"] {background-color: #1A1A1A; color: #FFFFFF; padding: 10px 20px; border-radius: 4px 4px 0 0 ;}
     div[data-baseweb="tab"]:hover {background-color: #FF0000;}
     div[data-baseweb="tab"][aria-selected="true"] {background-color: #FF0000;}
     .stProgress > div > div > div {background-color: #FF0000;}
