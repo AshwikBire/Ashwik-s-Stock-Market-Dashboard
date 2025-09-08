@@ -1950,3 +1950,16 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 """, unsafe_allow_html=True)
+import streamlit as st
+
+# Your LinkedIn profile URL
+linkedin_url = "https://www.linkedin.com/in/ashwik-bire-b2a000186"
+
+# One-line CSS with inline HTML for the footer
+st.markdown(f"""<div style="width:100%; background-color:#0D0D0D; border-top:2px solid #FF0000; padding:10px 0; text-align:center; font-family:sans-serif;">
+<a href="{linkedin_url}" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center;">
+<img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" width="30" style="border-radius:50%; margin-right:8px;">
+<span style="color:#0A66C2; font-size:16px; font-weight:600;">Connect on LinkedIn</span>
+</a>
+</div>""", unsafe_allow_html=True)
+
