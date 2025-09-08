@@ -1565,7 +1565,7 @@ elif selected == "Learning Center":
 
 # Company Info Page
 elif selected == "Company Info":
-    st.title("🏢 Company Information")
+    st.title("Company Information")
     
     ticker = st.text_input("Enter Company Symbol", "AAPL")
     
