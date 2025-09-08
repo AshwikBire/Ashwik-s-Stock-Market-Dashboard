@@ -207,6 +207,17 @@ st.markdown("""
         border: 1px solid #FFFF00;
     }
 </style>
+
+# Your LinkedIn profile URL
+linkedin_url = "https://www.linkedin.com/in/ashwik-bire-b2a000186"
+
+# Add LinkedIn icon and link
+st.markdown(f"""
+<a href="{linkedin_url}" target="_blank" style="text-decoration:none;">
+    <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" width="40" style="vertical-align:middle; border-radius:50%;">
+    <span style="color:#0A66C2; font-size:18px; margin-left:10px; vertical-align:middle;">Connect on LinkedIn</span>
+</a>
+
 """, unsafe_allow_html=True)
 
 # Initialize session state for caching and user data
