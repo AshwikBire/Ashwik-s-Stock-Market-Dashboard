@@ -216,6 +216,8 @@ if 'watchlist' not in st.session_state:
     st.session_state.watchlist = []
 if 'portfolio' not in st.session_state:
     st.session_state.portfolio = pd.DataFrame(columns=['Symbol', 'Quantity', 'Purchase Price', 'Purchase Date'])
+if 'selected' not in st.session_state:
+    st.session_state.selected = "Dashboard"
 
 # Optimized data fetching with caching
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -401,7 +403,7 @@ with st.sidebar:
         default_index=0,
         styles={
             "container": {"background-color": "#0A0A0A", "padding": "5px"},
-            "icon": {"color": #FF0000", "font-size": "16px"}, 
+            "icon": {"color": "#FF0000", "font-size": "16px"}, 
             "nav-link": {"color": "#FFFFFF", "font-size": "14px", "text-align": "left", "margin": "0px"},
             "nav-link-selected": {"background-color": "#FF0000", "color": "#000000", "font-weight": "bold"},
         }
@@ -523,15 +525,19 @@ if selected == "Dashboard":
     with action_cols[0]:
         if st.button("🔍 Screen Stocks", key="screen_stocks"):
             st.session_state.selected = "Stock Analysis"
+            st.rerun()
     with action_cols[1]:
         if st.button("Manage Portfolio", key="manage_portfolio"):
             st.session_state.selected = "Portfolio Manager"
+            st.rerun()
     with action_cols[2]:
         if st.button("View Options", key="view_options"):
             st.session_state.selected = "Options Chain"
+            st.rerun()
     with action_cols[3]:
         if st.button("Check News", key="check_news"):
             st.session_state.selected = "News & Sentiment"
+            st.rerun()
 
 # Stock Analysis Page
 elif selected == "Stock Analysis":
@@ -1174,7 +1180,7 @@ elif selected == "Market Overview":
     }
     
     econ_df = pd.DataFrame(econ_data)
-    st.dataframe(econ_df, use_container_width=True)
+    st.dataframe(eon_df, use_container_width=True)
     
     # Bond yields
     st.subheader("Bond Yields")
