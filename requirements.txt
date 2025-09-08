@@ -22,3 +22,4 @@ newsapi-python
 pandas
 requests
 ta
+pandas-ta
