@@ -17,35 +17,195 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Apply pure black theme with minimal CSS
+# Apply enhanced black and red theme
 st.markdown("""
 <style>
-    .main {background-color: #000000; color: #E0E0E0;}
-    .stApp {background-color: #000000;}
-    .stSidebar {background-color: #0D0D0D;}
-    h1, h2, h3, h4, h5, h6 {color: #FFFFFF !important; border-bottom: 1px solid #1A1A1A; padding-bottom: 8px;}
-    .stButton>button {background-color: #1A1A1A; color: white; border: 1px solid #FF0000; border-radius: 4px;}
-    .stTextInput>div>div>input, .stSelectbox>div>div>select {background-color: #1A1A1A; color: #FF0000; border: 1px solid #00BFFF;}
-    .stMetric {background-color: #0D0D0D; border-radius: 5px; padding: 10px; border-left: 3px solid #FF;}
-    .stDataFrame {background-color: #0D0D0D;}
-    .streamlit-expanderHeader {background-color: #0D0D0D; border-radius: 4px; padding: 8px;}
-    .stTabs {background-color: #000000;}
-    div[data-baseweb="tab-list"] {background-color: #0D0D0D; gap: 2px;}
-    div[data-baseweb="tab"] {background-color: #1A1A1A; color: #FFFFFF; padding: 10px 20px; border-radius: 4px 4px 0 0 ;}
-    div[data-baseweb="tab"]:hover {background-color: #FF0000;}
-    div[data-baseweb="tab"][aria-selected="true"] {background-color: #FF0000;}
-    .stProgress > div > div > div {background-color: #FF0000;}
-    .css-1d391kg {background-color: #0D0D0D;}
-    .stAlert {background-color: #0D0D0D;}
-    .st-bh {background-color: #1A1A1A;}
-    .st-bj {background-color: #1A1A1A;}
-    .st-ae {background-color: #1A1A1A;}
-    .st-bb {background-color: #1A1A1A;}
-    .st-at {background-color: #1A1A1A;}
-    .st-ax {background-color: #1A1A1A;}
-    .st-ay {background-color: #1A1A1A;}
-    .st-az {background-color: #1A1A1A;}
-    .st-b0 {background-color: #1A1A1A;}
+    /* Main background */
+    .main, .stApp {
+        background-color: #000000;
+        color: #FFFFFF;
+    }
+    
+    /* Sidebar */
+    .stSidebar {
+        background-color: #0A0A0A;
+        border-right: 1px solid #2A0A0A;
+    }
+    
+    /* Headers */
+    h1, h2, h3, h4, h5, h6 {
+        color: #FF0000 !important;
+        border-bottom: 1px solid #2A0A0A;
+        padding-bottom: 8px;
+        font-weight: 700;
+    }
+    
+    /* Buttons */
+    .stButton>button {
+        background-color: #1A0A0A;
+        color: #FF0000;
+        border: 1px solid #FF0000;
+        border-radius: 4px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .stButton>button:hover {
+        background-color: #FF0000;
+        color: #000000;
+        border: 1px solid #FF0000;
+    }
+    
+    /* Input fields */
+    .stTextInput>div>div>input, .stSelectbox>div>div>select {
+        background-color: #1A0A0A;
+        color: #FF0000;
+        border: 1px solid #2A0A0A;
+        border-radius: 4px;
+    }
+    
+    /* Metrics */
+    .stMetric {
+        background-color: #0A0A0A;
+        border-radius: 5px;
+        padding: 10px;
+        border-left: 3px solid #FF0000;
+        box-shadow: 0 2px 4px rgba(255, 0, 0, 0.1);
+    }
+    
+    /* Dataframes */
+    .stDataFrame {
+        background-color: #0A0A0A;
+        border: 1px solid #2A0A0A;
+    }
+    
+    /* Expanders */
+    .streamlit-expanderHeader {
+        background-color: #0A0A0A;
+        border-radius: 4px;
+        padding: 8px;
+        border: 1px solid #2A0A0A;
+        color: #FF0000;
+        font-weight: 600;
+    }
+    
+    /* Tabs */
+    .stTabs {
+        background-color: #000000;
+    }
+    
+    div[data-baseweb="tab-list"] {
+        background-color: #0A0A0A;
+        gap: 2px;
+        padding: 4px;
+        border-radius: 4px;
+    }
+    
+    div[data-baseweb="tab"] {
+        background-color: #1A0A0A;
+        color: #FFFFFF;
+        padding: 10px 20px;
+        border-radius: 4px;
+        border: 1px solid #2A0A0A;
+        transition: all 0.3s ease;
+    }
+    
+    div[data-baseweb="tab"]:hover {
+        background-color: #2A0A0A;
+        color: #FF0000;
+    }
+    
+    div[data-baseweb="tab"][aria-selected="true"] {
+        background-color: #FF0000;
+        color: #000000;
+        font-weight: 700;
+    }
+    
+    /* Progress bars */
+    .stProgress > div > div > div {
+        background-color: #FF0000;
+    }
+    
+    /* Alerts */
+    .stAlert {
+        background-color: #1A0A0A;
+        border: 1px solid #2A0A0A;
+        border-radius: 4px;
+    }
+    
+    /* Sidebar navigation */
+    .css-1d391kg {
+        background-color: #0A0A0A;
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #0A0A0A;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: #FF0000;
+        border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #CC0000;
+    }
+    
+    /* Custom selectbox dropdown */
+    .stSelectbox div[data-baseweb="select"] div {
+        background-color: #1A0A0A;
+        color: #FF0000;
+    }
+    
+    /* Custom number input */
+    .stNumberInput div[data-baseweb="input"] {
+        background-color: #1A0A0A;
+    }
+    
+    /* Custom date input */
+    .stDateInput div[data-baseweb="input"] {
+        background-color: #1A0A0A;
+    }
+    
+    /* Plotly chart customization */
+    .js-plotly-plot .plotly, .js-plotly-plot .plotly div {
+        background-color: #0A0A0A !important;
+    }
+    
+    /* Custom metric labels */
+    .stMetric label {
+        color: #FF0000 !important;
+        font-weight: 600;
+    }
+    
+    /* Custom success message */
+    .stSuccess {
+        background-color: #0A2A0A;
+        border: 1px solid #00FF00;
+    }
+    
+    /* Custom error message */
+    .stError {
+        background-color: #2A0A0A;
+        border: 1px solid #FF0000;
+    }
+    
+    /* Custom info message */
+    .stInfo {
+        background-color: #0A1A2A;
+        border: 1px solid #0080FF;
+    }
+    
+    /* Custom warning message */
+    .stWarning {
+        background-color: #2A2A0A;
+        border: 1px solid #FFFF00;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -227,7 +387,7 @@ def get_mutual_funds():
 
 # Sidebar navigation
 with st.sidebar:
-    st.title("MarketMentor Pro")
+    st.markdown("<h1 style='text-align: center; color: #FF0000;'>MarketMentor Pro</h1>", unsafe_allow_html=True)
     
     selected = option_menu(
         "Navigation",
@@ -240,46 +400,50 @@ with st.sidebar:
         menu_icon="cast",
         default_index=0,
         styles={
-            "container": {"background-color": "#0D0D0D"},
-            "icon": {"color": "#00BFFF", "font-size": "16px"}, 
-            "nav-link": {"color": "#E0E0E0", "font-size": "14px", "text-align": "left"},
-            "nav-link-selected": {"background-color": "#00BFFF"},
+            "container": {"background-color": "#0A0A0A", "padding": "5px"},
+            "icon": {"color": "#FF0000", "font-size": "16px"}, 
+            "nav-link": {"color": "#FFFFFF", "font-size": "14px", "text-align": "left", "margin": "0px"},
+            "nav-link-selected": {"background-color": "#FF0000", "color": "#000000", "font-weight": "bold"},
         }
     )
     
     # Watchlist section in sidebar
-    st.subheader("Watchlist")
-    watchlist_symbol = st.text_input("Add symbol to watchlist", "AAPL")
+    st.markdown("---")
+    st.subheader("📈 Watchlist")
+    watchlist_symbol = st.text_input("Add symbol to watchlist", "AAPL", key="watchlist_input")
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("Add") and watchlist_symbol:
+        if st.button("➕ Add", key="add_watchlist") and watchlist_symbol:
             if watchlist_symbol not in st.session_state.watchlist:
                 st.session_state.watchlist.append(watchlist_symbol)
                 st.success(f"Added {watchlist_symbol} to watchlist")
     with col2:
-        if st.button("Clear All"):
+        if st.button("🗑️ Clear All", key="clear_watchlist"):
             st.session_state.watchlist = []
             st.success("Watchlist cleared")
     
     if st.session_state.watchlist:
+        st.markdown("**Your Watchlist:**")
         for symbol in st.session_state.watchlist:
             try:
                 hist, _ = fetch_stock_data(symbol, "1d")
                 if hist is not None and not hist.empty:
                     price = hist['Close'].iloc[-1]
-                    st.write(f"{symbol}: ${price:.2f}")
+                    st.markdown(f"<div style='background-color: #1A0A0A; padding: 8px; border-radius: 4px; margin: 4px 0; border-left: 3px solid #FF0000;'>{symbol}: ${price:.2f}</div>", 
+                               unsafe_allow_html=True)
             except:
-                st.write(f"{symbol}: N/A")
+                st.markdown(f"<div style='background-color: #1A0A0A; padding: 8px; border-radius: 4px; margin: 4px 0; border-left: 3px solid #FF0000;'>{symbol}: N/A</div>", 
+                           unsafe_allow_html=True)
 
 # Dashboard Page
 if selected == "Dashboard":
-    st.title(" Market Dashboard")
+    st.title("📊 Market Dashboard")
     
     # Load global indices with caching
     indices_data = fetch_global_indices()
     
     # Display key indices
-    st.subheader("Global Markets")
+    st.subheader("🌍 Global Markets")
     cols = st.columns(6)
     index_count = 0
     for symbol, data in list(indices_data.items())[:6]:
@@ -307,7 +471,7 @@ if selected == "Dashboard":
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("Sector Performance")
+        st.subheader("📈 Sector Performance")
         sectors = {
             "Technology": "+2.3%", "Healthcare": "+1.5%", "Financials": "-0.8%",
             "Energy": "+3.2%", "Consumer Cyclical": "+0.7%", "Real Estate": "-1.2%",
@@ -319,19 +483,19 @@ if selected == "Dashboard":
         })
         fig = px.bar(sector_df, x="Performance", y="Sector", orientation='h',
                      title="Sector Performance (%)", color="Performance",
-                     color_continuous_scale=px.colors.sequential.Blues_r)
+                     color_continuous_scale=px.colors.sequential.Reds)
         st.plotly_chart(fig, use_container_width=True)
     
     with col2:
-        st.subheader(" Market Sentiment")
+        st.subheader("📊 Market Sentiment")
         sentiment_data = {"Bullish": 45, "Neutral": 30, "Bearish": 25}
         fig = px.pie(values=list(sentiment_data.values()), names=list(sentiment_data.keys()),
                      title="Market Sentiment Distribution",
-                     color_discrete_map={"Bullish": "#00CC96", "Neutral": "#FFA15A", "Bearish": "#EF553B"})
+                     color_discrete_map={"Bullish": "#FF0000", "Neutral": "#AAAAAA", "Bearish": "#0000FF"})
         st.plotly_chart(fig, use_container_width=True)
         
         # Market health indicators
-        st.subheader("Market Health")
+        st.subheader("❤️ Market Health")
         health_data = {
             "Volatility Index (VIX)": "18.5",
             "Advance/Decline Ratio": "1.2:1",
@@ -339,10 +503,11 @@ if selected == "Dashboard":
             "Put/Call Ratio": "0.85"
         }
         for indicator, value in health_data.items():
-            st.write(f"**{indicator}:** {value}")
+            st.markdown(f"<div style='background-color: #1A0A0A; padding: 8px; border-radius: 4px; margin: 4px 0; border-left: 3px solid #FF0000;'><b>{indicator}:</b> {value}</div>", 
+                       unsafe_allow_html=True)
     
     # Recent news with caching
-    st.subheader("Market News")
+    st.subheader("📰 Market News")
     news_articles = fetch_news()
     if news_articles:
         for article in news_articles[:3]:
@@ -353,24 +518,24 @@ if selected == "Dashboard":
         st.info("News feed temporarily unavailable.")
     
     # Quick actions
-    st.subheader("Quick Actions")
+    st.subheader("⚡ Quick Actions")
     action_cols = st.columns(4)
     with action_cols[0]:
-        if st.button("Screen Stocks"):
+        if st.button("🔍 Screen Stocks", key="screen_stocks"):
             st.session_state.selected = "Stock Analysis"
     with action_cols[1]:
-        if st.button("Manage Portfolio"):
+        if st.button("💼 Manage Portfolio", key="manage_portfolio"):
             st.session_state.selected = "Portfolio Manager"
     with action_cols[2]:
-        if st.button("View Options"):
+        if st.button("📊 View Options", key="view_options"):
             st.session_state.selected = "Options Chain"
     with action_cols[3]:
-        if st.button("Check News"):
+        if st.button("📰 Check News", key="check_news"):
             st.session_state.selected = "News & Sentiment"
 
 # Stock Analysis Page
 elif selected == "Stock Analysis":
-    st.title("Stock Analysis")
+    st.title("📈 Stock Analysis")
     
     tab1, tab2, tab3 = st.tabs(["Single Stock", "Compare Stocks", "Screener"])
     
@@ -539,7 +704,7 @@ elif selected == "Stock Analysis":
 
 # Technical Analysis Page
 elif selected == "Technical Analysis":
-    st.title("Technical Analysis")
+    st.title("📊 Technical Analysis")
     
     ticker = st.text_input("Enter Stock Symbol for Technical Analysis", "AAPL")
     if ticker:
@@ -553,7 +718,7 @@ elif selected == "Technical Analysis":
             
             if indicator == "Moving Averages":
                 fig = go.Figure()
-                fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name='Price', line=dict(color='#00BFFF')))
+                fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name='Price', line=dict(color='#FF0000')))
                 fig.add_trace(go.Scatter(x=hist.index, y=hist['SMA_20'], name='SMA 20', line=dict(color='#FFA15A')))
                 fig.add_trace(go.Scatter(x=hist.index, y=hist['SMA_50'], name='SMA 50', line=dict(color='#00CC96')))
                 fig.update_layout(title="Moving Averages")
@@ -568,7 +733,7 @@ elif selected == "Technical Analysis":
             
             elif indicator == "RSI":
                 fig = go.Figure()
-                fig.add_trace(go.Scatter(x=hist.index, y=hist['RSI'], name='RSI', line=dict(color='#00BFFF')))
+                fig.add_trace(go.Scatter(x=hist.index, y=hist['RSI'], name='RSI', line=dict(color='#FF0000')))
                 fig.add_hline(y=70, line_dash="dash", line_color="red", annotation_text="Overbought")
                 fig.add_hline(y=30, line_dash="dash", line_color="green", annotation_text="Oversold")
                 fig.update_layout(title="Relative Strength Index (RSI)")
@@ -583,7 +748,7 @@ elif selected == "Technical Analysis":
             
             elif indicator == "MACD":
                 fig = go.Figure()
-                fig.add_trace(go.Scatter(x=hist.index, y=hist['MACD'], name='MACD', line=dict(color='#00BFFF')))
+                fig.add_trace(go.Scatter(x=hist.index, y=hist['MACD'], name='MACD', line=dict(color='#FF0000')))
                 fig.add_trace(go.Scatter(x=hist.index, y=hist['MACD_Signal'], name='Signal', line=dict(color='#FFA15A')))
                 fig.add_trace(go.Bar(x=hist.index, y=hist['MACD_Hist'], name='Histogram', marker_color='#00CC96'))
                 fig.update_layout(title="MACD Indicator")
@@ -608,7 +773,7 @@ elif selected == "Technical Analysis":
                 fig.add_trace(go.Scatter(x=hist.index, y=hist['BB_Upper'], name='Upper Band', line=dict(color='#EF553B')))
                 fig.add_trace(go.Scatter(x=hist.index, y=hist['BB_Middle'], name='Middle Band', line=dict(color='#00CC96')))
                 fig.add_trace(go.Scatter(x=hist.index, y=hist['BB_Lower'], name='Lower Band', line=dict(color='#EF553B')))
-                fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name='Price', line=dict(color='#00BFFF')))
+                fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name='Price', line=dict(color='#FF0000')))
                 fig.update_layout(title="Bollinger Bands")
                 st.plotly_chart(fig, use_container_width=True)
                 
@@ -656,7 +821,7 @@ elif selected == "Technical Analysis":
 
 # Portfolio Manager Page
 elif selected == "Portfolio Manager":
-    st.title("Portfolio Manager")
+    st.title("💼 Portfolio Manager")
     
     tab1, tab2, tab3 = st.tabs(["Current Portfolio", "Add Holding", "Performance Analysis"])
     
@@ -793,7 +958,7 @@ elif selected == "Portfolio Manager":
 
 # Options Chain Page
 elif selected == "Options Chain":
-    st.title("Options Chain Analysis")
+    st.title("📊 Options Chain Analysis")
     
     st.subheader("Options Data (Simulated)")
     options_data = pd.DataFrame({
@@ -806,7 +971,7 @@ elif selected == "Options Chain":
         'Put IV': [0.38, 0.35, 0.33, 0.31, 0.29, 0.27, 0.25]
     })
     
-    st.dataframe(options_data.style.background_gradient(cmap="Blues"), use_container_width=True)
+    st.dataframe(options_data.style.background_gradient(cmap="Reds"), use_container_width=True)
     
     fig = go.Figure()
     fig.add_trace(go.Bar(x=options_data['Strike'], y=options_data['Call OI'], name='Call OI'))
@@ -886,7 +1051,7 @@ elif selected == "Options Chain":
 
 # Market Overview Page
 elif selected == "Market Overview":
-    st.title("Global Market Overview")
+    st.title("🌍 Global Market Overview")
     
     # Load global indices with caching
     indices_data = fetch_global_indices()
@@ -985,7 +1150,7 @@ elif selected == "Market Overview":
 
 # Economic Calendar Page
 elif selected == "Economic Calendar":
-    st.title("Economic Calendar")
+    st.title("📅 Economic Calendar")
     
     # Date selector
     col1, col2 = st.columns(2)
@@ -1111,7 +1276,7 @@ elif selected == "Crypto Markets":
 
 # News & Sentiment Page
 elif selected == "News & Sentiment":
-    st.title("News & Market Sentiment")
+    st.title("📰 News & Market Sentiment")
     
     news_query = st.text_input("Search Financial News", "stock market")
     if news_query:
@@ -1168,7 +1333,7 @@ elif selected == "News & Sentiment":
 
 # Learning Center Page
 elif selected == "Learning Center":
-    st.title("Learning Center")
+    st.title("📚 Learning Center")
     
     learning_tabs = st.tabs(["Beginner Guides", "Technical Analysis", "Options Trading", "Portfolio Management", "Video Resources"])
     
@@ -1502,7 +1667,7 @@ elif selected == "Company Info":
 
 # Predictions Page
 elif selected == "Predictions":
-    st.title("Stock & Mutual Fund Predictions")
+    st.title("🔮 Stock & Mutual Fund Predictions")
     
     tab1, tab2 = st.tabs(["Stock Predictions", "Mutual Fund Analysis"])
     
@@ -1553,7 +1718,7 @@ elif selected == "Predictions":
                                     x=hist_long.index, 
                                     y=hist_long['Close'], 
                                     name='Historical Price',
-                                    line=dict(color='#00BFFF')
+                                    line=dict(color='#FF0000')
                                 ))
                                 fig.add_trace(go.Scatter(
                                     x=future_dates, 
@@ -1767,14 +1932,11 @@ elif selected == "Settings":
 st.write("---")
 footer_col1, footer_col2, footer_col3 = st.columns(3)
 with footer_col1:
-    st.write("**MarketMentor Pro**")
-    st.write("Advanced Financial Analytics Platform")
+    st.markdown("<div style='text-align: center; color: #FF0000;'><b>MarketMentor Pro</b><br>Advanced Financial Analytics Platform</div>", unsafe_allow_html=True)
 with footer_col2:
-    st.write("**Disclaimer:**")
-    st.write("Not investment advice. Data may be delayed.")
+    st.markdown("<div style='text-align: center;'><b>Disclaimer:</b><br>Not investment advice. Data may be delayed.</div>", unsafe_allow_html=True)
 with footer_col3:
-    st.write("**© 2023 MarketMentor**")
-    st.write("Version 2.1.0")
+    st.markdown("<div style='text-align: center;'>**© 2023 MarketMentor**<br>Version 2.1.0</div>", unsafe_allow_html=True)
 
 # Add custom JavaScript for performance
 st.markdown("""
