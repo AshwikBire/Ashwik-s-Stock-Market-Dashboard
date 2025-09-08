@@ -715,7 +715,7 @@ elif selected == "Stock Analysis":
     else:
         st.error("Could not fetch data for the specified symbol. Please check the symbol and try again.")                
                 # Company info
-                if analysis_type == "Overview":
+            if analysis_type == "Overview":
                     st.subheader("Company Information")
                     col1, col2 = st.columns(2)
                     
