@@ -1938,6 +1938,25 @@ with footer_col2:
 with footer_col3:
     st.markdown("<div style='text-align: center;'>**© 2023 MarketMentor**<br>Version 2.1.0</div>", unsafe_allow_html=True)
 
+import streamlit as st
+
+# Your LinkedIn profile URL
+linkedin_url = "https://www.linkedin.com/in/ashwik-bire-b2a000186"
+
+# Footer content with icon and link
+footer_html = f"""
+<div style="width:100%; text-align:center; padding:10px; background-color:#0D0D0D; border-top:1px solid #1A1A1A;">
+    <a href="{linkedin_url}" target="_blank" style="text-decoration:none;">
+        <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" width="30" style="vertical-align:middle; border-radius:50%; margin-right:8px;">
+        <span style="color:#0A66C2; font-size:16px; vertical-align:middle;">Connect on LinkedIn</span>
+    </a>
+</div>
+"""
+
+# To display the footer
+st.markdown(footer_html, unsafe_allow_html=True)
+
+
 # Add custom JavaScript for performance
 st.markdown("""
 <script>
