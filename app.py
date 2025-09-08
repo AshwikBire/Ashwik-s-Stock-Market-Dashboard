@@ -401,7 +401,7 @@ with st.sidebar:
         default_index=0,
         styles={
             "container": {"background-color": "#0A0A0A", "padding": "5px"},
-            "icon": {"color": "#FF0000", "font-size": "16px"}, 
+            "icon": {"color": #FF0000", "font-size": "16px"}, 
             "nav-link": {"color": "#FFFFFF", "font-size": "14px", "text-align": "left", "margin": "0px"},
             "nav-link-selected": {"background-color": "#FF0000", "color": "#000000", "font-weight": "bold"},
         }
@@ -532,8 +532,9 @@ if selected == "Dashboard":
     with action_cols[3]:
         if st.button("Check News", key="check_news"):
             st.session_state.selected = "News & Sentiment"
-            
-            elif selected == "Stock Analysis":
+
+# Stock Analysis Page
+elif selected == "Stock Analysis":
     st.title("Stock Analysis")
     
     tab1, tab2, tab3 = st.tabs(["Single Stock", "Compare Stocks", "Screener"])
@@ -752,7 +753,6 @@ if selected == "Dashboard":
                 'P/E Ratio': [29.5, 32.1, 24.8, 18.3, 16.7]
             })
             st.dataframe(screened_stocks, use_container_width=True)
-
 
 # Technical Analysis Page
 elif selected == "Technical Analysis":
@@ -1305,7 +1305,7 @@ elif selected == "Crypto Markets":
     
     # Simulated crypto performance
     crypto_perf = pd.DataFrame({
-        'Crypto': ['Bitcoin', 'Ehereum', 'Binance Coin', 'Cardano', 'Solana'],
+        'Crypto': ['Bitcoin', 'Ethereum', 'Binance Coin', 'Cardano', 'Solana'],
         '7d Change': [2.1, 5.3, -1.2, 8.5, -3.2],
         '30d Change': [12.5, 18.2, 5.3, 25.8, -8.4],
         '90d Change': [35.2, 42.1, 18.5, 65.3, 12.7]
@@ -1990,6 +1990,15 @@ with footer_col2:
 with footer_col3:
     st.markdown("<div style='text-align: center;'>**© 2023 MarketMentor**<br>Version 2.1.0</div>", unsafe_allow_html=True)
 
+# Add LinkedIn footer
+linkedin_url = "https://www.linkedin.com/in/ashwik-bire-b2a000186"
+st.markdown(f"""<div style="width:100%; background-color:#0D0D0D; border-top:2px solid #FF0000; padding:10px 0; text-align:center; font-family:sans-serif;">
+<a href="{linkedin_url}" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center;">
+<img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" width="30" style="border-radius:50%; margin-right:8px;">
+<span style="color:#0A66C2; font-size:16px; font-weight:600;">Connect on LinkedIn</span>
+</a>
+</div>""", unsafe_allow_html=True)
+
 # Add custom JavaScript for performance
 st.markdown("""
 <script>
@@ -2002,16 +2011,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 """, unsafe_allow_html=True)
-import streamlit as st
-
-# Your LinkedIn profile URL
-linkedin_url = "https://www.linkedin.com/in/ashwik-bire-b2a000186"
-
-# One-line CSS with inline HTML for the footer
-st.markdown(f"""<div style="width:100%; background-color:#0D0D0D; border-top:2px solid #FF0000; padding:10px 0; text-align:center; font-family:sans-serif;">
-<a href="{linkedin_url}" target="_blank" style="text-decoration:none; display:inline-flex; align-items:center;">
-<img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" width="30" style="border-radius:50%; margin-right:8px;">
-<span style="color:#0A66C2; font-size:16px; font-weight:600;">Connect on LinkedIn</span>
-</a>
-</div>""", unsafe_allow_html=True)
-
