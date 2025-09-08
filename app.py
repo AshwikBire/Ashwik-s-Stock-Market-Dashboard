@@ -869,8 +869,8 @@ with st.sidebar:
             "icon": {"color": #FF0000", "font-size": "18px"},
             "nav-link": {"font-size": "16px", "text-align": "left", "margin": "0px", "color": "#FFFFFF"},
             "nav-link-selected": {"background-color": "#FF0000", "color": "#000000", "font-weight": "bold"},
-        }
-    )
+        })
+     
     
     # Watchlist section in sidebar
     st.subheader("My Watchlist")
