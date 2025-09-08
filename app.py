@@ -207,17 +207,6 @@ st.markdown("""
         border: 1px solid #FFFF00;
     }
 </style>
-
-# Your LinkedIn profile URL
-linkedin_url = "https://www.linkedin.com/in/ashwik-bire-b2a000186"
-
-# Add LinkedIn icon and link
-st.markdown(f"""
-<a href="{linkedin_url}" target="_blank" style="text-decoration:none;">
-    <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" width="40" style="vertical-align:middle; border-radius:50%;">
-    <span style="color:#0A66C2; font-size:18px; margin-left:10px; vertical-align:middle;">Connect on LinkedIn</span>
-</a>
-
 """, unsafe_allow_html=True)
 
 # Initialize session state for caching and user data
@@ -1920,7 +1909,10 @@ elif selected == "Settings":
             st.session_state.portfolio = pd.DataFrame(columns=['Symbol', 'Quantity', 'Purchase Price', 'Purchase Date'])
             st.success("Settings reset to defaults!")
     
-    
+    st.subheader("Account Information")
+    st.write("**Username:** trader123")
+    st.write("**Email:** user@example.com")
+    st.write("**Subscription:** Premium (expires Dec 31, 2023)")
     
     if st.button("Upgrade Subscription"):
         st.info("Redirecting to subscription page...")
