@@ -532,535 +532,189 @@ if selected == "Dashboard":
     with action_cols[3]:
         if st.button("Check News", key="check_news"):
             st.session_state.selected = "News & Sentiment"# Stock Analysis Page
-elif selected == "Stock Analysis":
-    st.title("📊 Stock Analysis")
-    
-    # Symbol input with exchange selection
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        symbol = st.text_input("Enter stock symbol:", 
-                              value=getattr(st.session_state, 'analyze_symbol', 'RELIANCE.NS'),
-                              placeholder="e.g., RELIANCE.NS, TCS.NS, INFY.NS")
-    with col2:
-        exchange = st.selectbox("Exchange", ["NSE", "BSE", "NASDAQ", "NYSE"], index=0)
-    
-    # Add appropriate exchange suffix if missing
-    if symbol and '.' not in symbol:
-        if exchange == "NSE":
-            symbol += ".NS"
-        elif exchange == "BSE":
-            symbol += ".BO"
-    
-    # Period selection
-    period = st.selectbox("Select period:", ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "ytd", "max"], index=2)
-    
-    # Fetch data
-    hist, info = fetch_stock_data(symbol, period)
-    
-    if hist is not None and not hist.empty and info is not None:
-        # Display stock info
-        st.subheader(f"{info.get('longName', symbol)} ({symbol})")
-        
-        # Get currency from info or default to USD
-        currency = info.get('currency', 'USD')
-        
-        # Calculate financial metrics
-        current_price = hist['Close'].iloc[-1]
-        prev_close = info.get('previousClose', current_price)
-        change = current_price - prev_close
-        change_percent = (change / prev_close) * 100
-        
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            st.metric("Current Price", format_currency(current_price, currency), 
-                     f"{format_currency(change, currency)} ({change_percent:.2f}%)")
-        with col2:
-            market_cap = info.get('marketCap', 0)
-            st.metric("Market Cap", format_currency(market_cap, currency))
-        with col3:
-            pe_ratio = info.get('trailingPE', 'N/A')
-            st.metric("PE Ratio", f"{pe_ratio:.2f}" if isinstance(pe_ratio, (int, float)) else pe_ratio)
-        with col4:
-            volume = hist['Volume'].iloc[-1]
-            st.metric("Volume", f"{volume:,.0f}")
-        
-        # Additional metrics
-        col5, col6, col7, col8 = st.columns(4)
-        with col5:
-            day_high = hist['High'].iloc[-1]
-            st.metric("Day High", format_currency(day_high, currency))
-        with col6:
-            day_low = hist['Low'].iloc[-1]
-            st.metric("Day Low", format_currency(day_low, currency))
-        with col7:
-            fifty_two_week_high = info.get('fiftyTwoWeekHigh', hist['High'].max())
-            st.metric("52W High", format_currency(fifty_two_week_high, currency))
-        with col8:
-            fifty_two_week_low = info.get('fiftyTwoWeekLow', hist['Low'].min())
-            st.metric("52W Low", format_currency(fifty_two_week_low, currency))
-        
-        # Price chart
-        st.subheader("Price Chart")
-        chart_type = st.radio("Chart Type", ["Line", "Candlestick", "OHLC"], horizontal=True)
-        
-        fig = go.Figure()
-        
-        if chart_type == "Line":
-            fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name='Close', line=dict(color='white')))
-        elif chart_type == "Candlestick":
-            fig.add_trace(go.Candlestick(
-                x=hist.index,
-                open=hist['Open'],
-                high=hist['High'],
-                low=hist['Low'],
-                close=hist['Close'],
-                name='Price'
-            ))
-        else:  # OHLC
-            fig.add_trace(go.Ohlc(
-                x=hist.index,
-                open=hist['Open'],
-                high=hist['High'],
-                low=hist['Low'],
-                close=hist['Close'],
-                name='OHLC'
-            ))
-        
-        fig.update_layout(
-            title=f"{symbol} Price History",
-            xaxis_title="Date",
-            yaxis_title=f"Price ({currency})",
-            template="plotly_dark",
-            height=500
-        )
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Volume chart
-        st.subheader("Volume")
-        fig_volume = go.Figure()
-        fig_volume.add_trace(go.Bar(x=hist.index, y=hist['Volume'], name='Volume', marker_color='red'))
-        fig_volume.update_layout(
-            title="Trading Volume",
-            xaxis_title="Date",
-            yaxis_title="Volume",
-            template="plotly_dark",
-            height=300
-        )
-        st.plotly_chart(fig_volume, use_container_width=True)
-        
-        # Display company info if available
-        if 'longName' in info:
-            st.subheader("Company Information")
-            col9, col10 = st.columns(2)
-            with col9:
-                st.write(f"**Name:** {info.get('longName', 'N/A')}")
-                st.write(f"**Sector:** {info.get('sector', 'N/A')}")
-                st.write(f"**Industry:** {info.get('industry', 'N/A')}")
-                st.write(f"**Country:** {info.get('country', 'N/A')}")
-            with col10:
-                st.write(f"**Website:** {info.get('website', 'N/A')}")
-                st.write(f"**Employees:** {info.get('fullTimeEmployees', 'N/A')}")
-                st.write(f"**CEO:** {info.get('ceo', 'N/A')}")
             
-            if 'longBusinessSummary' in info:
-                with st.expander("Business Summary"):
-                    st.write(info.get('longBusinessSummary', 'No summary available.'))
-        
-        # Financial ratios
-        st.subheader("Financial Ratios")
-        ratios_col1, ratios_col2, ratios_col3 = st.columns(3)
-        
-        with ratios_col1:
-            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-            st.write("**Valuation Ratios**")
-            st.write(f"P/E Ratio: {info.get('trailingPE', 'N/A')}")
-            st.write(f"Forward P/E: {info.get('forwardPE', 'N/A')}")
-            st.write(f"PEG Ratio: {info.get('pegRatio', 'N/A')}")
-            st.write(f"Price to Book: {info.get('priceToBook', 'N/A')}")
-            st.markdown("</div>", unsafe_allow_html=True)
-        
-        with ratios_col2:
-            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-            st.write("**Profitability Ratios**")
-            profit_margins = info.get('profitMargins', 'N/A')
-            if isinstance(profit_margins, (int, float)):
-                profit_margins = f"{profit_margins * 100:.2f}%"
-            st.write(f"Profit Margin: {profit_margins}")
-            st.write(f"EPS: {info.get('trailingEps', 'N/A')}")
-            st.write(f"ROE: {info.get('returnOnEquity', 'N/A')}")
-            st.write(f"ROA: {info.get('returnOnAssets', 'N/A')}")
-            st.markdown("</div>", unsafe_allow_html=True)
-        
-        with ratios_col3:
-            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-            st.write("**Growth Ratios**")
-            revenue_growth = info.get('revenueGrowth', 'N/A')
-            if isinstance(revenue_growth, (int, float)):
-                revenue_growth = f"{revenue_growth * 100:.2f}%"
-            st.write(f"Revenue Growth: {revenue_growth}")
-            
-            earnings_growth = info.get('earningsGrowth', 'N/A')
-            if isinstance(earnings_growth, (int, float)):
-                earnings_growth = f"{earnings_growth * 100:.2f}%"
-            st.write(f"Earnings Growth: {earnings_growth}")
-            
-            st.write(f"EBITDA: {format_currency(info.get('ebitda', 'N/A'), currency)}")
-            st.write(f"Enterprise Value: {format_currency(info.get('enterpriseValue', 'N/A'), currency)}")
-            st.markdown("</div>", unsafe_allow_html=True)
-    
-    else:
-        st.error("Could not fetch data for the specified symbol. Please check the symbol and try again.")
-            
-            # Stock Analysis Page
-elif selected == "Stock Analysis":
-    st.title("📊 Stock Analysis")
-    
-    # Symbol input with exchange selection
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        symbol = st.text_input("Enter stock symbol:", 
-                              value=getattr(st.session_state, 'analyze_symbol', 'RELIANCE.NS'),
-                              placeholder="e.g., RELIANCE.NS, TCS.NS, INFY.NS")
-    with col2:
-        exchange = st.selectbox("Exchange", ["NSE", "BSE", "NASDAQ", "NYSE"], index=0)
-    
-    # Add appropriate exchange suffix if missing
-    if symbol and '.' not in symbol:
-        if exchange == "NSE":
-            symbol += ".NS"
-        elif exchange == "BSE":
-            symbol += ".BO"
-    
-    # Period selection
-    period = st.selectbox("Select period:", ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "ytd", "max"], index=2)
-    
-    # Fetch data
-    hist, info = fetch_stock_data(symbol, period)
-    
-    if hist is not None and not hist.empty and info is not None:
-        # Display stock info
-        st.subheader(f"{info.get('longName', symbol)} ({symbol})")
-        
-        # Get currency from info or default to USD
-        currency = info.get('currency', 'USD')
-        
-        # Calculate financial metrics
-        current_price = hist['Close'].iloc[-1]
-        prev_close = info.get('previousClose', current_price)
-        change = current_price - prev_close
-        change_percent = (change / prev_close) * 100
-        
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            st.metric("Current Price", format_currency(current_price, currency), 
-                     f"{format_currency(change, currency)} ({change_percent:.2f}%)")
-        with col2:
-            market_cap = info.get('marketCap', 0)
-            st.metric("Market Cap", format_currency(market_cap, currency))
-        with col3:
-            pe_ratio = info.get('trailingPE', 'N/A')
-            st.metric("PE Ratio", f"{pe_ratio:.2f}" if isinstance(pe_ratio, (int, float)) else pe_ratio)
-        with col4:
-            volume = hist['Volume'].iloc[-1]
-            st.metric("Volume", f"{volume:,.0f}")
-        
-        # Additional metrics
-        col5, col6, col7, col8 = st.columns(4)
-        with col5:
-            day_high = hist['High'].iloc[-1]
-            st.metric("Day High", format_currency(day_high, currency))
-        with col6:
-            day_low = hist['Low'].iloc[-1]
-            st.metric("Day Low", format_currency(day_low, currency))
-        with col7:
-            fifty_two_week_high = info.get('fiftyTwoWeekHigh', hist['High'].max())
-            st.metric("52W High", format_currency(fifty_two_week_high, currency))
-        with col8:
-            fifty_two_week_low = info.get('fiftyTwoWeekLow', hist['Low'].min())
-            st.metric("52W Low", format_currency(fifty_two_week_low, currency))
-        
-        # Price chart
-        st.subheader("Price Chart")
-        chart_type = st.radio("Chart Type", ["Line", "Candlestick", "OHLC"], horizontal=True)
-        
-        fig = go.Figure()
-        
-        if chart_type == "Line":
-            fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name='Close', line=dict(color='white')))
-        elif chart_type == "Candlestick":
-            fig.add_trace(go.Candlestick(
-                x=hist.index,
-                open=hist['Open'],
-                high=hist['High'],
-                low=hist['Low'],
-                close=hist['Close'],
-                name='Price'
-            ))
-        else:  # OHLC
-            fig.add_trace(go.Ohlc(
-                x=hist.index,
-                open=hist['Open'],
-                high=hist['High'],
-                low=hist['Low'],
-                close=hist['Close'],
-                name='OHLC'
-            ))
-        
-        fig.update_layout(
-            title=f"{symbol} Price History",
-            xaxis_title="Date",
-            yaxis_title=f"Price ({currency})",
-            template="plotly_dark",
-            height=500
-        )
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Volume chart
-        st.subheader("Volume")
-        fig_volume = go.Figure()
-        fig_volume.add_trace(go.Bar(x=hist.index, y=hist['Volume'], name='Volume', marker_color='red'))
-        fig_volume.update_layout(
-            title="Trading Volume",
-            xaxis_title="Date",
-            yaxis_title="Volume",
-            template="plotly_dark",
-            height=300
-        )
-        st.plotly_chart(fig_volume, use_container_width=True)
-        
-        # Display company info if available
-        if 'longName' in info:
-            st.subheader("Company Information")
-            col9, col10 = st.columns(2)
-            with col9:
-                st.write(f"**Name:** {info.get('longName', 'N/A')}")
-                st.write(f"**Sector:** {info.get('sector', 'N/A')}")
-                st.write(f"**Industry:** {info.get('industry', 'N/A')}")
-                st.write(f"**Country:** {info.get('country', 'N/A')}")
-            with col10:
-                st.write(f"**Website:** {info.get('website', 'N/A')}")
-                st.write(f"**Employees:** {info.get('fullTimeEmployees', 'N/A')}")
-                st.write(f"**CEO:** {info.get('ceo', 'N/A')}")
-            
-            if 'longBusinessSummary' in info:
-                with st.expander("Business Summary"):
-                    st.write(info.get('longBusinessSummary', 'No summary available.'))
-        
-        # Financial ratios
-        st.subheader("Financial Ratios")
-        ratios_col1, ratios_col2, ratios_col3 = st.columns(3)
-        
-        with ratios_col1:
-            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-            st.write("**Valuation Ratios**")
-            st.write(f"P/E Ratio: {info.get('trailingPE', 'N/A')}")
-            st.write(f"Forward P/E: {info.get('forwardPE', 'N/A')}")
-            st.write(f"PEG Ratio: {info.get('pegRatio', 'N/A')}")
-            st.write(f"Price to Book: {info.get('priceToBook', 'N/A')}")
-            st.markdown("</div>", unsafe_allow_html=True)
-        
-        with ratios_col2:
-            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-            st.write("**Profitability Ratios**")
-            profit_margins = info.get('profitMargins', 'N/A')
-            if isinstance(profit_margins, (int, float)):
-                profit_margins = f"{profit_margins * 100:.2f}%"
-            st.write(f"Profit Margin: {profit_margins}")
-            st.write(f"EPS: {info.get('trailingEps', 'N/A')}")
-            st.write(f"ROE: {info.get('returnOnEquity', 'N/A')}")
-            st.write(f"ROA: {info.get('returnOnAssets', 'N/A')}")
-            st.markdown("</div>", unsafe_allow_html=True)
-        
-        with ratios_col3:
-            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
-            st.write("**Growth Ratios**")
-            revenue_growth = info.get('revenueGrowth', 'N/A')
-            if isinstance(revenue_growth, (int, float)):
-                revenue_growth = f"{revenue_growth * 100:.2f}%"
-            st.write(f"Revenue Growth: {revenue_growth}")
-            
-            earnings_growth = info.get('earningsGrowth', 'N/A')
-            if isinstance(earnings_growth, (int, float)):
-                earnings_growth = f"{earnings_growth * 100:.2f}%"
-            st.write(f"Earnings Growth: {earnings_growth}")
-            
-            st.write(f"EBITDA: {format_currency(info.get('ebitda', 'N/A'), currency)}")
-            st.write(f"Enterprise Value: {format_currency(info.get('enterpriseValue', 'N/A'), currency)}")
-            st.markdown("</div>", unsafe_allow_html=True)
-    
-    else:
-        st.error("Could not fetch data for the specified symbol. Please check the symbol and try again.")
-
-# Stock Analysis Page
 elif selected == "Stock Analysis":
     st.title("Stock Analysis")
     
-    tab1, tab2, tab3 = st.tabs(["Single Stock", "Compare Stocks", "Screener"])
+    # Symbol input with exchange selection
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        symbol = st.text_input("Enter stock symbol:", 
+                              value=getattr(st.session_state, 'analyze_symbol', 'RELIANCE.NS'),
+                              placeholder="e.g., RELIANCE.NS, TCS.NS, INFY.NS")
+    with col2:
+        exchange = st.selectbox("Exchange", ["NSE", "BSE", "NASDAQ", "NYSE"], index=0)
     
-    with tab1:
-        col1, col2 = st.columns([2, 1])
-        with col1:
-            ticker = st.text_input("🔍 Enter Stock Symbol", "AAPL")
-        with col2:
-            analysis_type = st.selectbox("Analysis Type", ["Overview", "Financials", "Holdings", "Chart"])
+    # Add appropriate exchange suffix if missing
+    if symbol and '.' not in symbol:
+        if exchange == "NSE":
+            symbol += ".NS"
+        elif exchange == "BSE":
+            symbol += ".BO"
+    
+    # Period selection
+    period = st.selectbox("Select period:", ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "ytd", "max"], index=2)
+    
+    # Fetch data
+    hist, info = fetch_stock_data(symbol, period)
+    
+    if hist is not None and not hist.empty and info is not None:
+        # Display stock info
+        st.subheader(f"{info.get('longName', symbol)} ({symbol})")
         
-        if ticker:
-            hist, info = fetch_stock_data(ticker, "3mo")
-            if hist is not None and info is not None:
-                st.subheader(f"{info.get('longName', 'N/A')} ({ticker.upper()})")
-                
-                # Key metrics
-                col1, col2, col3, col4 = st.columns(4)
-                current_price = info.get('regularMarketPrice', hist['Close'].iloc[-1] if not hist.empty else 'N/A')
-                previous_close = info.get('regularMarketPreviousClose', 'N/A')
-                market_cap = info.get('marketCap', 'N/A')
-                pe_ratio = info.get('trailingPE', 'N/A')
-                
-                with col1:
-                    st.metric("Current Price", f"${current_price:.2f}" if isinstance(current_price, float) else current_price)
-                with col2:
-                    if isinstance(previous_close, float) and isinstance(current_price, float):
-                        change = current_price - previous_close
-                        change_percent = (change / previous_close) * 100
-                        st.metric("Previous Close", f"${previous_close:.2f}", f"{change:.2f} ({change_percent:.2f}%)")
-                with col3:
-                    if isinstance(market_cap, (int, float)):
-                        if market_cap >= 1e12:
-                            st.metric("Market Cap", f"${market_cap/1e12:.2f}T")
-                        elif market_cap >= 1e9:
-                            st.metric("Market Cap", f"${market_cap/1e9:.2f}B")
-                        else:
-                            st.metric("Market Cap", f"${market_cap:,.2f}")
-                with col4:
-                    st.metric("P/E Ratio", f"{pe_ratio:.2f}" if isinstance(pe_ratio, float) else pe_ratio)
-                
-                # Additional metrics
-                col1, col2, col3, col4 = st.columns(4)
-                with col1:
-                    st.metric("52W High", f"${info.get('fiftyTwoWeekHigh', 'N/A')}")
-                with col2:
-                    st.metric("52W Low", f"${info.get('fiftyTwoWeekLow', 'N/A')}")
-                with col3:
-                    st.metric("Volume", f"{info.get('volume', 'N/A'):,}")
-                with col4:
-                    st.metric("Beta", f"{info.get('beta', 'N/A')}")
-                
-                # Price chart
-                if analysis_type == "Chart":
-                    st.subheader("Price Chart")
-                    chart_type = st.selectbox("Chart Type", ["Line", "Candlestick"])
-                    
-                    if chart_type == "Line":
-                        fig = px.line(hist, x=hist.index, y='Close', title=f"{ticker.upper()} Price History")
-                    else:
-                        fig = go.Figure(data=[go.Candlestick(
-                            x=hist.index, open=hist['Open'], high=hist['High'], 
-                            low=hist['Low'], close=hist['Close']
-                        )])
-                        fig.update_layout(title=f"{ticker.upper()} Candlestick Chart")
-                    
-                    st.plotly_chart(fig, use_container_width=True)
-                
-                # Financial statements (simulated)
-                if analysis_type == "Financials":
-                    st.subheader("Financial Statements")
-                    financials = pd.DataFrame({
-                        'Year': ['2023', '2022', '2021', '2020', '2019'],
-                        'Revenue (B)': [383.29, 365.82, 274.52, 260.17, 265.60],
-                        'Net Income (B)': [97.00, 94.68, 57.41, 55.26, 55.34],
-                        'EPS': [6.13, 5.67, 3.28, 3.31, 3.00],
-                        'Dividend': [0.96, 0.88, 0.82, 0.80, 0.75]
-                    })
-                    st.dataframe(financials, use_container_width=True)
-                    
-                    fig = go.Figure()
-                    fig.add_trace(go.Bar(x=financials['Year'], y=financials['Revenue (B)'], name='Revenue'))
-                    fig.add_trace(go.Bar(x=financials['Year'], y=financials['Net Income (B)'], name='Net Income'))
-                    fig.update_layout(title="Revenue vs Net Income (Billions $)", barmode='group')
-                    st.plotly_chart(fig, use_container_width=True)
-                
-                # Company info
-                if analysis_type == "Overview":
-                    st.subheader("Company Information")
-                    col1, col2 = st.columns(2)
-                    
-                    with col1:
-                        st.write(f"**Sector:** {info.get('sector', 'N/A')}")
-                        st.write(f"**Industry:** {info.get('industry', 'N/A')}")
-                        st.write(f"**Employees:** {info.get('fullTimeEmployees', 'N/A'):,}")
-                        st.write(f"**Country:** {info.get('country', 'N/A')}")
-                    
-                    with col2:
-                        st.write(f"**Website:** {info.get('website', 'N/A')}")
-                        st.write(f"**CEO:** {info.get('ceo', 'N/A')}")
-                        st.write(f"**IPO Year:** {info.get('ipoYear', 'N/A')}")
-                        st.write(f"**Market Cap:** ${info.get('marketCap', 'N/A'):,}")
-                    
-                    st.subheader("Business Summary")
+        # Get currency from info or default to USD
+        currency = info.get('currency', 'USD')
+        
+        # Calculate financial metrics
+        current_price = hist['Close'].iloc[-1]
+        prev_close = info.get('previousClose', current_price)
+        change = current_price - prev_close
+        change_percent = (change / prev_close) * 100
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("Current Price", format_currency(current_price, currency), 
+                     f"{format_currency(change, currency)} ({change_percent:.2f}%)")
+        with col2:
+            market_cap = info.get('marketCap', 0)
+            st.metric("Market Cap", format_currency(market_cap, currency))
+        with col3:
+            pe_ratio = info.get('trailingPE', 'N/A')
+            st.metric("PE Ratio", f"{pe_ratio:.2f}" if isinstance(pe_ratio, (int, float)) else pe_ratio)
+        with col4:
+            volume = hist['Volume'].iloc[-1]
+            st.metric("Volume", f"{volume:,.0f}")
+        
+        # Additional metrics
+        col5, col6, col7, col8 = st.columns(4)
+        with col5:
+            day_high = hist['High'].iloc[-1]
+            st.metric("Day High", format_currency(day_high, currency))
+        with col6:
+            day_low = hist['Low'].iloc[-1]
+            st.metric("Day Low", format_currency(day_low, currency))
+        with col7:
+            fifty_two_week_high = info.get('fiftyTwoWeekHigh', hist['High'].max())
+            st.metric("52W High", format_currency(fifty_two_week_high, currency))
+        with col8:
+            fifty_two_week_low = info.get('fiftyTwoWeekLow', hist['Low'].min())
+            st.metric("52W Low", format_currency(fifty_two_week_low, currency))
+        
+        # Price chart
+        st.subheader("Price Chart")
+        chart_type = st.radio("Chart Type", ["Line", "Candlestick", "OHLC"], horizontal=True)
+        
+        fig = go.Figure()
+        
+        if chart_type == "Line":
+            fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], name='Close', line=dict(color='white')))
+        elif chart_type == "Candlestick":
+            fig.add_trace(go.Candlestick(
+                x=hist.index,
+                open=hist['Open'],
+                high=hist['High'],
+                low=hist['Low'],
+                close=hist['Close'],
+                name='Price'
+            ))
+        else:  # OHLC
+            fig.add_trace(go.Ohlc(
+                x=hist.index,
+                open=hist['Open'],
+                high=hist['High'],
+                low=hist['Low'],
+                close=hist['Close'],
+                name='OHLC'
+            ))
+        
+        fig.update_layout(
+            title=f"{symbol} Price History",
+            xaxis_title="Date",
+            yaxis_title=f"Price ({currency})",
+            template="plotly_dark",
+            height=500
+        )
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Volume chart
+        st.subheader("Volume")
+        fig_volume = go.Figure()
+        fig_volume.add_trace(go.Bar(x=hist.index, y=hist['Volume'], name='Volume', marker_color='red'))
+        fig_volume.update_layout(
+            title="Trading Volume",
+            xaxis_title="Date",
+            yaxis_title="Volume",
+            template="plotly_dark",
+            height=300
+        )
+        st.plotly_chart(fig_volume, use_container_width=True)
+        
+        # Display company info if available
+        if 'longName' in info:
+            st.subheader("Company Information")
+            col9, col10 = st.columns(2)
+            with col9:
+                st.write(f"**Name:** {info.get('longName', 'N/A')}")
+                st.write(f"**Sector:** {info.get('sector', 'N/A')}")
+                st.write(f"**Industry:** {info.get('industry', 'N/A')}")
+                st.write(f"**Country:** {info.get('country', 'N/A')}")
+            with col10:
+                st.write(f"**Website:** {info.get('website', 'N/A')}")
+                st.write(f"**Employees:** {info.get('fullTimeEmployees', 'N/A')}")
+                st.write(f"**CEO:** {info.get('ceo', 'N/A')}")
+            
+            if 'longBusinessSummary' in info:
+                with st.expander("Business Summary"):
                     st.write(info.get('longBusinessSummary', 'No summary available.'))
+        
+        # Financial ratios
+        st.subheader("Financial Ratios")
+        ratios_col1, ratios_col2, ratios_col3 = st.columns(3)
+        
+        with ratios_col1:
+            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+            st.write("**Valuation Ratios**")
+            st.write(f"P/E Ratio: {info.get('trailingPE', 'N/A')}")
+            st.write(f"Forward P/E: {info.get('forwardPE', 'N/A')}")
+            st.write(f"PEG Ratio: {info.get('pegRatio', 'N/A')}")
+            st.write(f"Price to Book: {info.get('priceToBook', 'N/A')}")
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        with ratios_col2:
+            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+            st.write("**Profitability Ratios**")
+            profit_margins = info.get('profitMargins', 'N/A')
+            if isinstance(profit_margins, (int, float)):
+                profit_margins = f"{profit_margins * 100:.2f}%"
+            st.write(f"Profit Margin: {profit_margins}")
+            st.write(f"EPS: {info.get('trailingEps', 'N/A')}")
+            st.write(f"ROE: {info.get('returnOnEquity', 'N/A')}")
+            st.write(f"ROA: {info.get('returnOnAssets', 'N/A')}")
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        with ratios_col3:
+            st.markdown("<div class='custom-card'>", unsafe_allow_html=True)
+            st.write("**Growth Ratios**")
+            revenue_growth = info.get('revenueGrowth', 'N/A')
+            if isinstance(revenue_growth, (int, float)):
+                revenue_growth = f"{revenue_growth * 100:.2f}%"
+            st.write(f"Revenue Growth: {revenue_growth}")
             
-            else:
-                st.error("Unable to fetch data for the provided ticker symbol.")
+            earnings_growth = info.get('earningsGrowth', 'N/A')
+            if isinstance(earnings_growth, (int, float)):
+                earnings_growth = f"{earnings_growth * 100:.2f}%"
+            st.write(f"Earnings Growth: {earnings_growth}")
+            
+            st.write(f"EBITDA: {format_currency(info.get('ebitda', 'N/A'), currency)}")
+            st.write(f"Enterprise Value: {format_currency(info.get('enterpriseValue', 'N/A'), currency)}")
+            st.markdown("</div>", unsafe_allow_html=True)
     
-    with tab2:
-        st.subheader("Compare Stocks")
-        symbols = st.text_input("Enter symbols to compare (comma separated)", "AAPL, MSFT, GOOGL")
-        
-        if symbols:
-            symbol_list = [s.strip().upper() for s in symbols.split(',')]
-            comparison_data = {}
+    else:
+        st.error("Could not fetch data for the specified symbol. Please check the symbol and try again.")
             
-            for symbol in symbol_list:
-                hist, info = fetch_stock_data(symbol, "1mo")
-                if hist is not None and not hist.empty:
-                    comparison_data[symbol] = {
-                        'Price': hist['Close'].iloc[-1],
-                        'Change': ((hist['Close'].iloc[-1] - hist['Close'].iloc[0]) / hist['Close'].iloc[0]) * 100,
-                        'Volume': info.get('averageVolume', 0)
-                    }
-            
-            if comparison_data:
-                comp_df = pd.DataFrame(comparison_data).T
-                st.dataframe(comp_df, use_container_width=True)
-                
-                # Normalized price comparison chart
-                norm_data = {}
-                for symbol in symbol_list:
-                    hist, _ = fetch_stock_data(symbol, "1mo")
-                    if hist is not None and not hist.empty:
-                        norm_data[symbol] = (hist['Close'] / hist['Close'].iloc[0]) * 100
-                
-                if norm_data:
-                    norm_df = pd.DataFrame(norm_data)
-                    fig = px.line(norm_df, title="Normalized Price Comparison")
-                    st.plotly_chart(fig, use_container_width=True)
-    
-    with tab3:
-        st.subheader("Stock Screener")
-        st.info("Advanced stock screening functionality coming soon!")
-        
-        # Basic screener options
-        col1, col2 = st.columns(2)
-        with col1:
-            min_market_cap = st.selectbox("Min Market Cap", ["Any", "> $1B", "> $10B", "> $100B"])
-            min_price = st.number_input("Min Price", value=0.0)
-        with col2:
-            sector = st.selectbox("Sector", ["Any", "Technology", "Healthcare", "Financial", "Energy"])
-            max_pe = st.number_input("Max P/E Ratio", value=100.0)
-        
-        if st.button("Run Screen"):
-            st.success(f"Found 25 stocks matching your criteria")
-            # Simulated results
-            screened_stocks = pd.DataFrame({
-                'Symbol': ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META'],
-                'Price': [175.32, 328.79, 138.22, 145.18, 312.64],
-                'Change %': [2.3, 1.7, -0.8, 3.2, 0.5],
-                'Market Cap (B)': [2750, 2490, 1750, 1480, 890],
-                'P/E Ratio': [29.5, 32.1, 24.8, 58.3, 26.7]
-            })
-            st.dataframe(screened_stocks, use_container_width=True)
+
+# Stock Analysis Page
 
 # Technical Analysis Page
 elif selected == "Technical Analysis":
